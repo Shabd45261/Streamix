@@ -1,0 +1,11 @@
+<project>
+  <component name="ExternalProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Streamix.iml" filepath="$PROJECT_DIR$/.idea/modules/Streamix.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/Streamix.app.iml" filepath="$PROJECT_DIR$/.idea/modules/app/Streamix.app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/Streamix.app.androidTest.iml" filepath="$PROJECT_DIR$/.idea/modules/app/Streamix.app.androidTest.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/Streamix.app.main.iml" filepath="$PROJECT_DIR$/.idea/modules/app/Streamix.app.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/Streamix.app.unitTest.iml" filepath="$PROJECT_DIR$/.idea/modules/app/Streamix.app.unitTest.iml" />
+    </modules>
+  </component>
+</project>

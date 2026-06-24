@@ -1,0 +1,4 @@
+Streamix Repair & Maintenance Guide:
+1. Build Issues: Check libs.versions.toml for version mismatches.
+2. Scraper Failure: Sites like RedTube or Moviebox frequently change HTML. Update CSS selectors in provider classes.
+3. TMDB API: Ensure key is active at themoviedb.org.

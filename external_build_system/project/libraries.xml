@@ -1,0 +1,1652 @@
+<component name="libraryTable">
+  <library name="Gradle: D" __external-system-id="GRADLE">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/com.chaquo.python.runtime/chaquopy_java/17.0.0/cf4bf5d25689063eb96195194dcb16b01c3ae599/chaquopy_java-17.0.0.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+  <library name="Gradle: androidx.activity:activity-compose:1.9.0@aar" __external-system-id="GRADLE">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/eeb26efce82596b6b71307c00ad94c04/transformed/activity-compose-1.9.0/AndroidManifest.xml" />
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/eeb26efce82596b6b71307c00ad94c04/transformed/activity-compose-1.9.0/res" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/eeb26efce82596b6b71307c00ad94c04/transformed/activity-compose-1.9.0/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.activity/activity-compose/1.9.0/8bde89d86287051e6a4e6eda6699e128b945b147/activity-compose-1.9.0-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.activity/activity-compose/1.9.0/d164345e6fcf25df9c64c75caadc53b32c9e69e2/activity-compose-1.9.0-samples-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.activity:activity-ktx:1.9.0@aar" __external-system-id="GRADLE">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/35ed2718508bf1cb9ccc54dabdd86705/transformed/activity-ktx-1.9.0/AndroidManifest.xml" />
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/35ed2718508bf1cb9ccc54dabdd86705/transformed/activity-ktx-1.9.0/res" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/35ed2718508bf1cb9ccc54dabdd86705/transformed/activity-ktx-1.9.0/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.activity/activity-ktx/1.9.0/2ad14aed781c4a73ed4dbb421966d408a0a06686/activity-ktx-1.9.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.activity:activity:1.9.0@aar" __external-system-id="GRADLE">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/4603b75d550c0ab1363cfe4cbbb34a89/transformed/activity-1.9.0/AndroidManifest.xml" />
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/4603b75d550c0ab1363cfe4cbbb34a89/transformed/activity-1.9.0/res" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/4603b75d550c0ab1363cfe4cbbb34a89/transformed/activity-1.9.0/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.activity/activity/1.9.0/f03633494401aa419966552d45ed3efb0bbd99e8/activity-1.9.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.annotation:annotation-experimental:1.4.0@aar" __external-system-id="GRADLE">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/590246fa3f144a611bf996174efb03ea/transformed/annotation-experimental-1.4.0/AndroidManifest.xml" />
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/590246fa3f144a611bf996174efb03ea/transformed/annotation-experimental-1.4.0/res" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/590246fa3f144a611bf996174efb03ea/transformed/annotation-experimental-1.4.0/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.annotation/annotation-experimental/1.4.0/4dc003cb3c5ff16a1c3d09f3d1f7ae7b2d14a9c4/annotation-experimental-1.4.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.annotation:annotation-jvm:1.8.0" type="java-imported" __external-system-id="GRADLE">
+    <properties groupId="androidx.annotation" artifactId="annotation-jvm" version="1.8.0" baseVersion="1.8.0" />
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.annotation/annotation-jvm/1.8.0/b8a16fe526014b7941c1debaccaf9c5153692dbb/annotation-jvm-1.8.0.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.annotation/annotation-jvm/1.8.0/38ef8b544da94401882fb3abac556f26f46bc046/annotation-jvm-1.8.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.appcompat:appcompat-resources:1.7.0@aar" __external-system-id="GRADLE">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/c6c71625f07f5b04135c3ccecbde2668/transformed/appcompat-resources-1.7.0/AndroidManifest.xml" />
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/c6c71625f07f5b04135c3ccecbde2668/transformed/appcompat-resources-1.7.0/res" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/c6c71625f07f5b04135c3ccecbde2668/transformed/appcompat-resources-1.7.0/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.appcompat/appcompat-resources/1.7.0/cb084bf039d2b49e02cb58e0da0044fed264a4fb/appcompat-resources-1.7.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.appcompat:appcompat:1.7.0@aar" __external-system-id="GRADLE">
+    <ANNOTATIONS>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/25a72668472e4c70599291deb5a6f463/transformed/appcompat-1.7.0/annotations.zip!/" />
+    </ANNOTATIONS>
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/25a72668472e4c70599291deb5a6f463/transformed/appcompat-1.7.0/AndroidManifest.xml" />
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/25a72668472e4c70599291deb5a6f463/transformed/appcompat-1.7.0/res" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/25a72668472e4c70599291deb5a6f463/transformed/appcompat-1.7.0/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.appcompat/appcompat/1.7.0/c66c25a939bfe4b18249922dc4e7a19caca8bf68/appcompat-1.7.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.arch.core:core-common:2.2.0" type="java-imported" __external-system-id="GRADLE">
+    <properties groupId="androidx.arch.core" artifactId="core-common" version="2.2.0" baseVersion="2.2.0" />
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.arch.core/core-common/2.2.0/5e1b8b81dfd5f52c56a8d53b18ca759c19a301f3/core-common-2.2.0.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.arch.core/core-common/2.2.0/f3ac1460fc6844d5441595a34591af7fc04fd2e5/core-common-2.2.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.arch.core:core-runtime:2.2.0@aar" __external-system-id="GRADLE">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/ec97fe36d18074e4c4bec34f85ef8b41/transformed/core-runtime-2.2.0/AndroidManifest.xml" />
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/ec97fe36d18074e4c4bec34f85ef8b41/transformed/core-runtime-2.2.0/res" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/ec97fe36d18074e4c4bec34f85ef8b41/transformed/core-runtime-2.2.0/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.arch.core/core-runtime/2.2.0/48630ad88f438e5a603ae74cf4858203d1a595c5/core-runtime-2.2.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.cardview:cardview:1.0.0@aar" __external-system-id="GRADLE">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/4f948674d6aeaccb39dfd9bb277291fe/transformed/cardview-1.0.0/AndroidManifest.xml" />
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/4f948674d6aeaccb39dfd9bb277291fe/transformed/cardview-1.0.0/res" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/4f948674d6aeaccb39dfd9bb277291fe/transformed/cardview-1.0.0/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.cardview/cardview/1.0.0/c9f3ce7ca74ad2c978230f4094ba6804c5166f9c/cardview-1.0.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.collection:collection-jvm:1.4.0" type="java-imported" __external-system-id="GRADLE">
+    <properties groupId="androidx.collection" artifactId="collection-jvm" version="1.4.0" baseVersion="1.4.0" />
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.collection/collection-jvm/1.4.0/e209fb7bd1183032f55a0408121c6251a81acb49/collection-jvm-1.4.0.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.collection/collection-jvm/1.4.0/d85f9e6eecd7ec453dd808c6429dd84650112ac4/collection-jvm-1.4.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.collection:collection-ktx:1.4.0" type="java-imported" __external-system-id="GRADLE">
+    <properties groupId="androidx.collection" artifactId="collection-ktx" version="1.4.0" baseVersion="1.4.0" />
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.collection/collection-ktx/1.4.0/2ad14aed781c4a73ed4dbb421966d408a0a06686/collection-ktx-1.4.0.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.collection/collection-ktx/1.4.0/2ad14aed781c4a73ed4dbb421966d408a0a06686/collection-ktx-1.4.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.compose.animation:animation-android:1.6.7@aar" __external-system-id="GRADLE">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/b59ee6f19843456343334cb0ef3c3dac/transformed/animation-release/AndroidManifest.xml" />
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/b59ee6f19843456343334cb0ef3c3dac/transformed/animation-release/res" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/b59ee6f19843456343334cb0ef3c3dac/transformed/animation-release/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.compose.animation/animation-android/1.6.7/22e0eb3f955b01f383e6f7cda43646b887cc0f37/animation-android-1.6.7-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.compose.animation:animation-core-android:1.6.7@aar" __external-system-id="GRADLE">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/64fe86645153548b85d5fc9e23ab6c34/transformed/animation-core-release/AndroidManifest.xml" />
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/64fe86645153548b85d5fc9e23ab6c34/transformed/animation-core-release/res" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/64fe86645153548b85d5fc9e23ab6c34/transformed/animation-core-release/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.compose.animation/animation-core-android/1.6.7/850b59ca441485047c2c3cc7d1ba44088757c18b/animation-core-android-1.6.7-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.compose.foundation:foundation-android:1.6.7@aar" __external-system-id="GRADLE">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/7c59eabe3adc6e934aad54527c4b9f67/transformed/foundation-release/AndroidManifest.xml" />
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/7c59eabe3adc6e934aad54527c4b9f67/transformed/foundation-release/res" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/7c59eabe3adc6e934aad54527c4b9f67/transformed/foundation-release/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.compose.foundation/foundation-android/1.6.7/3689a919e5a57ced15b961efab7a333bcdc3a51c/foundation-android-1.6.7-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.compose.foundation:foundation-layout-android:1.6.7@aar" __external-system-id="GRADLE">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/0ce6c9456b89220a85a6843a766fa1e7/transformed/foundation-layout-release/AndroidManifest.xml" />
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/0ce6c9456b89220a85a6843a766fa1e7/transformed/foundation-layout-release/res" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/0ce6c9456b89220a85a6843a766fa1e7/transformed/foundation-layout-release/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.compose.foundation/foundation-layout-android/1.6.7/7abc26bf88267a59649360c2e68a13d69976ff17/foundation-layout-android-1.6.7-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.compose.material3:material3-android:1.2.1@aar" __external-system-id="GRADLE">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/cb8a994371b3084ce88d8040f8c2bd32/transformed/material3-release/AndroidManifest.xml" />
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/cb8a994371b3084ce88d8040f8c2bd32/transformed/material3-release/res" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/cb8a994371b3084ce88d8040f8c2bd32/transformed/material3-release/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.compose.material3/material3-android/1.2.1/a269bcec123bcf8567c612a65f19cc47d9ab2b49/material3-android-1.2.1-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.compose.material:material-android:1.6.7@aar" __external-system-id="GRADLE">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/a26b4ee3985dfbf330ec8b4554dc7a9c/transformed/material-release/AndroidManifest.xml" />
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/a26b4ee3985dfbf330ec8b4554dc7a9c/transformed/material-release/res" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/a26b4ee3985dfbf330ec8b4554dc7a9c/transformed/material-release/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.compose.material/material-android/1.6.7/864313b7a0766a4615bf1eca76e715409e7952e0/material-android-1.6.7-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.compose.material:material-icons-core-android:1.6.7@aar" __external-system-id="GRADLE">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/542aed9b043fdbc7c8fdae29d95a632c/transformed/material-icons-core-release/AndroidManifest.xml" />
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/542aed9b043fdbc7c8fdae29d95a632c/transformed/material-icons-core-release/res" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/542aed9b043fdbc7c8fdae29d95a632c/transformed/material-icons-core-release/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.compose.material/material-icons-core-android/1.6.7/e518df0d8a19c3833f72a24ff667853015e340fd/material-icons-core-android-1.6.7-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.compose.material:material-icons-extended-android:1.6.7@aar" __external-system-id="GRADLE">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/b1fc9334fa59e2a230b7dcd92e3999c5/transformed/material-icons-extended-release/AndroidManifest.xml" />
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/b1fc9334fa59e2a230b7dcd92e3999c5/transformed/material-icons-extended-release/res" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/b1fc9334fa59e2a230b7dcd92e3999c5/transformed/material-icons-extended-release/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.compose.material/material-icons-extended-android/1.6.7/4c74984f208526fde6a4ad0d78d00a8d33cbcce0/material-icons-extended-android-1.6.7-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.compose.material:material-ripple-android:1.6.7@aar" __external-system-id="GRADLE">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/d3545e1457da75a8f01c39f7769a0584/transformed/material-ripple-release/AndroidManifest.xml" />
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/d3545e1457da75a8f01c39f7769a0584/transformed/material-ripple-release/res" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/d3545e1457da75a8f01c39f7769a0584/transformed/material-ripple-release/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.compose.material/material-ripple-android/1.6.7/5658994fca2cfab39445d8960d9609737b5f71be/material-ripple-android-1.6.7-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.compose.runtime:runtime-android:1.6.7@aar" __external-system-id="GRADLE">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/0e4a0496ee02ac7d11199642bc878edb/transformed/runtime-release/AndroidManifest.xml" />
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/0e4a0496ee02ac7d11199642bc878edb/transformed/runtime-release/res" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/0e4a0496ee02ac7d11199642bc878edb/transformed/runtime-release/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.compose.runtime/runtime-android/1.6.7/62e52dabf4dfc35e8854aeb74ad491dcba876ba4/runtime-android-1.6.7-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.compose.runtime:runtime-saveable-android:1.6.7@aar" __external-system-id="GRADLE">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/9d2a310b7c33e5a507a0163329063267/transformed/runtime-saveable-release/AndroidManifest.xml" />
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/9d2a310b7c33e5a507a0163329063267/transformed/runtime-saveable-release/res" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/9d2a310b7c33e5a507a0163329063267/transformed/runtime-saveable-release/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.compose.runtime/runtime-saveable-android/1.6.7/e36ff9886898fcb4c455c2e9901391f49c6574b5/runtime-saveable-android-1.6.7-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.compose.ui:ui-android:1.6.7@aar" __external-system-id="GRADLE">
+    <ANNOTATIONS>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/e006e74c523fede0079e557d4d764670/transformed/ui-release/annotations.zip!/" />
+    </ANNOTATIONS>
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/e006e74c523fede0079e557d4d764670/transformed/ui-release/AndroidManifest.xml" />
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/e006e74c523fede0079e557d4d764670/transformed/ui-release/res" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/e006e74c523fede0079e557d4d764670/transformed/ui-release/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.compose.ui/ui-android/1.6.7/f010bcb99ca0db43f790103aa5db3a701bcb0cba/ui-android-1.6.7-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.compose.ui:ui-geometry-android:1.6.7@aar" __external-system-id="GRADLE">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/34cb3df482c6c3dd71b150affc26a055/transformed/ui-geometry-release/AndroidManifest.xml" />
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/34cb3df482c6c3dd71b150affc26a055/transformed/ui-geometry-release/res" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/34cb3df482c6c3dd71b150affc26a055/transformed/ui-geometry-release/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.compose.ui/ui-geometry-android/1.6.7/2b167ccf642bf99c919cfa98bee1676e8335d1dc/ui-geometry-android-1.6.7-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.compose.ui:ui-graphics-android:1.6.7@aar" __external-system-id="GRADLE">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/355b687ac44fc75e13b66e77be978508/transformed/ui-graphics-release/AndroidManifest.xml" />
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/355b687ac44fc75e13b66e77be978508/transformed/ui-graphics-release/res" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/355b687ac44fc75e13b66e77be978508/transformed/ui-graphics-release/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.compose.ui/ui-graphics-android/1.6.7/1298b90ac426648ecdcf197c8b1cfe137b7c433f/ui-graphics-android-1.6.7-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.compose.ui:ui-test-manifest:1.6.7@aar" __external-system-id="GRADLE">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/706c30f8cc6f580694d8036883ac35d8/transformed/ui-test-manifest-1.6.7/AndroidManifest.xml" />
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/706c30f8cc6f580694d8036883ac35d8/transformed/ui-test-manifest-1.6.7/res" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/706c30f8cc6f580694d8036883ac35d8/transformed/ui-test-manifest-1.6.7/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.compose.ui/ui-test-manifest/1.6.7/2ad14aed781c4a73ed4dbb421966d408a0a06686/ui-test-manifest-1.6.7-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.compose.ui:ui-text-android:1.6.7@aar" __external-system-id="GRADLE">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/e6555c93a7ec1f9330d7ef5832918352/transformed/ui-text-release/AndroidManifest.xml" />
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/e6555c93a7ec1f9330d7ef5832918352/transformed/ui-text-release/res" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/e6555c93a7ec1f9330d7ef5832918352/transformed/ui-text-release/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.compose.ui/ui-text-android/1.6.7/46c95af2b67e2f644f3d43e99dc9132bac6aceef/ui-text-android-1.6.7-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.compose.ui:ui-tooling-android:1.6.7@aar" __external-system-id="GRADLE">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/e91383ddb280d7f355d2d23707662e71/transformed/ui-tooling-release/AndroidManifest.xml" />
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/e91383ddb280d7f355d2d23707662e71/transformed/ui-tooling-release/res" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/e91383ddb280d7f355d2d23707662e71/transformed/ui-tooling-release/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.compose.ui/ui-tooling-android/1.6.7/c5462dd57a2e392ac2dfcfcc07b694c793c82a73/ui-tooling-android-1.6.7-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.compose.ui:ui-tooling-data-android:1.6.7@aar" __external-system-id="GRADLE">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/84d8ec724439e08a6eda9e781133455e/transformed/ui-tooling-data-release/AndroidManifest.xml" />
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/84d8ec724439e08a6eda9e781133455e/transformed/ui-tooling-data-release/res" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/84d8ec724439e08a6eda9e781133455e/transformed/ui-tooling-data-release/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.compose.ui/ui-tooling-data-android/1.6.7/106401abfb0f95e83de0d129bc8443122809bacd/ui-tooling-data-android-1.6.7-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.compose.ui:ui-tooling-preview-android:1.6.7@aar" __external-system-id="GRADLE">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/682719ce513580f5d451cdf71eba67bb/transformed/ui-tooling-preview-release/AndroidManifest.xml" />
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/682719ce513580f5d451cdf71eba67bb/transformed/ui-tooling-preview-release/res" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/682719ce513580f5d451cdf71eba67bb/transformed/ui-tooling-preview-release/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.compose.ui/ui-tooling-preview-android/1.6.7/c1cc66505a91b370b6f456d88ab4eba3400300f7/ui-tooling-preview-android-1.6.7-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.compose.ui:ui-unit-android:1.6.7@aar" __external-system-id="GRADLE">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/f7748e6ce87936336d0fd35042599cdd/transformed/ui-unit-release/AndroidManifest.xml" />
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/f7748e6ce87936336d0fd35042599cdd/transformed/ui-unit-release/res" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/f7748e6ce87936336d0fd35042599cdd/transformed/ui-unit-release/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.compose.ui/ui-unit-android/1.6.7/b9b3e53b3ee319c34765d6cf8cebbaed01e25af0/ui-unit-android-1.6.7-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.compose.ui:ui-util-android:1.6.7@aar" __external-system-id="GRADLE">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/775189f650859e798143f45d4f6d8610/transformed/ui-util-release/AndroidManifest.xml" />
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/775189f650859e798143f45d4f6d8610/transformed/ui-util-release/res" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/775189f650859e798143f45d4f6d8610/transformed/ui-util-release/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.compose.ui/ui-util-android/1.6.7/c226e92fd11dfab72261220b7ba604984aa8fbfb/ui-util-android-1.6.7-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.concurrent:concurrent-futures:1.1.0" type="java-imported" __external-system-id="GRADLE">
+    <properties groupId="androidx.concurrent" artifactId="concurrent-futures" version="1.1.0" baseVersion="1.1.0" />
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.concurrent/concurrent-futures/1.1.0/50b7fb98350d5f42a4e49704b03278542293ba48/concurrent-futures-1.1.0.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.concurrent/concurrent-futures/1.1.0/a27842adf6c42f3d80893bd46e1de4ac024218e7/concurrent-futures-1.1.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.constraintlayout:constraintlayout-solver:2.0.1" type="java-imported" __external-system-id="GRADLE">
+    <properties groupId="androidx.constraintlayout" artifactId="constraintlayout-solver" version="2.0.1" baseVersion="2.0.1" />
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.constraintlayout/constraintlayout-solver/2.0.1/30988fe2d77f3fe3bf7551bb8a8b795fad7e7226/constraintlayout-solver-2.0.1.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+  <library name="Gradle: androidx.constraintlayout:constraintlayout:2.0.1@aar" __external-system-id="GRADLE">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/fde5f8cc2410b59d8918c2fc7ac9b257/transformed/constraintlayout-2.0.1/AndroidManifest.xml" />
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/fde5f8cc2410b59d8918c2fc7ac9b257/transformed/constraintlayout-2.0.1/res" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/fde5f8cc2410b59d8918c2fc7ac9b257/transformed/constraintlayout-2.0.1/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+  <library name="Gradle: androidx.coordinatorlayout:coordinatorlayout:1.1.0@aar" __external-system-id="GRADLE">
+    <ANNOTATIONS>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/9b123947e51a5f90934fdcc7409eb977/transformed/coordinatorlayout-1.1.0/annotations.zip!/" />
+    </ANNOTATIONS>
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/9b123947e51a5f90934fdcc7409eb977/transformed/coordinatorlayout-1.1.0/AndroidManifest.xml" />
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/9b123947e51a5f90934fdcc7409eb977/transformed/coordinatorlayout-1.1.0/res" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/9b123947e51a5f90934fdcc7409eb977/transformed/coordinatorlayout-1.1.0/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.coordinatorlayout/coordinatorlayout/1.1.0/a15529ac349d76a872ae5ef42b84c320c456cd7f/coordinatorlayout-1.1.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.core:core-ktx:1.13.1@aar" __external-system-id="GRADLE">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/d80b33ae53115c86f081887489c1dbc1/transformed/core-ktx-1.13.1/AndroidManifest.xml" />
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/d80b33ae53115c86f081887489c1dbc1/transformed/core-ktx-1.13.1/res" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/d80b33ae53115c86f081887489c1dbc1/transformed/core-ktx-1.13.1/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.core/core-ktx/1.13.1/2ebeecb97d5b1557fc7b3e3758447b8176e322e8/core-ktx-1.13.1-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.core:core:1.13.1@aar" __external-system-id="GRADLE">
+    <ANNOTATIONS>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/ce5ae78a984fa902c80abc60b86796fa/transformed/core-1.13.1/annotations.zip!/" />
+    </ANNOTATIONS>
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/ce5ae78a984fa902c80abc60b86796fa/transformed/core-1.13.1/AndroidManifest.xml" />
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/ce5ae78a984fa902c80abc60b86796fa/transformed/core-1.13.1/res" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/ce5ae78a984fa902c80abc60b86796fa/transformed/core-1.13.1/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.core/core/1.13.1/b0c9edc0bc9e5113630fbaca0967ef604097ba6f/core-1.13.1-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.cursoradapter:cursoradapter:1.0.0@aar" __external-system-id="GRADLE">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/09f6c096a6e40fa0642246b615550ae9/transformed/cursoradapter-1.0.0/AndroidManifest.xml" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/09f6c096a6e40fa0642246b615550ae9/transformed/cursoradapter-1.0.0/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.cursoradapter/cursoradapter/1.0.0/1e323083b41c31fd4d45510dfce50614963c3c6c/cursoradapter-1.0.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.customview:customview:1.1.0@aar" __external-system-id="GRADLE">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/b0b093bc0cfd08c346d0d580f0b4b87f/transformed/customview-1.1.0/AndroidManifest.xml" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/b0b093bc0cfd08c346d0d580f0b4b87f/transformed/customview-1.1.0/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.customview/customview/1.1.0/be631aafb1eb3f64c9cc57083a21a3321cf2e2e1/customview-1.1.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.documentfile:documentfile:1.0.0@aar" __external-system-id="GRADLE">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/a3c8b45cb3ecf64974c1ebd2d84cfa68/transformed/documentfile-1.0.0/AndroidManifest.xml" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/a3c8b45cb3ecf64974c1ebd2d84cfa68/transformed/documentfile-1.0.0/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.documentfile/documentfile/1.0.0/a1bed5cf96db96bd06a2feade98fe55653811dc8/documentfile-1.0.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.drawerlayout:drawerlayout:1.1.1@aar" __external-system-id="GRADLE">
+    <ANNOTATIONS>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/2a1163a41e480182768e9d4abf762f20/transformed/drawerlayout-1.1.1/annotations.zip!/" />
+    </ANNOTATIONS>
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/2a1163a41e480182768e9d4abf762f20/transformed/drawerlayout-1.1.1/AndroidManifest.xml" />
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/2a1163a41e480182768e9d4abf762f20/transformed/drawerlayout-1.1.1/res" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/2a1163a41e480182768e9d4abf762f20/transformed/drawerlayout-1.1.1/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.drawerlayout/drawerlayout/1.1.1/d95f7d9cd7d95cc0c038bbcf9c65f521b56fee55/drawerlayout-1.1.1-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.dynamicanimation:dynamicanimation:1.0.0@aar" __external-system-id="GRADLE">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/31c95f9bbf84042d8233a24e65936869/transformed/dynamicanimation-1.0.0/AndroidManifest.xml" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/31c95f9bbf84042d8233a24e65936869/transformed/dynamicanimation-1.0.0/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.dynamicanimation/dynamicanimation/1.0.0/5c050e29af5033ff5e2d58ccf657ae92fdfbda4a/dynamicanimation-1.0.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.fragment:fragment-ktx:1.3.6@aar" __external-system-id="GRADLE">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/0deb469a5d25f699d8801380ae17397f/transformed/fragment-ktx-1.3.6/AndroidManifest.xml" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/0deb469a5d25f699d8801380ae17397f/transformed/fragment-ktx-1.3.6/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.fragment/fragment-ktx/1.3.6/2064e157d891676f2cf4e59c4643c54b759b3ad/fragment-ktx-1.3.6-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.fragment:fragment:1.5.4@aar" __external-system-id="GRADLE">
+    <ANNOTATIONS>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/cdb55a693ad9307aa9b685dac45d0a79/transformed/fragment-1.5.4/annotations.zip!/" />
+    </ANNOTATIONS>
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/cdb55a693ad9307aa9b685dac45d0a79/transformed/fragment-1.5.4/AndroidManifest.xml" />
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/cdb55a693ad9307aa9b685dac45d0a79/transformed/fragment-1.5.4/res" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/cdb55a693ad9307aa9b685dac45d0a79/transformed/fragment-1.5.4/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.fragment/fragment/1.5.4/5404b0f8aeccb2fe882bee99ef8843711c01c156/fragment-1.5.4-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.hilt:hilt-navigation-compose:1.2.0@aar" __external-system-id="GRADLE">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/a9e34302ec63ad592ccf32e493c90bbc/transformed/hilt-navigation-compose-1.2.0/AndroidManifest.xml" />
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/a9e34302ec63ad592ccf32e493c90bbc/transformed/hilt-navigation-compose-1.2.0/res" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/a9e34302ec63ad592ccf32e493c90bbc/transformed/hilt-navigation-compose-1.2.0/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.hilt/hilt-navigation-compose/1.2.0/3316ba490a3081b6cfa8fa21c29a48a6a2e35e2f/hilt-navigation-compose-1.2.0-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.hilt/hilt-navigation-compose/1.2.0/b8667dbea736b4b1387ebc43139a8298992e5b88/hilt-navigation-compose-1.2.0-samples-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.hilt:hilt-navigation:1.2.0@aar" __external-system-id="GRADLE">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/5e547c53b00235c8952d70903b1ea4ae/transformed/hilt-navigation-1.2.0/AndroidManifest.xml" />
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/5e547c53b00235c8952d70903b1ea4ae/transformed/hilt-navigation-1.2.0/res" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/5e547c53b00235c8952d70903b1ea4ae/transformed/hilt-navigation-1.2.0/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.hilt/hilt-navigation/1.2.0/336b66c8b6b552426d3ba2270a51ace5c17e8d66/hilt-navigation-1.2.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.interpolator:interpolator:1.0.0@aar" __external-system-id="GRADLE">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/ff65c9fa7810dda675e67bdaa129c211/transformed/interpolator-1.0.0/AndroidManifest.xml" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/ff65c9fa7810dda675e67bdaa129c211/transformed/interpolator-1.0.0/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.interpolator/interpolator/1.0.0/fefd5e3cbc479b6b4a9532d05688a1e659e8d3d2/interpolator-1.0.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.legacy:legacy-support-core-utils:1.0.0@aar" __external-system-id="GRADLE">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/4e8083b3c27abf15d69ca3fa0595ca87/transformed/legacy-support-core-utils-1.0.0/AndroidManifest.xml" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/4e8083b3c27abf15d69ca3fa0595ca87/transformed/legacy-support-core-utils-1.0.0/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.legacy/legacy-support-core-utils/1.0.0/46c37f178088153618cfb0afef08ec96c48f93cb/legacy-support-core-utils-1.0.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.lifecycle:lifecycle-common-jvm:2.8.2" type="java-imported" __external-system-id="GRADLE">
+    <properties groupId="androidx.lifecycle" artifactId="lifecycle-common-jvm" version="2.8.2" baseVersion="2.8.2" />
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.lifecycle/lifecycle-common-jvm/2.8.2/7174a594afb73a9ad9ac9074ce78b94af3cc52a7/lifecycle-common-jvm-2.8.2.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.lifecycle/lifecycle-common-jvm/2.8.2/b5219f8d5cf295957282572a607df3dbb0036ddc/lifecycle-common-jvm-2.8.2-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.lifecycle:lifecycle-livedata-core-ktx:2.8.2@aar" __external-system-id="GRADLE">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/f9ec9aedc05c9776ef4af76f4f36729b/transformed/lifecycle-livedata-core-ktx-2.8.2/AndroidManifest.xml" />
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/f9ec9aedc05c9776ef4af76f4f36729b/transformed/lifecycle-livedata-core-ktx-2.8.2/res" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/f9ec9aedc05c9776ef4af76f4f36729b/transformed/lifecycle-livedata-core-ktx-2.8.2/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.lifecycle/lifecycle-livedata-core-ktx/2.8.2/2ad14aed781c4a73ed4dbb421966d408a0a06686/lifecycle-livedata-core-ktx-2.8.2-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.lifecycle:lifecycle-livedata-core:2.8.2@aar" __external-system-id="GRADLE">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/bbc3b6a3f74ff57f8fa4f888215b838f/transformed/lifecycle-livedata-core-2.8.2/AndroidManifest.xml" />
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/bbc3b6a3f74ff57f8fa4f888215b838f/transformed/lifecycle-livedata-core-2.8.2/res" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/bbc3b6a3f74ff57f8fa4f888215b838f/transformed/lifecycle-livedata-core-2.8.2/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.lifecycle/lifecycle-livedata-core/2.8.2/1ee4a7a4402e47ba804463490cd01af81412f951/lifecycle-livedata-core-2.8.2-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.lifecycle:lifecycle-livedata:2.8.2@aar" __external-system-id="GRADLE">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/656d4245a8650714ae8732e631071e78/transformed/lifecycle-livedata-2.8.2/AndroidManifest.xml" />
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/656d4245a8650714ae8732e631071e78/transformed/lifecycle-livedata-2.8.2/res" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/656d4245a8650714ae8732e631071e78/transformed/lifecycle-livedata-2.8.2/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.lifecycle/lifecycle-livedata/2.8.2/f78f4ca1227ddf2e0b820216abf09123e8360c9d/lifecycle-livedata-2.8.2-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.lifecycle:lifecycle-runtime-android:2.8.2@aar" __external-system-id="GRADLE">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/c80a8da302d57f244ce663f5b0409e13/transformed/lifecycle-runtime-release/AndroidManifest.xml" />
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/c80a8da302d57f244ce663f5b0409e13/transformed/lifecycle-runtime-release/res" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/c80a8da302d57f244ce663f5b0409e13/transformed/lifecycle-runtime-release/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.lifecycle/lifecycle-runtime-android/2.8.2/d671f0a8e8b879b58cce01f6061b4e7ce3974006/lifecycle-runtime-android-2.8.2-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.lifecycle:lifecycle-runtime-ktx-android:2.8.2@aar" __external-system-id="GRADLE">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/a69dc756797eb1dd484f8fe3e639b090/transformed/lifecycle-runtime-ktx-release/AndroidManifest.xml" />
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/a69dc756797eb1dd484f8fe3e639b090/transformed/lifecycle-runtime-ktx-release/res" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/a69dc756797eb1dd484f8fe3e639b090/transformed/lifecycle-runtime-ktx-release/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.lifecycle/lifecycle-runtime-ktx-android/2.8.2/2ad14aed781c4a73ed4dbb421966d408a0a06686/lifecycle-runtime-ktx-android-2.8.2-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.lifecycle:lifecycle-viewmodel-android:2.8.2@aar" __external-system-id="GRADLE">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/8dba8bb5f5ac93f04f8bb9f4945c0a4d/transformed/lifecycle-viewmodel-release/AndroidManifest.xml" />
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/8dba8bb5f5ac93f04f8bb9f4945c0a4d/transformed/lifecycle-viewmodel-release/res" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/8dba8bb5f5ac93f04f8bb9f4945c0a4d/transformed/lifecycle-viewmodel-release/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.lifecycle/lifecycle-viewmodel-android/2.8.2/f394e7f6091e5e3e30d57b7d6087ac5995fe039c/lifecycle-viewmodel-android-2.8.2-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.lifecycle:lifecycle-viewmodel-compose-android:2.8.2@aar" __external-system-id="GRADLE">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/7374e57e946d1dba4e074f4edd6afbb2/transformed/lifecycle-viewmodel-compose-release/AndroidManifest.xml" />
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/7374e57e946d1dba4e074f4edd6afbb2/transformed/lifecycle-viewmodel-compose-release/res" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/7374e57e946d1dba4e074f4edd6afbb2/transformed/lifecycle-viewmodel-compose-release/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.lifecycle/lifecycle-viewmodel-compose-android/2.8.2/191230278f5a132d12b0e9aa6b89b72ab83336a2/lifecycle-viewmodel-compose-2.8.2-samples-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.lifecycle/lifecycle-viewmodel-compose-android/2.8.2/26dba82e6bc7b31cfa1188f58d1f320ec4c6e6ed/lifecycle-viewmodel-compose-android-2.8.2-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.2@aar" __external-system-id="GRADLE">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/bc1fc0dc80e905bdad837017b5c1a658/transformed/lifecycle-viewmodel-ktx-2.8.2/AndroidManifest.xml" />
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/bc1fc0dc80e905bdad837017b5c1a658/transformed/lifecycle-viewmodel-ktx-2.8.2/res" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/bc1fc0dc80e905bdad837017b5c1a658/transformed/lifecycle-viewmodel-ktx-2.8.2/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.lifecycle/lifecycle-viewmodel-ktx/2.8.2/2ad14aed781c4a73ed4dbb421966d408a0a06686/lifecycle-viewmodel-ktx-2.8.2-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.lifecycle:lifecycle-viewmodel-savedstate:2.8.2@aar" __external-system-id="GRADLE">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/25c8befced8ce303c76a464f4152fddd/transformed/lifecycle-viewmodel-savedstate-2.8.2/AndroidManifest.xml" />
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/25c8befced8ce303c76a464f4152fddd/transformed/lifecycle-viewmodel-savedstate-2.8.2/res" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/25c8befced8ce303c76a464f4152fddd/transformed/lifecycle-viewmodel-savedstate-2.8.2/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.lifecycle/lifecycle-viewmodel-savedstate/2.8.2/2010eace55477ddd72ad8c5dbbcf361d037bdac8/lifecycle-viewmodel-savedstate-2.8.2-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.loader:loader:1.0.0@aar" __external-system-id="GRADLE">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/7299b7b08e712267cc25eb279bb2d0a2/transformed/loader-1.0.0/AndroidManifest.xml" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/7299b7b08e712267cc25eb279bb2d0a2/transformed/loader-1.0.0/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.loader/loader/1.0.0/b9ef587f3e46c7fe5b00264989764e43ff45cada/loader-1.0.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.localbroadcastmanager:localbroadcastmanager:1.0.0@aar" __external-system-id="GRADLE">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/f54f3d22571e4525ed22775dfcde5e84/transformed/localbroadcastmanager-1.0.0/AndroidManifest.xml" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/f54f3d22571e4525ed22775dfcde5e84/transformed/localbroadcastmanager-1.0.0/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.localbroadcastmanager/localbroadcastmanager/1.0.0/3930e99159fd6b7f1d2e7d5fe9af0924ca1faf9/localbroadcastmanager-1.0.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.media3:media3-common:1.3.1@aar" __external-system-id="GRADLE">
+    <ANNOTATIONS>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/fe20a6f2cf839759f06c602c11629bf0/transformed/media3-common-1.3.1/annotations.zip!/" />
+    </ANNOTATIONS>
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/fe20a6f2cf839759f06c602c11629bf0/transformed/media3-common-1.3.1/AndroidManifest.xml" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/fe20a6f2cf839759f06c602c11629bf0/transformed/media3-common-1.3.1/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.media3/media3-common/1.3.1/14e5678a48b564665536bbc431b8f6bb8dc5811/media3-common-1.3.1-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.media3:media3-container:1.3.1@aar" __external-system-id="GRADLE">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/ca0dd94b9b209e29aaed36c96c79aee8/transformed/media3-container-1.3.1/AndroidManifest.xml" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/ca0dd94b9b209e29aaed36c96c79aee8/transformed/media3-container-1.3.1/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.media3/media3-container/1.3.1/b4a6a1f001b50570130d9b7ffaa1c008cf723f05/media3-container-1.3.1-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.media3:media3-database:1.3.1@aar" __external-system-id="GRADLE">
+    <ANNOTATIONS>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/7ece7c4ac963fd62b1280d4d2dad6631/transformed/media3-database-1.3.1/annotations.zip!/" />
+    </ANNOTATIONS>
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/7ece7c4ac963fd62b1280d4d2dad6631/transformed/media3-database-1.3.1/AndroidManifest.xml" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/7ece7c4ac963fd62b1280d4d2dad6631/transformed/media3-database-1.3.1/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.media3/media3-database/1.3.1/800a4aa39c0ce6572d4ca7bf45cde9d25dc6d866/media3-database-1.3.1-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.media3:media3-datasource:1.3.1@aar" __external-system-id="GRADLE">
+    <ANNOTATIONS>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/b6b3664eb9697654970f3d48717fb554/transformed/media3-datasource-1.3.1/annotations.zip!/" />
+    </ANNOTATIONS>
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/b6b3664eb9697654970f3d48717fb554/transformed/media3-datasource-1.3.1/AndroidManifest.xml" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/b6b3664eb9697654970f3d48717fb554/transformed/media3-datasource-1.3.1/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.media3/media3-datasource/1.3.1/1634d249e413ae5bf333868a2a50d0c1dc3ff963/media3-datasource-1.3.1-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.media3:media3-decoder:1.3.1@aar" __external-system-id="GRADLE">
+    <ANNOTATIONS>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/c8280d08ca1b246724b3423a40c2bf71/transformed/media3-decoder-1.3.1/annotations.zip!/" />
+    </ANNOTATIONS>
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/c8280d08ca1b246724b3423a40c2bf71/transformed/media3-decoder-1.3.1/AndroidManifest.xml" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/c8280d08ca1b246724b3423a40c2bf71/transformed/media3-decoder-1.3.1/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.media3/media3-decoder/1.3.1/fa405fb0d6b3afe5f1e06fbb5a514e30253f6de1/media3-decoder-1.3.1-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.media3:media3-exoplayer-dash:1.3.1@aar" __external-system-id="GRADLE">
+    <ANNOTATIONS>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/00f558435635dc79c72c15a7a9749ece/transformed/media3-exoplayer-dash-1.3.1/annotations.zip!/" />
+    </ANNOTATIONS>
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/00f558435635dc79c72c15a7a9749ece/transformed/media3-exoplayer-dash-1.3.1/AndroidManifest.xml" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/00f558435635dc79c72c15a7a9749ece/transformed/media3-exoplayer-dash-1.3.1/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.media3/media3-exoplayer-dash/1.3.1/94586e48c535f46956a7b149f151e515dbd7023e/media3-exoplayer-dash-1.3.1-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.media3:media3-exoplayer-hls:1.3.1@aar" __external-system-id="GRADLE">
+    <ANNOTATIONS>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/e65d81ad7cc0a06d62ab73353a917f07/transformed/media3-exoplayer-hls-1.3.1/annotations.zip!/" />
+    </ANNOTATIONS>
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/e65d81ad7cc0a06d62ab73353a917f07/transformed/media3-exoplayer-hls-1.3.1/AndroidManifest.xml" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/e65d81ad7cc0a06d62ab73353a917f07/transformed/media3-exoplayer-hls-1.3.1/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.media3/media3-exoplayer-hls/1.3.1/488950f57399f2044f4bf721165e56d5318bc90d/media3-exoplayer-hls-1.3.1-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.media3:media3-exoplayer:1.3.1@aar" __external-system-id="GRADLE">
+    <ANNOTATIONS>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/ef94417a591303105bd9a2b05779bd09/transformed/media3-exoplayer-1.3.1/annotations.zip!/" />
+    </ANNOTATIONS>
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/ef94417a591303105bd9a2b05779bd09/transformed/media3-exoplayer-1.3.1/AndroidManifest.xml" />
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/ef94417a591303105bd9a2b05779bd09/transformed/media3-exoplayer-1.3.1/res" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/ef94417a591303105bd9a2b05779bd09/transformed/media3-exoplayer-1.3.1/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.media3/media3-exoplayer/1.3.1/2d8f2d72c538c1f07fa8ace328a47e69a35cd144/media3-exoplayer-1.3.1-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.media3:media3-extractor:1.3.1@aar" __external-system-id="GRADLE">
+    <ANNOTATIONS>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/0e4e5f180765b63b8f269fd1ed50e978/transformed/media3-extractor-1.3.1/annotations.zip!/" />
+    </ANNOTATIONS>
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/0e4e5f180765b63b8f269fd1ed50e978/transformed/media3-extractor-1.3.1/AndroidManifest.xml" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/0e4e5f180765b63b8f269fd1ed50e978/transformed/media3-extractor-1.3.1/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.media3/media3-extractor/1.3.1/94121531f961b8bc323a226aa12a3623526fbc06/media3-extractor-1.3.1-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.media3:media3-session:1.3.1@aar" __external-system-id="GRADLE">
+    <ANNOTATIONS>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/985d061e1de3a9f9e58c7860b4515cfc/transformed/media3-session-1.3.1/annotations.zip!/" />
+    </ANNOTATIONS>
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/985d061e1de3a9f9e58c7860b4515cfc/transformed/media3-session-1.3.1/AndroidManifest.xml" />
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/985d061e1de3a9f9e58c7860b4515cfc/transformed/media3-session-1.3.1/res" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/985d061e1de3a9f9e58c7860b4515cfc/transformed/media3-session-1.3.1/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.media3/media3-session/1.3.1/d686bee46ef741508cd90920874c275447e7ba63/media3-session-1.3.1-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.media3:media3-ui:1.3.1@aar" __external-system-id="GRADLE">
+    <ANNOTATIONS>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/4bca758c45cc103a7e70ab2bce7f6499/transformed/media3-ui-1.3.1/annotations.zip!/" />
+    </ANNOTATIONS>
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/4bca758c45cc103a7e70ab2bce7f6499/transformed/media3-ui-1.3.1/AndroidManifest.xml" />
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/4bca758c45cc103a7e70ab2bce7f6499/transformed/media3-ui-1.3.1/res" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/4bca758c45cc103a7e70ab2bce7f6499/transformed/media3-ui-1.3.1/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.media3/media3-ui/1.3.1/f60799515748ddbd80ea844ba3799f6ed670f002/media3-ui-1.3.1-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.navigation:navigation-common-ktx:2.7.7@aar" __external-system-id="GRADLE">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/b984ab2c8de0dc948ba48e5959918320/transformed/navigation-common-ktx-2.7.7/AndroidManifest.xml" />
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/b984ab2c8de0dc948ba48e5959918320/transformed/navigation-common-ktx-2.7.7/res" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/b984ab2c8de0dc948ba48e5959918320/transformed/navigation-common-ktx-2.7.7/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.navigation/navigation-common-ktx/2.7.7/2ad14aed781c4a73ed4dbb421966d408a0a06686/navigation-common-ktx-2.7.7-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.navigation:navigation-common:2.7.7@aar" __external-system-id="GRADLE">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/f8af464126ce51e88f225bf35d61836f/transformed/navigation-common-2.7.7/AndroidManifest.xml" />
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/f8af464126ce51e88f225bf35d61836f/transformed/navigation-common-2.7.7/res" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/f8af464126ce51e88f225bf35d61836f/transformed/navigation-common-2.7.7/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.navigation/navigation-common/2.7.7/1d8bd650624447bc2b94e9d73d4b2aa584745fa7/navigation-common-2.7.7-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.navigation:navigation-compose:2.7.7@aar" __external-system-id="GRADLE">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/7e035844c0d297dca5026b6f897668f2/transformed/navigation-compose-2.7.7/AndroidManifest.xml" />
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/7e035844c0d297dca5026b6f897668f2/transformed/navigation-compose-2.7.7/res" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/7e035844c0d297dca5026b6f897668f2/transformed/navigation-compose-2.7.7/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.navigation/navigation-compose/2.7.7/b759250a62331ef854dcbc1aa7783f6aa3f5571/navigation-compose-2.7.7-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.navigation:navigation-runtime-ktx:2.7.7@aar" __external-system-id="GRADLE">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/9c574fd8547b1d030547e677b5469a9f/transformed/navigation-runtime-ktx-2.7.7/AndroidManifest.xml" />
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/9c574fd8547b1d030547e677b5469a9f/transformed/navigation-runtime-ktx-2.7.7/res" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/9c574fd8547b1d030547e677b5469a9f/transformed/navigation-runtime-ktx-2.7.7/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.navigation/navigation-runtime-ktx/2.7.7/2ad14aed781c4a73ed4dbb421966d408a0a06686/navigation-runtime-ktx-2.7.7-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.navigation:navigation-runtime:2.7.7@aar" __external-system-id="GRADLE">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/75a410a158b0e83117a84e21f7df408d/transformed/navigation-runtime-2.7.7/AndroidManifest.xml" />
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/75a410a158b0e83117a84e21f7df408d/transformed/navigation-runtime-2.7.7/res" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/75a410a158b0e83117a84e21f7df408d/transformed/navigation-runtime-2.7.7/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.navigation/navigation-runtime/2.7.7/bea7a2905c59820fb8b79cff05dec4daa304db93/navigation-runtime-2.7.7-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.preference:preference-ktx:1.2.1@aar" __external-system-id="GRADLE">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/1e01846c4e72c7747b1514032d3c0168/transformed/preference-ktx-1.2.1/AndroidManifest.xml" />
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/1e01846c4e72c7747b1514032d3c0168/transformed/preference-ktx-1.2.1/res" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/1e01846c4e72c7747b1514032d3c0168/transformed/preference-ktx-1.2.1/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.preference/preference-ktx/1.2.1/c8df4bdd1cf69b87cbab7120ee314c2c2f6c1bd3/preference-ktx-1.2.1-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.preference:preference:1.2.1@aar" __external-system-id="GRADLE">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/b65d766151374ae32dcd13584436cc31/transformed/preference-1.2.1/AndroidManifest.xml" />
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/b65d766151374ae32dcd13584436cc31/transformed/preference-1.2.1/res" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/b65d766151374ae32dcd13584436cc31/transformed/preference-1.2.1/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.preference/preference/1.2.1/ab5e929e8738e3251b1740fea406ef36e91382a6/preference-1.2.1-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.print:print:1.0.0@aar" __external-system-id="GRADLE">
+    <ANNOTATIONS>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/78bf37853b0ad4d2b7191fc3b252c6e4/transformed/print-1.0.0/annotations.zip!/" />
+    </ANNOTATIONS>
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/78bf37853b0ad4d2b7191fc3b252c6e4/transformed/print-1.0.0/AndroidManifest.xml" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/78bf37853b0ad4d2b7191fc3b252c6e4/transformed/print-1.0.0/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.print/print/1.0.0/71fc2d9acf7cce6b96230c5af263268b1664914a/print-1.0.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.recyclerview:recyclerview:1.1.0@aar" __external-system-id="GRADLE">
+    <ANNOTATIONS>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/b6eba87cba9eee95fa0349a63cb66e14/transformed/recyclerview-1.1.0/annotations.zip!/" />
+    </ANNOTATIONS>
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/b6eba87cba9eee95fa0349a63cb66e14/transformed/recyclerview-1.1.0/AndroidManifest.xml" />
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/b6eba87cba9eee95fa0349a63cb66e14/transformed/recyclerview-1.1.0/res" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/b6eba87cba9eee95fa0349a63cb66e14/transformed/recyclerview-1.1.0/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.recyclerview/recyclerview/1.1.0/f2bdf79e1977939817f54a9d3e2f6bc52b63bdd0/recyclerview-1.1.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.recyclerview:recyclerview:1.3.0@aar" __external-system-id="GRADLE">
+    <ANNOTATIONS>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/5cf3bc316e7cc7d35d96c15ef8d45af8/transformed/recyclerview-1.3.0/annotations.zip!/" />
+    </ANNOTATIONS>
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/5cf3bc316e7cc7d35d96c15ef8d45af8/transformed/recyclerview-1.3.0/AndroidManifest.xml" />
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/5cf3bc316e7cc7d35d96c15ef8d45af8/transformed/recyclerview-1.3.0/res" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/5cf3bc316e7cc7d35d96c15ef8d45af8/transformed/recyclerview-1.3.0/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.recyclerview/recyclerview/1.3.0/f4de7876e10ff121102f131b26d4a98b1613a012/recyclerview-1.3.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.resourceinspection:resourceinspection-annotation:1.0.1" type="java-imported" __external-system-id="GRADLE">
+    <properties groupId="androidx.resourceinspection" artifactId="resourceinspection-annotation" version="1.0.1" baseVersion="1.0.1" />
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.resourceinspection/resourceinspection-annotation/1.0.1/8c21f8ff5d96d5d52c948707f7e4d6ca6773feef/resourceinspection-annotation-1.0.1.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.resourceinspection/resourceinspection-annotation/1.0.1/a1c91a3cf63fd51a8e755747186d97585f955ae3/resourceinspection-annotation-1.0.1-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.room:room-common:2.6.1" type="java-imported" __external-system-id="GRADLE">
+    <properties groupId="androidx.room" artifactId="room-common" version="2.6.1" baseVersion="2.6.1" />
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.room/room-common/2.6.1/ff1b9580850a9b7eef56554e356628d225785265/room-common-2.6.1.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.room/room-common/2.6.1/c04c7202f74aed470c956e50f032ab6d84bff312/room-common-2.6.1-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.room:room-ktx:2.6.1@aar" __external-system-id="GRADLE">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/da7d962740d972b468dd8ca320eb85d9/transformed/room-ktx-2.6.1/AndroidManifest.xml" />
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/da7d962740d972b468dd8ca320eb85d9/transformed/room-ktx-2.6.1/res" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/da7d962740d972b468dd8ca320eb85d9/transformed/room-ktx-2.6.1/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.room/room-ktx/2.6.1/dde5739324784ec695041f2c447905111a8adbe6/room-ktx-2.6.1-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.room:room-runtime:2.6.1@aar" __external-system-id="GRADLE">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/f2015555871e506dc099a330d048bb1a/transformed/room-runtime-2.6.1/AndroidManifest.xml" />
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/f2015555871e506dc099a330d048bb1a/transformed/room-runtime-2.6.1/res" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/f2015555871e506dc099a330d048bb1a/transformed/room-runtime-2.6.1/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.room/room-runtime/2.6.1/32d0372c48888813c86c9fde561182c68745154d/room-runtime-2.6.1-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.savedstate:savedstate-ktx:1.2.1@aar" __external-system-id="GRADLE">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/173b191fa5673db19660bc901c3bfb3c/transformed/savedstate-ktx-1.2.1/AndroidManifest.xml" />
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/173b191fa5673db19660bc901c3bfb3c/transformed/savedstate-ktx-1.2.1/res" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/173b191fa5673db19660bc901c3bfb3c/transformed/savedstate-ktx-1.2.1/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.savedstate/savedstate-ktx/1.2.1/396eb83ce13cac3986e1e8a8b60f60ac0447ffbf/savedstate-ktx-1.2.1-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.savedstate:savedstate:1.2.1@aar" __external-system-id="GRADLE">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/12384fe9d99f00d9482ffdbe629fc822/transformed/savedstate-1.2.1/AndroidManifest.xml" />
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/12384fe9d99f00d9482ffdbe629fc822/transformed/savedstate-1.2.1/res" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/12384fe9d99f00d9482ffdbe629fc822/transformed/savedstate-1.2.1/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.savedstate/savedstate/1.2.1/58d4c9fd35e826d3bce813974006451ee9ba4344/savedstate-1.2.1-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.security:security-crypto:1.1.0-alpha06@aar" __external-system-id="GRADLE">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/a09ad1024479fca6505d59972e390da2/transformed/security-crypto-1.1.0-alpha06/AndroidManifest.xml" />
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/a09ad1024479fca6505d59972e390da2/transformed/security-crypto-1.1.0-alpha06/res" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/a09ad1024479fca6505d59972e390da2/transformed/security-crypto-1.1.0-alpha06/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.security/security-crypto/1.1.0-alpha06/9bd8e29776fba2c0113183619f0bd2ca4804716b/security-crypto-1.1.0-alpha06-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.slidingpanelayout:slidingpanelayout:1.2.0@aar" __external-system-id="GRADLE">
+    <ANNOTATIONS>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/31d314dd3809341a5f28fc83df852645/transformed/slidingpanelayout-1.2.0/annotations.zip!/" />
+    </ANNOTATIONS>
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/31d314dd3809341a5f28fc83df852645/transformed/slidingpanelayout-1.2.0/AndroidManifest.xml" />
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/31d314dd3809341a5f28fc83df852645/transformed/slidingpanelayout-1.2.0/res" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/31d314dd3809341a5f28fc83df852645/transformed/slidingpanelayout-1.2.0/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.slidingpanelayout/slidingpanelayout/1.2.0/6cdf3fd538b995c58d602da7114a92fdeeff92ac/slidingpanelayout-1.2.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.sqlite:sqlite-framework:2.4.0@aar" __external-system-id="GRADLE">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/078207addca6cee26bf29ff4a2a846c9/transformed/sqlite-framework-2.4.0/AndroidManifest.xml" />
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/078207addca6cee26bf29ff4a2a846c9/transformed/sqlite-framework-2.4.0/res" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/078207addca6cee26bf29ff4a2a846c9/transformed/sqlite-framework-2.4.0/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.sqlite/sqlite-framework/2.4.0/edd5d14792596229407204bf8e4a68e6f9b6cddc/sqlite-framework-2.4.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.sqlite:sqlite:2.4.0@aar" __external-system-id="GRADLE">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/f12e34a0c37cd023e86f4361fa695f2a/transformed/sqlite-2.4.0/AndroidManifest.xml" />
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/f12e34a0c37cd023e86f4361fa695f2a/transformed/sqlite-2.4.0/res" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/f12e34a0c37cd023e86f4361fa695f2a/transformed/sqlite-2.4.0/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.sqlite/sqlite/2.4.0/64eec23481a9132037f83e036924d7d584a17c3d/sqlite-2.4.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.test.espresso:espresso-core:3.5.1@aar" __external-system-id="GRADLE">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/3a7f8626f6d9de5fe0ae59ee73c2d67e/transformed/espresso-core-3.5.1/AndroidManifest.xml" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/3a7f8626f6d9de5fe0ae59ee73c2d67e/transformed/espresso-core-3.5.1/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.test.espresso/espresso-core/3.5.1/5aa814b4dae9b17188d620668107d85e687388de/espresso-core-3.5.1-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.test.espresso/espresso-core/3.5.1/50bb4dd95e68eb3fdc986995afab6730be477cdb/espresso-core-3.5.1-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.test.espresso:espresso-idling-resource:3.5.1@aar" __external-system-id="GRADLE">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/9298d50b6df3edf147aaa04170a3b32c/transformed/espresso-idling-resource-3.5.1/AndroidManifest.xml" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/9298d50b6df3edf147aaa04170a3b32c/transformed/espresso-idling-resource-3.5.1/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.test.espresso/espresso-idling-resource/3.5.1/331f1323e408dc60d9a8bea1eb40a2aa569f8091/espresso-idling-resource-3.5.1-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.test.espresso/espresso-idling-resource/3.5.1/7dd3d807f81bd316fe725ad5ab60f7afdad14607/espresso-idling-resource-3.5.1-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.test.ext:junit:1.1.5@aar" __external-system-id="GRADLE">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/1eed6a8158be229b586ec00f7428642f/transformed/junit-1.1.5/AndroidManifest.xml" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/1eed6a8158be229b586ec00f7428642f/transformed/junit-1.1.5/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.test.ext/junit/1.1.5/ee5294c4eb3c3b3ba1d1b0a347ee5d902b1748ee/junit-1.1.5-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.test.ext/junit/1.1.5/e59336d689cf66c42c13a8505fbd83826163431f/junit-1.1.5-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.test.services:storage:1.4.2@aar" __external-system-id="GRADLE">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/318aa568351f5b44d3cd158375cf05de/transformed/storage-1.4.2/AndroidManifest.xml" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/318aa568351f5b44d3cd158375cf05de/transformed/storage-1.4.2/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.test.services/storage/1.4.2/edb6438b0e7e21c66b22184eebdb13cd5167161a/storage-1.4.2-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.test.services/storage/1.4.2/7653e58ad020a74392900229f15971ffb69d57ea/storage-1.4.2-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.test:annotation:1.0.1@aar" __external-system-id="GRADLE">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/c8be1c3af1f46afaf9f18ab3a4a04c89/transformed/annotation-1.0.1/AndroidManifest.xml" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/c8be1c3af1f46afaf9f18ab3a4a04c89/transformed/annotation-1.0.1/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.test/annotation/1.0.1/d922fcf4c7ae6c3b54012d21e594409c6c6ac156/annotation-1.0.1-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.test:core:1.5.0@aar" __external-system-id="GRADLE">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/2d58784af027c80332d45b285d7d4ee1/transformed/core-1.5.0/AndroidManifest.xml" />
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/2d58784af027c80332d45b285d7d4ee1/transformed/core-1.5.0/res" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/2d58784af027c80332d45b285d7d4ee1/transformed/core-1.5.0/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.test/core/1.5.0/50a7c88bc23efab4bed11093b47197d11ab3d5a0/core-1.5.0-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.test/core/1.5.0/d4ea5ffd68fc05c1e952467fb884f0d82b44ec3b/core-1.5.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.test:monitor:1.6.1@aar" __external-system-id="GRADLE">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/e69fba0b4a2663624e0fc813cea71eab/transformed/monitor-1.6.1/AndroidManifest.xml" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/e69fba0b4a2663624e0fc813cea71eab/transformed/monitor-1.6.1/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.test/monitor/1.6.1/87046c506f644e8c889827b7a5ab9917c8235a23/monitor-1.6.1-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.test/monitor/1.6.1/1e73d3074dcfe62111deab415fb4232386e74d71/monitor-1.6.1-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.test:runner:1.5.2@aar" __external-system-id="GRADLE">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/0d29680ca61fe27b15cc1fa38f32bd4d/transformed/runner-1.5.2/AndroidManifest.xml" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/0d29680ca61fe27b15cc1fa38f32bd4d/transformed/runner-1.5.2/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.test/runner/1.5.2/6f61644c4619fe5390973846edfd7704d0db55fd/runner-1.5.2-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.test/runner/1.5.2/afd05fc4f8a8375097741bd497654ccbefd63b89/runner-1.5.2-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.tracing:tracing:1.0.0@aar" __external-system-id="GRADLE">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/444309fd3231188a4e16b6156ab8d6a1/transformed/tracing-1.0.0/AndroidManifest.xml" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/444309fd3231188a4e16b6156ab8d6a1/transformed/tracing-1.0.0/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.tracing/tracing/1.0.0/aa6dafdce323d80a993c5427cf81d5072f023c8c/tracing-1.0.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.transition:transition:1.5.0@aar" __external-system-id="GRADLE">
+    <ANNOTATIONS>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/5d3780ae3518e08938bd7802eac8f0a3/transformed/transition-1.5.0/annotations.zip!/" />
+    </ANNOTATIONS>
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/5d3780ae3518e08938bd7802eac8f0a3/transformed/transition-1.5.0/AndroidManifest.xml" />
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/5d3780ae3518e08938bd7802eac8f0a3/transformed/transition-1.5.0/res" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/5d3780ae3518e08938bd7802eac8f0a3/transformed/transition-1.5.0/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.transition/transition/1.5.0/9372d1f39a8d63c3d6ed67688546a789037ac8b0/transition-1.5.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.vectordrawable:vectordrawable-animated:1.1.0@aar" __external-system-id="GRADLE">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/c2f7b814dc315919e03a0600260771c0/transformed/vectordrawable-animated-1.1.0/AndroidManifest.xml" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/c2f7b814dc315919e03a0600260771c0/transformed/vectordrawable-animated-1.1.0/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.vectordrawable/vectordrawable-animated/1.1.0/871a7705cd03bc246947638c712cdd11378233ff/vectordrawable-animated-1.1.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.vectordrawable:vectordrawable:1.1.0@aar" __external-system-id="GRADLE">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/ab6e141d4c77f65bc74ed0bde63093c3/transformed/vectordrawable-1.1.0/AndroidManifest.xml" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/ab6e141d4c77f65bc74ed0bde63093c3/transformed/vectordrawable-1.1.0/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.vectordrawable/vectordrawable/1.1.0/1e0694477eed874c50c54b547cc3e5a62a57a62b/vectordrawable-1.1.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.versionedparcelable:versionedparcelable:1.1.1@aar" __external-system-id="GRADLE">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/adc77d39dc357cf226b7c585238c154b/transformed/versionedparcelable-1.1.1/AndroidManifest.xml" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/adc77d39dc357cf226b7c585238c154b/transformed/versionedparcelable-1.1.1/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.versionedparcelable/versionedparcelable/1.1.1/d9085927216387af679d18b6f472bc0fc5c7cc81/versionedparcelable-1.1.1-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.viewpager2:viewpager2:1.0.0@aar" __external-system-id="GRADLE">
+    <ANNOTATIONS>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/4d510c1328e00c2f2b90274bd72dfbfe/transformed/viewpager2-1.0.0/annotations.zip!/" />
+    </ANNOTATIONS>
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/4d510c1328e00c2f2b90274bd72dfbfe/transformed/viewpager2-1.0.0/AndroidManifest.xml" />
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/4d510c1328e00c2f2b90274bd72dfbfe/transformed/viewpager2-1.0.0/res" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/4d510c1328e00c2f2b90274bd72dfbfe/transformed/viewpager2-1.0.0/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.viewpager2/viewpager2/1.0.0/3c3569044e6969f1ee5c3aa03b08e6717a2d782f/viewpager2-1.0.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: androidx.viewpager:viewpager:1.0.0@aar" __external-system-id="GRADLE">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/2668128c5730804ec316b30e71a251b5/transformed/viewpager-1.0.0/AndroidManifest.xml" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/2668128c5730804ec316b30e71a251b5/transformed/viewpager-1.0.0/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/androidx.viewpager/viewpager/1.0.0/db045f92188b9d247d5f556866f8861ab68528f0/viewpager-1.0.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: com.google.android.material:material:1.12.0@aar" __external-system-id="GRADLE">
+    <ANNOTATIONS>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/a8820451ec6c89c221f65414e4aaf127/transformed/material-1.12.0/annotations.zip!/" />
+    </ANNOTATIONS>
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/a8820451ec6c89c221f65414e4aaf127/transformed/material-1.12.0/AndroidManifest.xml" />
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/a8820451ec6c89c221f65414e4aaf127/transformed/material-1.12.0/res" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/a8820451ec6c89c221f65414e4aaf127/transformed/material-1.12.0/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/com.google.android.material/material/1.12.0/5583a9ff7f51bd568ac8b94496ec3d1ec787a015/material-1.12.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: com.google.code.findbugs:jsr305:3.0.2" type="java-imported" __external-system-id="GRADLE">
+    <properties groupId="com.google.code.findbugs" artifactId="jsr305" version="3.0.2" baseVersion="3.0.2" />
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/com.google.code.findbugs/jsr305/3.0.2/25ea2e8b0c338a877313bd4672d3fe056ea78f0d/jsr305-3.0.2.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/com.google.code.findbugs/jsr305/3.0.2/7cb5b4e91eb0741882c8fefb2fd0338eff9857c/jsr305-3.0.2-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/com.google.code.findbugs/jsr305/3.0.2/b19b5927c2c25b6c70f093767041e641ae0b1b35/jsr305-3.0.2-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: com.google.code.gson:gson:2.10.1" type="java-imported" __external-system-id="GRADLE">
+    <properties groupId="com.google.code.gson" artifactId="gson" version="2.10.1" baseVersion="2.10.1" />
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/com.google.code.gson/gson/2.10.1/b3add478d4382b78ea20b1671390a858002feb6c/gson-2.10.1.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/com.google.code.gson/gson/2.10.1/9cca04b7347a417baf90858f7cc59d82b44fdd11/gson-2.10.1-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/com.google.code.gson/gson/2.10.1/982a90132e942f302e6fe79d6e78c4bc2e998569/gson-2.10.1-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: com.google.dagger:dagger-lint-aar:2.51.1@aar" __external-system-id="GRADLE">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/70d2c5f653b7045894100e1179db460f/transformed/dagger-lint-aar-2.51.1/AndroidManifest.xml" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/70d2c5f653b7045894100e1179db460f/transformed/dagger-lint-aar-2.51.1/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+  <library name="Gradle: com.google.dagger:dagger:2.51.1" type="java-imported" __external-system-id="GRADLE">
+    <properties groupId="com.google.dagger" artifactId="dagger" version="2.51.1" baseVersion="2.51.1" />
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/com.google.dagger/dagger/2.51.1/48cb41ae824574a5c5f961e45c833650bf19c956/dagger-2.51.1.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/com.google.dagger/dagger/2.51.1/7403f41eaa735be486f06b3c64e7c205d357d3fb/dagger-2.51.1-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/com.google.dagger/dagger/2.51.1/a3756f7322c6fa3c8fa023a9504a53b9d48f9d30/dagger-2.51.1-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: com.google.dagger:hilt-android:2.51.1@aar" __external-system-id="GRADLE">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/6d92bc93910d76d093f31fca07db90e9/transformed/hilt-android-2.51.1/AndroidManifest.xml" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/6d92bc93910d76d093f31fca07db90e9/transformed/hilt-android-2.51.1/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/com.google.dagger/hilt-android/2.51.1/84d86177dfeb51dd7a662414038bd517b65258d6/hilt-android-2.51.1-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/com.google.dagger/hilt-android/2.51.1/a570dae5ea6065d82d601f9ba20d6eb11e47a788/hilt-android-2.51.1-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: com.google.dagger:hilt-core:2.51.1" type="java-imported" __external-system-id="GRADLE">
+    <properties groupId="com.google.dagger" artifactId="hilt-core" version="2.51.1" baseVersion="2.51.1" />
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/com.google.dagger/hilt-core/2.51.1/ea893fd757e1c12c960441c1a9056b13bf07d8f1/hilt-core-2.51.1.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/com.google.dagger/hilt-core/2.51.1/6b5578963b64400a508ff68cce9885b67ca93732/hilt-core-2.51.1-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/com.google.dagger/hilt-core/2.51.1/5184c1ad1e22759cecf3c9b2faaf4132df3465c3/hilt-core-2.51.1-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: com.google.guava:failureaccess:1.0.1" type="java-imported" __external-system-id="GRADLE">
+    <properties groupId="com.google.guava" artifactId="failureaccess" version="1.0.1" baseVersion="1.0.1" />
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/com.google.guava/failureaccess/1.0.1/1dcf1de382a0bf95a3d8b0849546c88bac1292c9/failureaccess-1.0.1.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/com.google.guava/failureaccess/1.0.1/a9aadb2d577ff54ba3115ee7357cbe65bd2a470f/failureaccess-1.0.1-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/com.google.guava/failureaccess/1.0.1/1d064e61aad6c51cc77f9b59dc2cccc78e792f5a/failureaccess-1.0.1-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: com.google.guava:guava:32.1.3-android" type="java-imported" __external-system-id="GRADLE">
+    <properties groupId="com.google.guava" artifactId="guava" version="32.1.3-android" baseVersion="32.1.3-android" />
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/com.google.guava/guava/32.1.3-android/ea090dd85ca2fa12d42d054369df888665230dd7/guava-32.1.3-android.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/com.google.guava/guava/32.1.3-android/fb59bab02d550a72efe5efca877b464032889298/guava-32.1.3-android-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/com.google.guava/guava/32.1.3-android/b765a950c76b93bdf9c6e3d9b06544d13f79c255/guava-32.1.3-android-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava" type="java-imported" __external-system-id="GRADLE">
+    <properties groupId="com.google.guava" artifactId="listenablefuture" version="9999.0-empty-to-avoid-conflict-with-guava" baseVersion="9999.0-empty-to-avoid-conflict-with-guava" />
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/com.google.guava/listenablefuture/9999.0-empty-to-avoid-conflict-with-guava/b421526c5f297295adef1c886e5246c39d4ac629/listenablefuture-9999.0-empty-to-avoid-conflict-with-guava.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+  <library name="Gradle: com.squareup.okhttp3:logging-interceptor:4.12.0" type="java-imported" __external-system-id="GRADLE">
+    <properties groupId="com.squareup.okhttp3" artifactId="logging-interceptor" version="4.12.0" baseVersion="4.12.0" />
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/com.squareup.okhttp3/logging-interceptor/4.12.0/e922c1f14d365c0f2bed140cc0825e18462c2778/logging-interceptor-4.12.0.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/com.squareup.okhttp3/logging-interceptor/4.12.0/a95a22f91c44d6f5555a1b7f2e2bb6797715c010/logging-interceptor-4.12.0-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/com.squareup.okhttp3/logging-interceptor/4.12.0/7a192f61dc08ffb393982f5d2cb012d800675062/logging-interceptor-4.12.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: com.squareup.okhttp3:okhttp:4.12.0" type="java-imported" __external-system-id="GRADLE">
+    <properties groupId="com.squareup.okhttp3" artifactId="okhttp" version="4.12.0" baseVersion="4.12.0" />
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/com.squareup.okhttp3/okhttp/4.12.0/2f4525d4a200e97e1b87449c2cd9bd2e25b7e8cd/okhttp-4.12.0.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/com.squareup.okhttp3/okhttp/4.12.0/8c6816d131791a66e792d7920f4109cfecf917e8/okhttp-4.12.0-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/com.squareup.okhttp3/okhttp/4.12.0/ae6ec072a7ddfd4e225a36de1c185e76ebc7348d/okhttp-4.12.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: com.squareup.okio:okio-jvm:3.8.0" type="java-imported" __external-system-id="GRADLE">
+    <properties groupId="com.squareup.okio" artifactId="okio-jvm" version="3.8.0" baseVersion="3.8.0" />
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/com.squareup.okio/okio-jvm/3.8.0/856593a7eb4dc94f9fe27b4a4d14624a8db9ffa7/okio-jvm-3.8.0.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/com.squareup.okio/okio-jvm/3.8.0/9d0c938bae8f3e4cdc2f199cb47ba00f011b50ee/okio-jvm-3.8.0-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/com.squareup.okio/okio-jvm/3.8.0/cc9280984f9645dcf004f914d5437eac23f5e678/okio-jvm-3.8.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: com.squareup.retrofit2:converter-gson:2.11.0" type="java-imported" __external-system-id="GRADLE">
+    <properties groupId="com.squareup.retrofit2" artifactId="converter-gson" version="2.11.0" baseVersion="2.11.0" />
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/com.squareup.retrofit2/converter-gson/2.11.0/9d1fe9d1662de0548e08e293041140a8e4026f81/converter-gson-2.11.0.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/com.squareup.retrofit2/converter-gson/2.11.0/7a7284b47a4f7fcd41248fa1d546ea333624336d/converter-gson-2.11.0-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/com.squareup.retrofit2/converter-gson/2.11.0/4bdd51518a12394cd5b1adeac899a14669609fc1/converter-gson-2.11.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: com.squareup.retrofit2:retrofit:2.11.0" type="java-imported" __external-system-id="GRADLE">
+    <properties groupId="com.squareup.retrofit2" artifactId="retrofit" version="2.11.0" baseVersion="2.11.0" />
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/com.squareup.retrofit2/retrofit/2.11.0/6ca8c6caf842271f3232e075519fe04081ef7069/retrofit-2.11.0.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/com.squareup.retrofit2/retrofit/2.11.0/3e7266abd240978852c0ec745d7e642e4d7c3a78/retrofit-2.11.0-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/com.squareup.retrofit2/retrofit/2.11.0/b7a50b1ba86e50d99fd6c2030b8749869d4e10f/retrofit-2.11.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: com.squareup:javawriter:2.1.1" type="java-imported" __external-system-id="GRADLE">
+    <properties groupId="com.squareup" artifactId="javawriter" version="2.1.1" baseVersion="2.1.1" />
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/com.squareup/javawriter/2.1.1/67ff45d9ae02e583d0f9b3432a5ebbe05c30c966/javawriter-2.1.1.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/com.squareup/javawriter/2.1.1/f591a105db78771d0a1e7a277b3747556c528c22/javawriter-2.1.1-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/com.squareup/javawriter/2.1.1/5b31387d839a5cdaf5b6de3990da01f7f2b963c5/javawriter-2.1.1-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: io.coil-kt:coil-base:2.6.0@aar" __external-system-id="GRADLE">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/9dbe4ae1825e1cf8188c4f6b4b6a3c2d/transformed/coil-base-2.6.0/AndroidManifest.xml" />
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/9dbe4ae1825e1cf8188c4f6b4b6a3c2d/transformed/coil-base-2.6.0/res" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/9dbe4ae1825e1cf8188c4f6b4b6a3c2d/transformed/coil-base-2.6.0/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/io.coil-kt/coil-base/2.6.0/2d3937ec8b3871dcef63b472a1ed38ef7ee3178f/coil-base-2.6.0-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/io.coil-kt/coil-base/2.6.0/433ba517f0cf48a59d405dbd90d5896c164e8f39/coil-base-2.6.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: io.coil-kt:coil-compose-base:2.6.0@aar" __external-system-id="GRADLE">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/a2b18efa9152444407a7ab4bcbc52692/transformed/coil-compose-base-2.6.0/AndroidManifest.xml" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/a2b18efa9152444407a7ab4bcbc52692/transformed/coil-compose-base-2.6.0/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/io.coil-kt/coil-compose-base/2.6.0/73d47a4b2bd159bde673e2af089bca02b9f910b2/coil-compose-base-2.6.0-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/io.coil-kt/coil-compose-base/2.6.0/18e1ed89513a7e2f81e4f908317cd51fffae6f20/coil-compose-base-2.6.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: io.coil-kt:coil-compose:2.6.0@aar" __external-system-id="GRADLE">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/c5197382fe0edf81faacd452a42ef923/transformed/coil-compose-2.6.0/AndroidManifest.xml" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/c5197382fe0edf81faacd452a42ef923/transformed/coil-compose-2.6.0/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/io.coil-kt/coil-compose/2.6.0/1b7306704cfc5d1f564ba6958ec940075c34f607/coil-compose-2.6.0-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/io.coil-kt/coil-compose/2.6.0/1baa363068477a97ae1afd6879892dad14b690f8/coil-compose-2.6.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: io.coil-kt:coil:2.6.0@aar" __external-system-id="GRADLE">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Projects/caches/transforms-3/43eac89298ae130bd1d4d31d002c44c4/transformed/coil-2.6.0/AndroidManifest.xml" />
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/transforms-3/43eac89298ae130bd1d4d31d002c44c4/transformed/coil-2.6.0/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/io.coil-kt/coil/2.6.0/871b2f8e81bdbbefa1bcb21cca6e06334ea77f91/coil-2.6.0-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/io.coil-kt/coil/2.6.0/937a2d5a82528330e0a0c6b09142703a4a0874ae/coil-2.6.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: javax.inject:javax.inject:1" type="java-imported" __external-system-id="GRADLE">
+    <properties groupId="javax.inject" artifactId="javax.inject" version="1" baseVersion="1" />
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/javax.inject/javax.inject/1/6975da39a7040257bd51d21a231b76c915872d38/javax.inject-1.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/javax.inject/javax.inject/1/70ec961c25111ed9015d1af77772d96383c2d238/javax.inject-1-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/javax.inject/javax.inject/1/a00123f261762a7c5e0ec916a2c7c8298d29c400/javax.inject-1-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: junit:junit:4.13.2" type="java-imported" __external-system-id="GRADLE">
+    <properties groupId="junit" artifactId="junit" version="4.13.2" baseVersion="4.13.2" />
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/junit/junit/4.13.2/8ac9e16d933b6fb43bc7f576336b8f4d7eb5ba12/junit-4.13.2.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/junit/junit/4.13.2/f2f3f384dacd2ade2ddf7aa7e0f4360dfee38672/junit-4.13.2-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/junit/junit/4.13.2/33987872a811fe4d4001ed494b07854822257f42/junit-4.13.2-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: org.hamcrest:hamcrest-core:1.3" type="java-imported" __external-system-id="GRADLE">
+    <properties groupId="org.hamcrest" artifactId="hamcrest-core" version="1.3" baseVersion="1.3" />
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/org.hamcrest/hamcrest-core/1.3/42a25dc3219429f0e5d060061f71acb49bf010a0/hamcrest-core-1.3.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/org.hamcrest/hamcrest-core/1.3/ad09811315f1d4f5756986575b0ea16b99cd686f/hamcrest-core-1.3-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/org.hamcrest/hamcrest-core/1.3/1dc37250fbc78e23a65a67fbbaf71d2e9cbc3c0b/hamcrest-core-1.3-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: org.hamcrest:hamcrest-integration:1.3" type="java-imported" __external-system-id="GRADLE">
+    <properties groupId="org.hamcrest" artifactId="hamcrest-integration" version="1.3" baseVersion="1.3" />
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/org.hamcrest/hamcrest-integration/1.3/5de0c73fef18917cd85d0ab70bb23818685e4dfd/hamcrest-integration-1.3.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/org.hamcrest/hamcrest-integration/1.3/cc5884d4138d3376f574f6a3992acceedfc37bea/hamcrest-integration-1.3-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/org.hamcrest/hamcrest-integration/1.3/ae7787a563e6a1b1f17fd4ac43be3a3c8830cfda/hamcrest-integration-1.3-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: org.hamcrest:hamcrest-library:1.3" type="java-imported" __external-system-id="GRADLE">
+    <properties groupId="org.hamcrest" artifactId="hamcrest-library" version="1.3" baseVersion="1.3" />
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/org.hamcrest/hamcrest-library/1.3/4785a3c21320980282f9f33d0d1264a69040538f/hamcrest-library-1.3.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/org.hamcrest/hamcrest-library/1.3/4324046c5f99f3dc91b5370899fa3ae65fd137d2/hamcrest-library-1.3-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/org.hamcrest/hamcrest-library/1.3/47a7ee46628ab7133129cd7cef1e92657bc275e/hamcrest-library-1.3-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.8.22" type="java-imported" __external-system-id="GRADLE">
+    <properties groupId="org.jetbrains.kotlin" artifactId="kotlin-stdlib-jdk7" version="1.8.22" baseVersion="1.8.22" />
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib-jdk7/1.8.22/4dabb8248310d833bb6a8b516024a91fd3d275c/kotlin-stdlib-jdk7-1.8.22.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib-jdk7/1.8.22/5b8f86fea035328fc9e8c660773037a3401ce25f/kotlin-stdlib-jdk7-1.8.22-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib-jdk7/1.8.22/3641d7cb7650db9fe93a5361b1b88cbcefdb01e0/kotlin-stdlib-jdk7-1.8.22-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.9.0" type="java-imported" __external-system-id="GRADLE">
+    <properties groupId="org.jetbrains.kotlin" artifactId="kotlin-stdlib-jdk7" version="1.9.0" baseVersion="1.9.0" />
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib-jdk7/1.9.0/f320478990d05e0cfaadd74f9619fd6027adbf37/kotlin-stdlib-jdk7-1.9.0.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib-jdk7/1.9.0/5b8f86fea035328fc9e8c660773037a3401ce25f/kotlin-stdlib-jdk7-1.9.0-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib-jdk7/1.9.0/3641d7cb7650db9fe93a5361b1b88cbcefdb01e0/kotlin-stdlib-jdk7-1.9.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.22" type="java-imported" __external-system-id="GRADLE">
+    <properties groupId="org.jetbrains.kotlin" artifactId="kotlin-stdlib-jdk8" version="1.8.22" baseVersion="1.8.22" />
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib-jdk8/1.8.22/b25c86d47d6b962b9cf0f8c3f320c8a10eea3dd1/kotlin-stdlib-jdk8-1.8.22.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib-jdk8/1.8.22/5b8f86fea035328fc9e8c660773037a3401ce25f/kotlin-stdlib-jdk8-1.8.22-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib-jdk8/1.8.22/20739e7aae2a2bfb66c4081b233ffea7b947cf77/kotlin-stdlib-jdk8-1.8.22-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.9.0" type="java-imported" __external-system-id="GRADLE">
+    <properties groupId="org.jetbrains.kotlin" artifactId="kotlin-stdlib-jdk8" version="1.9.0" baseVersion="1.9.0" />
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib-jdk8/1.9.0/e000bd084353d84c9e888f6fb341dc1f5b79d948/kotlin-stdlib-jdk8-1.9.0.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib-jdk8/1.9.0/5b8f86fea035328fc9e8c660773037a3401ce25f/kotlin-stdlib-jdk8-1.9.0-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib-jdk8/1.9.0/20739e7aae2a2bfb66c4081b233ffea7b947cf77/kotlin-stdlib-jdk8-1.9.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: org.jetbrains.kotlin:kotlin-stdlib:1.9.24" type="java-imported" __external-system-id="GRADLE">
+    <properties groupId="org.jetbrains.kotlin" artifactId="kotlin-stdlib" version="1.9.24" baseVersion="1.9.24" />
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib/1.9.24/9928532f12c66ad816a625b3f9984f8368ca6d2b/kotlin-stdlib-1.9.24.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib/1.9.24/2ad14aed781c4a73ed4dbb421966d408a0a06686/kotlin-stdlib-1.9.24-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib/1.9.24/52dda8af2e7466cff406f7f2840812f0df7c356/kotlin-stdlib-1.9.24-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1" type="java-imported" __external-system-id="GRADLE">
+    <properties groupId="org.jetbrains.kotlinx" artifactId="kotlinx-coroutines-android" version="1.8.1" baseVersion="1.8.1" />
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/org.jetbrains.kotlinx/kotlinx-coroutines-android/1.8.1/73e2acdd18df99dd4849d99f188dff529fc0afe0/kotlinx-coroutines-android-1.8.1.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/org.jetbrains.kotlinx/kotlinx-coroutines-android/1.8.1/d6de4253df04d7f12a7a5bed2a3ae4b8705f0585/kotlinx-coroutines-android-1.8.1-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/org.jetbrains.kotlinx/kotlinx-coroutines-android/1.8.1/c1c2926cbeef5637a60c67ae911b20e6adbbab34/kotlinx-coroutines-android-1.8.1-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.8.1" type="java-imported" __external-system-id="GRADLE">
+    <properties groupId="org.jetbrains.kotlinx" artifactId="kotlinx-coroutines-core-jvm" version="1.8.1" baseVersion="1.8.1" />
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/org.jetbrains.kotlinx/kotlinx-coroutines-core-jvm/1.8.1/bb0e192bd7c2b6b8217440d36e9758e377e450/kotlinx-coroutines-core-jvm-1.8.1.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/org.jetbrains.kotlinx/kotlinx-coroutines-core-jvm/1.8.1/2b3a17cdc985e1dd63a39f2e6858ee8ec5ece18f/kotlinx-coroutines-core-jvm-1.8.1-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/org.jetbrains.kotlinx/kotlinx-coroutines-core-jvm/1.8.1/de8e46286026b0249acd5db040effcae1188c6e9/kotlinx-coroutines-core-jvm-1.8.1-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: org.jetbrains:annotations:23.0.0" type="java-imported" __external-system-id="GRADLE">
+    <properties groupId="org.jetbrains" artifactId="annotations" version="23.0.0" baseVersion="23.0.0" />
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/org.jetbrains/annotations/23.0.0/8cc20c07506ec18e0834947b84a864bfc094484e/annotations-23.0.0.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/org.jetbrains/annotations/23.0.0/41442a550d78cb59a601c1d38603f6ab5497f93c/annotations-23.0.0-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/org.jetbrains/annotations/23.0.0/ca5088d615accaabd2aa956b10b236a4e75cfccb/annotations-23.0.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: org.json:json:20240303" type="java-imported" __external-system-id="GRADLE">
+    <properties groupId="org.json" artifactId="json" version="20240303" baseVersion="20240303" />
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/org.json/json/20240303/ebb88e8fb5122b7506d5cf1d69f1ccdb790d22a/json-20240303.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/org.json/json/20240303/ea1cbaa537726645b5f3f1371cd586cbe2d97ea/json-20240303-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/org.json/json/20240303/1245e385b5212a5a1403458d23aebcf8b0a11463/json-20240303-sources.jar!/" />
+    </SOURCES>
+  </library>
+  <library name="Gradle: org.jsoup:jsoup:1.17.2" type="java-imported" __external-system-id="GRADLE">
+    <properties groupId="org.jsoup" artifactId="jsoup" version="1.17.2" baseVersion="1.17.2" />
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/org.jsoup/jsoup/1.17.2/1e75b08d7019546a954f1e359477f916f537a34d/jsoup-1.17.2.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/org.jsoup/jsoup/1.17.2/bb97a306a51bf2b573d0c2fccaa70fa8be1bafbf/jsoup-1.17.2-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Projects/caches/modules-2/files-2.1/org.jsoup/jsoup/1.17.2/40c83bbe7e07d1593facfac04b78775fa9368d24/jsoup-1.17.2-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

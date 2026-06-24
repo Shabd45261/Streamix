@@ -1,0 +1,105 @@
+# RedTube scraper for Streamix Adult Profile
+# Pattern adapted from CloudStream3 / AdultEmpireCash YAML spec
+# CSS selectors verified against live RedTube HTML structure
+
+id: redtube
+name: RedTube
+domain: https://www.redtube.com
+version: "2.0.0"
+icon: https://www.redtube.com/favicon.ico
+categories:
+  - ADULT
+tags:
+  - tube
+  - free
+  - adult
+
+# ── Anti-detection headers (CRITICAL — sites check all of these) ─────
+headers:
+  User-Agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+  Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8"
+  Accept-Language: "en-US,en;q=0.9"
+  Accept-Encoding: "gzip, deflate, br"
+  Referer: "https://www.redtube.com/"
+  # Age verification cookie — without this you may get redirect to age gate
+  Cookie: "pref_age_verified_date=1717200000; platform=pc"
+
+# ── Home / Trending ──────────────────────────────────────────────────
+trending:
+  url: "https://www.redtube.com/?page={page}"
+  items_selector: "li.videoblock"
+  title_selector: "a.video_link span.title"
+  link_selector: "a.video_link"
+  link_attr: "href"
+  thumbnail_selector: "img"
+  thumbnail_attr: "data-thumb_url"
+  thumbnail_fallback_attr: "src"
+  duration_selector: "span.duration"
+  views_selector: "span.viewsNumber"
+  rating_selector: "span.percent"
+
+# ── Search ───────────────────────────────────────────────────────────
+search:
+  url: "https://www.redtube.com/?search={query}&page={page}"
+  items_selector: "li.videoblock"
+  title_selector: "a.video_link span.title"
+  link_selector: "a.video_link"
+  link_attr: "href"
+  thumbnail_selector: "img"
+  thumbnail_attr: "data-thumb_url"
+  thumbnail_fallback_attr: "src"
+  duration_selector: "span.duration"
+  views_selector: "span.viewsNumber"
+
+# ── Detail / Result page ─────────────────────────────────────────────
+detail:
+  title_selector: "h1.video_title_text"
+  description_selector: "div#video-description-text"
+  tags_selector: "div.tagsWrapper a.linkTagged"
+  performers_selector: "div.pornstarsWrapper a"
+  studio_selector: "div.video-channel a"
+  date_selector: "span.publish_date"
+  poster_selector: "meta[property='og:image']"
+  poster_attr: "content"
+  duration_selector: "meta[property='video:duration']"
+  duration_attr: "content"
+  views_selector: "span.viewsNumber"
+  rating_selector: "span.percent"
+
+# ── Stream extraction (applied to video page HTML/JS) ────────────────
+# Type "regex" means: search page source with this regex, group 1 = URL
+stream:
+  # Best: full quality array JSON — parse all available qualities
+  primary_selector: '"mediaDefinitions":(\[.*?\])'
+  primary_type: "regex_json_array"
+
+  # Fallbacks in order:
+  fallbacks:
+    - selector: '"videoUrl"\s*:\s*"([^"]+)"'
+      type: "regex"
+      format: "mp4"
+      quality: "Auto"
+    - selector: '"quality_1080p"\s*:\s*"([^"]+)"'
+      type: "regex"
+      format: "mp4"
+      quality: "1080p"
+    - selector: '"quality_720p"\s*:\s*"([^"]+)"'
+      type: "regex"
+      format: "mp4"
+      quality: "720p"
+    - selector: '"quality_480p"\s*:\s*"([^"]+)"'
+      type: "regex"
+      format: "mp4"
+      quality: "480p"
+    - selector: '"quality_240p"\s*:\s*"([^"]+)"'
+      type: "regex"
+      format: "mp4"
+      quality: "240p"
+    - selector: '"hls"\s*:\s*\{[^}]*"url"\s*:\s*"([^"]+)"'
+      type: "regex"
+      format: "hls"
+      quality: "HLS"
+    - selector: 'file\s*:\s*[''"]([^''"]+\.m3u8[^''"]*)[''""]'
+      type: "regex"
+      format: "hls"
+      quality: "HLS"
