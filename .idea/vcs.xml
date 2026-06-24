@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="VcsDirectoryMappings">
+    <mapping directory="$PROJECT_DIR$" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/Extensions/Adult/CXXX/CXXX" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/Extensions/Adult/Cloudstream/cloudstream" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/Extensions/Adult/Gizlikeyif/Cs-GizliKeyif" vcs="Git" />
