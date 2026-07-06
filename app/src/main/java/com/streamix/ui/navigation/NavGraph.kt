@@ -176,6 +176,7 @@ fun StreamixNavGraph() {
                         isMinimized = playerMinimized,
                         onMinimizedChange = { PlayerManager.isMinimized.value = it },
                         onClose = { PlayerManager.close() },
+                        isPlayingInitially = true,
                         onVideoSelect = { video ->
                             val encoded = java.net.URLEncoder.encode(video.id, "UTF-8")
                             val apiEncoded = java.net.URLEncoder.encode(video.studio, "UTF-8")

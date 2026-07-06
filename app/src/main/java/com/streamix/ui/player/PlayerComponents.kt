@@ -269,7 +269,13 @@ fun EmbeddedPlayer(
             val mediaItem = if (mimeType != null) MediaItem.Builder().setUri(videoUrl).setMimeType(mimeType).build() else MediaItem.fromUri(videoUrl)
             exoPlayer.setMediaItem(mediaItem); exoPlayer.prepare()
             if (currentPosition > 0) exoPlayer.seekTo(currentPosition)
-            if (isPlayingInitially || hasStarted) { exoPlayer.playWhenReady = true; isPlaying = true; hasStarted = true }
+            
+            // Force play if initially playing or if we have already started (resolution switch)
+            if (isPlayingInitially || hasStarted) {
+                exoPlayer.play()
+                isPlaying = true
+                hasStarted = true
+            }
         }
     }
 
@@ -489,7 +495,21 @@ fun EmbeddedPlayer(
             }
 
             if (showCCDialog) { TrackSelectionDialog("Subtitles", availableSubtitleTracks, exoPlayer, C.TRACK_TYPE_TEXT) { showCCDialog = false } }
-            if (showSettings) { TrackSelectionDialog("Quality", availableVideoTracks, exoPlayer, C.TRACK_TYPE_VIDEO) { showSettings = false } }
+            if (showSettings) {
+                if ((mediaType == "movie" || mediaType == "tv") && links.size > 1) {
+                    ResolutionSelectionDialog(
+                        links = links,
+                        currentIndex = currentLinkIndex,
+                        onLinkSelect = { index ->
+                            currentLinkIndex = index
+                            showSettings = false
+                        },
+                        onDismiss = { showSettings = false }
+                    )
+                } else {
+                    TrackSelectionDialog("Quality", availableVideoTracks, exoPlayer, C.TRACK_TYPE_VIDEO) { showSettings = false }
+                }
+            }
             if (showDownloadDialog) {
                 PlayerManager.currentVideo.value?.let { video ->
                     DownloadDialog(video.title, video.studio, video.posterPath, onDownloadStart = { _, _ ->
@@ -585,6 +605,49 @@ fun AddToPlaylistDialog(video: SearchResult, onDismiss: () -> Unit) {
                 val context = LocalContext.current
                 TextButton(onClick = { onDismiss(); Toast.makeText(context, "Added to favorites", Toast.LENGTH_SHORT).show() }, modifier = Modifier.fillMaxWidth()) { Text("My Favorites", color = Color.White) }
                 TextButton(onClick = onDismiss, modifier = Modifier.fillMaxWidth()) { Text("CANCEL", color = Color(0xFF00BCD4)) }
+            }
+        }
+    }
+}
+
+@Composable
+fun ResolutionSelectionDialog(
+    links: List<VideoLink>,
+    currentIndex: Int,
+    onLinkSelect: (Int) -> Unit,
+    onDismiss: () -> Unit
+) {
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            colors = CardDefaults.cardColors(containerColor = Color(0xFF2C2C2C)),
+            shape = RoundedCornerShape(12.dp)
+        ) {
+            Column(Modifier.padding(24.dp).width(300.dp)) {
+                Text("Select Resolution", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                Spacer(Modifier.height(16.dp))
+                LazyColumn(Modifier.heightIn(max = 400.dp)) {
+                    itemsIndexed(links) { index, link ->
+                        val isSelected = index == currentIndex
+                        Row(
+                            Modifier
+                                .fillMaxWidth()
+                                .clickable { onLinkSelect(index) }
+                                .padding(vertical = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            RadioButton(
+                                selected = isSelected,
+                                onClick = { onLinkSelect(index) },
+                                colors = RadioButtonDefaults.colors(selectedColor = Color(0xFF00BCD4))
+                            )
+                            Spacer(Modifier.width(8.dp))
+                            Text(link.quality, color = Color.White, fontSize = 16.sp)
+                        }
+                    }
+                }
+                TextButton(onClick = onDismiss, modifier = Modifier.align(Alignment.End)) {
+                    Text("CANCEL", color = Color(0xFF00BCD4))
+                }
             }
         }
     }
