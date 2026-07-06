@@ -1,0 +1,11 @@
+delete every MovieBox scraper we have now and start again
+
+NOTE - DO NOT DELETE ANYTHING ELSE NOTHING ELSE
+
+then use 
+
+D:\Android\Streamix\Extensions\Movies\cloudstream-extensions-phisher\MovieBoxProvider
+
+D:\Android\Streamix\Extensions\Movies\CNCVerse-Cloud-Stream-Extension\MovieBoxProviderIN
+
+directly into the app and program movies profile homescreen and search to handle these kotlin scrapers

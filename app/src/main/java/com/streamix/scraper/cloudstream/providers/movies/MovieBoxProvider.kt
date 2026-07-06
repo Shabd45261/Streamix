@@ -294,18 +294,7 @@ class MovieBoxProvider : MainAPI() {
     override suspend fun load(url: String): LoadResponse? {
         val id = if (url.contains("subjectId=")) url.substringAfter("subjectId=").substringBefore("&") else url.substringAfterLast("/")
         val finalUrl = "$mainUrl/wefeed-mobile-bff/subject-api/get?subjectId=$id"
-        val xClientToken = generateXClientToken()
-        val xTrSignature = generateXTrSignature("GET", "application/json", "application/json", finalUrl)
-        val headers = mapOf(
-            "user-agent" to "com.community.mbox.in/50020042 (Linux; U; Android 16; en_IN; sdk_gphone64_x86_64; Build/BP22.250325.006; Cronet/133.0.6876.3)",
-            "accept" to "application/json",
-            "content-type" to "application/json",
-            "x-client-token" to xClientToken,
-            "x-tr-signature" to xTrSignature,
-            "x-client-info" to """{"package_name":"com.community.mbox.in","version_name":"3.0.03.0529.03","version_code":50020042,"os":"android","os_version":"16","device_id":"$deviceId","install_store":"ps","gaid":"d7578036d13336cc","brand":"google","model":"sdk_gphone64_x86_64","system_language":"en","net":"NETWORK_WIFI","region":"IN","timezone":"Asia/Calcutta","sp_code":""}""",
-            "x-client-status" to "0",
-            "Authorization" to "Bearer ${getCachedToken()}"
-        )
+        val headers = getHeaders(finalUrl, "GET")
 
         val response = try { app.get(finalUrl, headers = headers) } catch (_: Exception) { return null }
         val detailData = try { mapper.readTree(response.text)["data"] } catch (_: Exception) { null } ?: return null
@@ -326,7 +315,12 @@ class MovieBoxProvider : MainAPI() {
                     val se = season["se"]?.asInt() ?: 1
                     val maxEp = season["maxEp"]?.asInt() ?: 1
                     for (ep in 1..maxEp) {
-                        episodes.add(newEpisode("$id|$se|$ep") { this.season = se; this.episode = ep; this.name = "Episode $ep"; this.posterUrl = poster })
+                        episodes.add(newEpisode("$id|$se|$ep") { 
+                            this.season = se
+                            this.episode = ep
+                            this.name = "Episode $ep"
+                            this.posterUrl = poster 
+                        })
                     }
                 }
             } catch (_: Exception) { }
@@ -345,7 +339,7 @@ class MovieBoxProvider : MainAPI() {
         return res
     }
 
-    private fun getHeaders(url: String, method: String, body: String? = null): Map<String, String> {
+    private suspend fun getHeaders(url: String, method: String, body: String? = null): Map<String, String> {
         val ts = System.currentTimeMillis()
         val sig = generateXTrSignature(method, "application/json", "application/json", url, body)
         return mapOf(
@@ -355,7 +349,8 @@ class MovieBoxProvider : MainAPI() {
             "x-client-token" to generateXClientToken(ts),
             "x-tr-signature" to sig,
             "x-client-info" to """{"package_name":"com.community.mbox.in","version_name":"3.0.13.0325.03","version_code":50020088,"os":"android","os_version":"13","device_id":"$deviceId","install_store":"ps","gaid":"d7578036d13336cc","brand":"google","model":"Pixel 7","system_language":"en","net":"NETWORK_WIFI","region":"IN","timezone":"Asia/Calcutta","sp_code":""}""",
-            "x-client-status" to "0"
+            "x-client-status" to "0",
+            "Authorization" to "Bearer ${getCachedToken()}"
         )
     }
 

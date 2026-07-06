@@ -29,11 +29,11 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.streamix.core.model.SearchResult
 import com.streamix.core.model.VideoLink
 import com.streamix.scraper.cloudstream.Episode
 import com.streamix.scraper.cloudstream.TvType
-import com.streamix.scraper.cloudstream.utils.AppUtils.tryParseJson
 import com.streamix.ui.player.PlayerManager
 import com.streamix.ui.theme.LocalCustomColors
 import androidx.media3.common.MediaItem
@@ -51,7 +51,6 @@ fun MoviesDetailScreen(
     viewModel: MoviesDetailViewModel = hiltViewModel()
 ) {
     val movie by viewModel.currentMovie.collectAsState()
-    val history by viewModel.historyItem.collectAsState()
     val episodes by viewModel.episodes.collectAsState()
     val selectedSeason by viewModel.selectedSeason.collectAsState()
     val selectedEpisode by viewModel.selectedEpisode.collectAsState()
@@ -60,7 +59,7 @@ fun MoviesDetailScreen(
     val isLoading by viewModel.isLoading.collectAsState()
     val trailerLinks by viewModel.trailerLinks.collectAsState()
     
-    val context = LocalContext.current
+    val colors = LocalCustomColors.current
 
     LaunchedEffect(movieId, apiName, fallbackUrl) {
         viewModel.load(movieId, apiName, fallbackUrl)
@@ -94,40 +93,32 @@ fun MoviesDetailScreen(
 
     Box(Modifier.fillMaxSize().background(Color.Black)) {
         movie?.let { data ->
-            LazyColumn(modifier = Modifier.fillMaxSize()) {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(bottom = 120.dp)
+            ) {
                 item {
                     DetailHeroSection(data, trailerLinks)
                 }
 
                 item {
-                    DetailInfoContent(data, history, selectedEpisode) {
-                        selectedEpisode?.let { viewModel.selectEpisode(it) } ?: viewModel.loadLinks(data.dataUrl, data.apiName, data.name)
+                    DetailInfoContent(data, selectedEpisode) {
+                        selectedEpisode?.let { viewModel.selectEpisode(it) }
+                            ?: viewModel.loadLinks(data.dataUrl, data.apiName, data.name)
                     }
                 }
-
-                // Removed DetailActionSection item here
 
                 if (data.type == TvType.TvSeries && seasons.isNotEmpty()) {
                     item {
                         SeriesSelectorRow(
                             seasons = seasons,
                             selectedSeason = selectedSeason,
-                            selectedEpisode = selectedEpisode,
+                            totalEpisodes = episodes.filter { it.season == selectedSeason }.size,
                             onSeasonSelect = { viewModel.selectSeason(it) }
                         )
                     }
 
                     val seasonEpisodes = episodes.filter { it.season == selectedSeason }
-                    item {
-                        Text(
-                            text = "${seasonEpisodes.size} Episodes",
-                            color = Color.White,
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
-                        )
-                    }
-
                     items(seasonEpisodes) { episode ->
                         EpisodeCardItem(
                             episode = episode,
@@ -135,11 +126,11 @@ fun MoviesDetailScreen(
                             onClick = { viewModel.selectEpisode(episode) }
                         )
                     }
-                } else if (!viewModel.relatedVideos.value.isEmpty()) {
+                } else if (viewModel.relatedVideos.value.isNotEmpty()) {
                     item {
                         Text(
                             text = "Related Movies",
-                            color = Color.White,
+                            color = colors.secondary,
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(16.dp)
@@ -158,7 +149,7 @@ fun MoviesDetailScreen(
                                     )
                                     Text(
                                         text = result.title,
-                                        color = Color.White,
+                                        color = colors.secondary,
                                         fontSize = 12.sp,
                                         maxLines = 2,
                                         modifier = Modifier.padding(top = 4.dp)
@@ -168,67 +159,31 @@ fun MoviesDetailScreen(
                         }
                     }
                 }
-
-                item {
-                    Spacer(Modifier.height(100.dp))
-                }
             }
 
-            // Bookmark indicator at bottom right
+            // Floating Bookmark Box at bottom right (as seen in Image 3)
             Box(
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
                     .padding(16.dp)
-                    .background(Color(0xFF1C1C1C), RoundedCornerShape(8.dp))
-                    .padding(horizontal = 12.dp, vertical = 8.dp)
+                    .background(Color(0xFF1C1C1C), RoundedCornerShape(24.dp))
+                    .border(1.dp, Color.White.copy(0.1f), RoundedCornerShape(24.dp))
+                    .clickable { /* Open bookmark options */ }
+                    .padding(horizontal = 16.dp, vertical = 10.dp)
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.BookmarkBorder, null, tint = Color.White, modifier = Modifier.size(18.dp))
+                    Icon(Icons.Default.BookmarkBorder, null, tint = Color.White, modifier = Modifier.size(20.dp))
                     Spacer(Modifier.width(8.dp))
-                    Text("None", color = Color.White, fontSize = 14.sp)
+                    Text("None", color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.Bold)
                 }
             }
         }
 
         // Fixed Top Bar
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .statusBarsPadding()
-                .padding(8.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconButton(onClick = { navController.popBackStack() }) {
-                Icon(Icons.Default.ArrowBack, contentDescription = null, tint = Color.White)
-            }
-            
-            Row {
-                IconButton(onClick = { /* Cast */ }) {
-                    Icon(Icons.Default.Cast, contentDescription = null, tint = Color.White)
-                }
-                if (movie?.type == TvType.TvSeries) {
-                    IconButton(onClick = { /* Notifications */ }) {
-                        Icon(Icons.Default.NotificationsNone, contentDescription = null, tint = Color.White)
-                    }
-                }
-                IconButton(onClick = { /* Heart */ }) {
-                    Icon(Icons.Default.FavoriteBorder, contentDescription = null, tint = Color.White)
-                }
-                IconButton(onClick = { /* Share */ }) {
-                    Icon(Icons.Default.Share, contentDescription = null, tint = Color.White)
-                }
-                IconButton(onClick = { /* Browser */ }) {
-                    Icon(Icons.Default.Language, contentDescription = null, tint = Color.White)
-                }
-                IconButton(onClick = { /* Search */ }) {
-                    Icon(Icons.Default.Search, contentDescription = null, tint = Color.White)
-                }
-            }
-        }
+        DetailTopBar(navController)
 
         if (isLoading && movie == null) {
-            CircularProgressIndicator(modifier = Modifier.align(Alignment.Center), color = Color.Red)
+            CircularProgressIndicator(modifier = Modifier.align(Alignment.Center), color = colors.tertiary)
         } else if (!isLoading && movie == null) {
             Column(modifier = Modifier.align(Alignment.Center), horizontalAlignment = Alignment.CenterHorizontally) {
                 Icon(Icons.Default.ErrorOutline, null, tint = Color.Gray, modifier = Modifier.size(64.dp))
@@ -243,8 +198,33 @@ fun MoviesDetailScreen(
 }
 
 @Composable
+fun DetailTopBar(navController: NavController) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .statusBarsPadding()
+            .padding(horizontal = 8.dp, vertical = 4.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        IconButton(onClick = { navController.popBackStack() }) {
+            Icon(Icons.Default.ArrowBack, contentDescription = null, tint = Color.White)
+        }
+        
+        Row {
+            IconButton(onClick = { /* Cast */ }) { Icon(Icons.Default.Cast, null, tint = Color.White) }
+            IconButton(onClick = { /* Notifications */ }) { Icon(Icons.Default.NotificationsNone, null, tint = Color.White) }
+            IconButton(onClick = { /* Heart */ }) { Icon(Icons.Default.FavoriteBorder, null, tint = Color.White) }
+            IconButton(onClick = { /* Share */ }) { Icon(Icons.Default.Share, null, tint = Color.White) }
+            IconButton(onClick = { /* Browser */ }) { Icon(Icons.Default.Language, null, tint = Color.White) }
+            IconButton(onClick = { /* Search */ }) { Icon(Icons.Default.Search, null, tint = Color.White) }
+        }
+    }
+}
+
+@Composable
 fun DetailHeroSection(data: com.streamix.scraper.cloudstream.LoadResponse, trailerLinks: List<VideoLink>) {
-    Box(modifier = Modifier.fillMaxWidth().height(400.dp)) {
+    Box(modifier = Modifier.fillMaxWidth().height(300.dp)) {
         if (trailerLinks.isNotEmpty()) {
             DetailTrailerPlayer(trailerLinks)
         } else {
@@ -256,35 +236,35 @@ fun DetailHeroSection(data: com.streamix.scraper.cloudstream.LoadResponse, trail
             )
         }
         
-        // Gradient
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(
                     Brush.verticalGradient(
-                        colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.6f), Color.Black),
-                        startY = 600f
+                        colors = listOf(Color.Transparent, Color.Black.copy(0.5f), Color.Black),
+                        startY = 300f
                     )
                 )
         )
         
-        // Title or Logo overlay
-        Box(modifier = Modifier.fillMaxSize().padding(16.dp), contentAlignment = Alignment.BottomStart) {
+        Column(
+            modifier = Modifier.align(Alignment.BottomStart).padding(horizontal = 16.dp, vertical = 12.dp)
+        ) {
             if (!data.logoUrl.isNullOrEmpty()) {
                 AsyncImage(
                     model = data.logoUrl,
                     contentDescription = null,
-                    modifier = Modifier.height(100.dp).widthIn(max = 240.dp),
+                    modifier = Modifier.height(100.dp).widthIn(max = 260.dp),
                     contentScale = ContentScale.Fit,
                     alignment = Alignment.BottomStart
                 )
             } else {
                 Text(
                     text = data.name,
-                    style = MaterialTheme.typography.headlineLarge,
                     color = Color.White,
+                    fontSize = 36.sp,
                     fontWeight = FontWeight.Black,
-                    modifier = Modifier.padding(bottom = 8.dp)
+                    lineHeight = 40.sp
                 )
             }
         }
@@ -298,15 +278,13 @@ fun DetailTrailerPlayer(links: List<VideoLink>) {
     val exoPlayer = remember {
         ExoPlayer.Builder(context).build().apply {
             repeatMode = Player.REPEAT_MODE_ONE
-            volume = 1f // UNMUTED as requested
+            volume = 0.5f 
             playWhenReady = true
         }
     }
 
     DisposableEffect(exoPlayer) {
-        onDispose {
-            exoPlayer.release()
-        }
+        onDispose { exoPlayer.release() }
     }
 
     LaunchedEffect(links) {
@@ -322,104 +300,53 @@ fun DetailTrailerPlayer(links: List<VideoLink>) {
                 player = exoPlayer
                 useController = false
                 resizeMode = AspectRatioFrameLayout.RESIZE_MODE_ZOOM
-                setBackgroundColor(android.graphics.Color.BLACK)
             }
         },
         modifier = Modifier.fillMaxSize()
     )
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun DetailInfoContent(
     data: com.streamix.scraper.cloudstream.LoadResponse,
-    history: com.streamix.core.storage.WatchHistoryEntity?,
     selectedEpisode: Episode?,
     onPlay: () -> Unit
 ) {
-    Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
-        // Metadata row
-        Row(
-            verticalAlignment = Alignment.CenterVertically, 
-            modifier = Modifier.padding(bottom = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            if (data.score != null) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.Star, null, tint = Color(0xFFFFC107), modifier = Modifier.size(16.dp))
-                    Spacer(Modifier.width(4.dp))
-                    Text(
-                        text = "${data.score!!.toDouble() / 10.0}", 
-                        color = Color.White, 
-                        fontSize = 14.sp, 
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            }
-            
-            Text(text = data.year?.toString() ?: "", color = Color.Gray, fontSize = 14.sp)
-            
-            if (data.duration != null && data.type == TvType.Movie) {
-                val h = data.duration!! / 60
-                val m = data.duration!! % 60
-                Text(
-                    text = if (h > 0) "${h}h ${m}m" else "${m}m", 
-                    color = Color.Gray, 
-                    fontSize = 14.sp
-                )
-            }
+    val context = LocalContext.current
 
+    Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
+        // Metadata Row
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(bottom = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
             Surface(
-                color = Color.Red.copy(0.1f),
-                shape = RoundedCornerShape(4.dp),
-                border = BorderStroke(1.dp, Color.Red.copy(0.5f))
+                color = Color(0xFF1C1C1C),
+                shape = RoundedCornerShape(4.dp)
             ) {
                 Text(
-                    text = if (data.type == TvType.TvSeries) "SERIES" else "MOVIE",
-                    color = Color.Red,
-                    fontSize = 10.sp,
-                    fontWeight = FontWeight.Black,
-                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                    text = data.apiName,
+                    color = Color.White,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                 )
             }
-        }
-
-        // Action Buttons Row (Cloudstream Style)
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(bottom = 20.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            val buttonText = if (data.type == TvType.TvSeries) {
-                if (selectedEpisode != null) "S${selectedEpisode.season}:E${selectedEpisode.episode}" 
-                else "Play"
-            } else {
-                if (history != null && history.progress > 0) "Resume" else "Play"
-            }
-
-            DetailActionButton(
-                icon = Icons.Default.PlayArrow,
-                label = buttonText,
-                containerColor = Color.White,
-                contentColor = Color.Black,
-                modifier = Modifier.weight(1.5f),
-                onClick = onPlay
-            )
             
-            DetailActionButton(
-                icon = Icons.Default.FileDownload,
-                label = "Download",
-                containerColor = Color(0xFF1C1C1C),
-                contentColor = Color.White,
-                modifier = Modifier.weight(1f),
-                onClick = { /* Download */ }
-            )
-
-            DetailActionButton(
-                icon = Icons.Default.Add,
-                label = "My List",
-                containerColor = Color(0xFF1C1C1C),
-                contentColor = Color.White,
-                modifier = Modifier.weight(1f),
-                onClick = { /* Add to List */ }
+            val metaInfo = mutableListOf<String>()
+            metaInfo.add(if (data.type == TvType.TvSeries) "Series" else "Movie")
+            data.year?.let { metaInfo.add(it.toString()) }
+            if (data.score != null) {
+                metaInfo.add("${data.score!!.toDouble() / 10.0}/10.0")
+            }
+            
+            Text(
+                text = metaInfo.joinToString("   "),
+                color = Color.Gray,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium
             )
         }
 
@@ -427,8 +354,8 @@ fun DetailInfoContent(
         var isExpanded by remember { mutableStateOf(false) }
         Text(
             text = data.plot ?: "No description available.",
-            color = Color.White.copy(0.7f),
-            fontSize = 14.sp,
+            color = Color.White.copy(0.9f),
+            fontSize = 15.sp,
             lineHeight = 22.sp,
             maxLines = if (isExpanded) 100 else 3,
             overflow = TextOverflow.Ellipsis,
@@ -437,13 +364,6 @@ fun DetailInfoContent(
 
         // Cast Section
         if (!data.actors.isNullOrEmpty()) {
-            Text(
-                text = "Cast",
-                color = Color.White,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(bottom = 12.dp)
-            )
             LazyRow(
                 horizontalArrangement = Arrangement.spacedBy(16.dp), 
                 modifier = Modifier.padding(bottom = 24.dp)
@@ -451,105 +371,77 @@ fun DetailInfoContent(
                 items(data.actors!!) { actorData ->
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally, 
-                        modifier = Modifier.width(70.dp)
+                        modifier = Modifier.width(90.dp)
                     ) {
                         AsyncImage(
-                            model = actorData.actor.image,
+                            model = ImageRequest.Builder(context)
+                                .data(actorData.actor.image)
+                                .crossfade(true)
+                                .build(),
                             contentDescription = null,
-                            modifier = Modifier.size(70.dp).clip(CircleShape).background(Color(0xFF1C1C1C)),
+                            modifier = Modifier.size(80.dp).clip(CircleShape).background(Color(0xFF1C1C1C)),
                             contentScale = ContentScale.Crop
                         )
                         Text(
                             text = actorData.actor.name, 
                             color = Color.White, 
-                            fontSize = 11.sp, 
-                            fontWeight = FontWeight.Medium,
+                            fontSize = 12.sp, 
+                            fontWeight = FontWeight.Bold,
                             textAlign = TextAlign.Center, 
-                            maxLines = 2, 
-                            modifier = Modifier.padding(top = 8.dp),
-                            lineHeight = 14.sp
+                            maxLines = 1, 
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
+                        Text(
+                            text = actorData.roleString ?: "", 
+                            color = Color.Gray, 
+                            fontSize = 11.sp, 
+                            textAlign = TextAlign.Center, 
+                            maxLines = 1
                         )
                     }
                 }
             }
         }
-    }
-}
 
-@Composable
-fun DetailActionButton(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    label: String,
-    containerColor: Color,
-    contentColor: Color,
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit
-) {
-    Surface(
-        onClick = onClick,
-        modifier = modifier.height(48.dp),
-        color = containerColor,
-        shape = RoundedCornerShape(8.dp)
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
-        ) {
-            Icon(icon, null, tint = contentColor, modifier = Modifier.size(20.dp))
-            Spacer(Modifier.width(8.dp))
-            Text(text = label, color = contentColor, fontWeight = FontWeight.ExtraBold, fontSize = 14.sp)
+        // Genres Section
+        if (!data.tags.isNullOrEmpty()) {
+            FlowRow(
+                modifier = Modifier.padding(bottom = 24.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                data.tags!!.forEach { tag ->
+                    Surface(
+                        color = Color.White.copy(0.1f),
+                        shape = RoundedCornerShape(4.dp)
+                    ) {
+                        Text(
+                            text = tag,
+                            color = Color.White,
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Medium,
+                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 7.dp)
+                        )
+                    }
+                }
+            }
         }
-    }
-}
 
-@Composable
-fun DetailActionSection(
-    data: com.streamix.scraper.cloudstream.LoadResponse,
-    history: com.streamix.core.storage.WatchHistoryEntity?,
-    selectedEpisode: Episode?,
-    onPlay: () -> Unit
-) {
-    Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        // Play Button (Large Pill)
+        // Main Play Button
+        val buttonText = if (data.type == TvType.TvSeries) {
+            if (selectedEpisode != null) "S${selectedEpisode.season}:E${selectedEpisode.episode} ${selectedEpisode.name ?: ""}" 
+            else "Play"
+        } else "Play"
+
         Button(
             onClick = onPlay,
-            modifier = Modifier.fillMaxWidth().height(48.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Color.White),
-            shape = RoundedCornerShape(24.dp)
-        ) {
-            Icon(Icons.Default.PlayArrow, contentDescription = null, tint = Color.Black)
-            Spacer(Modifier.width(8.dp))
-            
-            val buttonText = if (data.type == TvType.TvSeries) {
-                if (selectedEpisode != null) "S${selectedEpisode.season}:E${selectedEpisode.episode} ${selectedEpisode.name ?: ""}" 
-                else "Play"
-            } else {
-                if (history != null && history.progress > 0) {
-                    val remaining = history.totalDuration - history.progress
-                    val h = remaining / (1000 * 60 * 60)
-                    val m = (remaining / (1000 * 60)) % 60
-                    if (h > 0) "${h}h ${m}m remaining" else "${m}m remaining"
-                } else "Play"
-            }
-            
-            Text(
-                text = buttonText,
-                color = Color.Black,
-                fontWeight = FontWeight.Bold,
-                fontSize = 16.sp
-            )
-        }
-
-        // Download Button
-        Button(
-            onClick = { /* Download */ },
-            modifier = Modifier.fillMaxWidth().height(48.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1C1C1C)),
+            modifier = Modifier.fillMaxWidth().height(56.dp).padding(bottom = 8.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE1E2E4)),
             shape = RoundedCornerShape(8.dp)
         ) {
-            Icon(Icons.Default.FileDownload, contentDescription = null, tint = Color.White)
+            Icon(Icons.Default.PlayArrow, null, tint = Color.Black, modifier = Modifier.size(28.dp))
             Spacer(Modifier.width(8.dp))
-            Text(text = "Download", color = Color.White, fontWeight = FontWeight.Bold)
+            Text(text = buttonText, color = Color.Black, fontWeight = FontWeight.ExtraBold, fontSize = 16.sp)
         }
     }
 }
@@ -558,29 +450,28 @@ fun DetailActionSection(
 fun SeriesSelectorRow(
     seasons: List<Int>,
     selectedSeason: Int,
-    selectedEpisode: Episode?,
+    totalEpisodes: Int,
     onSeasonSelect: (Int) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
 
     Row(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Season Pill
+        // Season Dropdown
         Box {
             Surface(
                 onClick = { expanded = true },
                 color = Color(0xFF1C1C1C),
-                shape = RoundedCornerShape(8.dp),
-                border = BorderStroke(1.dp, Color.DarkGray)
+                shape = RoundedCornerShape(8.dp)
             ) {
                 Row(
-                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(text = "Season $selectedSeason", color = Color.White, fontSize = 14.sp)
+                    Text(text = "Season $selectedSeason", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold)
                     Icon(Icons.Default.KeyboardArrowDown, null, tint = Color.White, modifier = Modifier.size(20.dp))
                 }
             }
@@ -597,29 +488,26 @@ fun SeriesSelectorRow(
             }
         }
 
-        // Episode Pill
+        // Ep Selector
         Surface(
             color = Color(0xFF1C1C1C),
-            shape = RoundedCornerShape(8.dp),
-            border = BorderStroke(1.dp, Color.DarkGray)
+            shape = RoundedCornerShape(8.dp)
         ) {
             Row(
-                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(text = "Ep ${selectedEpisode?.episode ?: 1}", color = Color.White, fontSize = 14.sp)
-                Icon(Icons.Default.KeyboardArrowUp, null, tint = Color.White, modifier = Modifier.size(20.dp))
+                Text(text = "Ep ↑", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold)
             }
+        }
+
+        IconButton(onClick = { /* Download All */ }) {
+            Icon(Icons.Default.FileDownload, null, tint = Color.White, modifier = Modifier.size(26.dp))
         }
 
         Spacer(Modifier.weight(1f))
 
-        IconButton(
-            onClick = { /* Batch download */ },
-            modifier = Modifier.clip(CircleShape).background(Color(0xFF1C1C1C))
-        ) {
-            Icon(Icons.Default.FileDownload, null, tint = Color.White, modifier = Modifier.size(24.dp))
-        }
+        Text(text = "$totalEpisodes Episodes", color = Color.Gray, fontSize = 14.sp, fontWeight = FontWeight.Medium)
     }
 }
 
@@ -633,57 +521,63 @@ fun EpisodeCardItem(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick() }
-            .padding(16.dp)
+            .padding(horizontal = 16.dp, vertical = 12.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            // Thumbnail
-            Box(modifier = Modifier.width(150.dp).height(85.dp).clip(RoundedCornerShape(8.dp))) {
+            // Thumbnail with Play Icon
+            Box(modifier = Modifier.width(140.dp).aspectRatio(16/9f).clip(RoundedCornerShape(8.dp))) {
                 AsyncImage(
                     model = episode.posterUrl ?: loadResponse.posterUrl,
                     contentDescription = null,
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop
                 )
-                Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.2f)))
-                Icon(
-                    Icons.Default.PlayCircle,
-                    contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier.align(Alignment.Center).size(36.dp)
-                )
+                Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(0.3f)))
+                Surface(
+                    color = Color.Black.copy(0.4f),
+                    shape = CircleShape,
+                    modifier = Modifier.align(Alignment.Center).size(36.dp),
+                    border = BorderStroke(1.dp, Color.White)
+                ) {
+                    Icon(
+                        Icons.Default.PlayArrow,
+                        null,
+                        tint = Color.White,
+                        modifier = Modifier.padding(8.dp)
+                    )
+                }
             }
             
-            Column(modifier = Modifier.padding(start = 12.dp).weight(1f)) {
+            Column(modifier = Modifier.padding(horizontal = 16.dp).weight(1f)) {
                 Text(
                     text = "${episode.episode}. ${episode.name ?: "Episode ${episode.episode}"}", 
                     color = Color.White, 
-                    fontSize = 15.sp, 
+                    fontSize = 16.sp, 
                     fontWeight = FontWeight.Bold,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
-                
                 Text(
-                    text = episode.date ?: "2024", 
+                    text = episode.date ?: "April 11, 2024", 
                     color = Color.Gray, 
-                    fontSize = 12.sp,
-                    modifier = Modifier.padding(top = 2.dp)
+                    fontSize = 13.sp,
+                    modifier = Modifier.padding(top = 4.dp)
                 )
             }
 
-            IconButton(onClick = { /* Download episode */ }) {
-                Icon(Icons.Outlined.FileDownload, contentDescription = null, tint = Color.White, modifier = Modifier.size(24.dp))
+            IconButton(onClick = { /* Download Episode */ }) {
+                Icon(Icons.Outlined.FileDownload, null, tint = Color.White, modifier = Modifier.size(26.dp))
             }
         }
         
         Text(
-            text = episode.description ?: loadResponse.plot ?: "No description available.",
-            color = Color.LightGray.copy(alpha = 0.7f),
+            text = episode.description ?: "Episode description unavailable.",
+            color = Color.Gray,
             fontSize = 13.sp,
             lineHeight = 18.sp,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.padding(top = 8.dp)
+            modifier = Modifier.padding(top = 10.dp)
         )
     }
 }
