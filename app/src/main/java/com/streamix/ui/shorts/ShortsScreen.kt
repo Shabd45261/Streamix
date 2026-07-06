@@ -46,6 +46,7 @@ import androidx.media3.ui.PlayerView
 import coil.compose.SubcomposeAsyncImage
 import com.streamix.ui.theme.LocalCustomColors
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 import androidx.media3.datasource.DefaultHttpDataSource
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
@@ -71,6 +72,8 @@ fun ShortsScreen(
     val lifecycleOwner = LocalLifecycleOwner.current
     val colors = LocalCustomColors.current
     val bottomDockVisible = LocalBottomDockVisible.current
+    val prefs = remember { com.streamix.core.storage.PreferencesManager(androidContext) }
+    val autoScrollEnabled by prefs.autoScrollShorts.collectAsState(initial = false)
 
     // Hide bottom dock when shorts are active
     LaunchedEffect(isScreenActive) {
@@ -85,8 +88,28 @@ fun ShortsScreen(
         ExoPlayer.Builder(androidContext)
             .setMediaSourceFactory(DefaultMediaSourceFactory(httpDataSourceFactory))
             .build().apply {
-                repeatMode = Player.REPEAT_MODE_ONE
+                repeatMode = if (autoScrollEnabled) Player.REPEAT_MODE_OFF else Player.REPEAT_MODE_ONE
             }
+    }
+
+    val pagerState = rememberPagerState(pageCount = { items.size })
+    val scope = rememberCoroutineScope()
+
+    LaunchedEffect(exoPlayer, autoScrollEnabled) {
+        val listener = object : Player.Listener {
+            override fun onPlaybackStateChanged(state: Int) {
+                if (state == Player.STATE_ENDED && autoScrollEnabled) {
+                    scope.launch {
+                        delay(800) // Small delay as requested
+                        if (pagerState.currentPage < items.size - 1) {
+                            pagerState.animateScrollToPage(pagerState.currentPage + 1)
+                        }
+                    }
+                }
+            }
+        }
+        exoPlayer.addListener(listener)
+        exoPlayer.repeatMode = if (autoScrollEnabled) Player.REPEAT_MODE_OFF else Player.REPEAT_MODE_ONE
     }
 
     DisposableEffect(lifecycleOwner) {
@@ -142,8 +165,6 @@ fun ShortsScreen(
                 Text("No shorts available", color = colors.secondary.copy(0.4f), fontSize = 16.sp)
             }
         } else {
-            val pagerState = rememberPagerState(pageCount = { items.size })
-
             LaunchedEffect(pagerState.currentPage, items.size) {
                 if (items.isNotEmpty() && pagerState.currentPage >= items.size - 3) {
                     viewModel.loadMore(context)

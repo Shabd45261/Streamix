@@ -30,6 +30,15 @@ class ThemeViewModel @Inject constructor(
     val youtubeAccountName = prefs.youtubeAccountName
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
+    val autoScrollShorts = prefs.autoScrollShorts
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
+    fun setAutoScrollShorts(enabled: Boolean) {
+        viewModelScope.launch {
+            prefs.setAutoScrollShorts(enabled)
+        }
+    }
+
     fun updateTheme(primary: Color, secondary: Color, tertiary: Color) {
         viewModelScope.launch {
             prefs.setThemeColors(primary.toHex(), secondary.toHex(), tertiary.toHex())

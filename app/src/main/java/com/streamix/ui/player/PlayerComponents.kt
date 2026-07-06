@@ -44,11 +44,15 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -101,6 +105,7 @@ interface PlayerEntryPoint {
 }
 
 enum class GestureIndicatorType { VOLUME, BRIGHTNESS }
+enum class PlaylistState { COLLAPSED, HALF, FULL }
 
 @Composable
 fun EmbeddedPlayer(
@@ -192,6 +197,7 @@ fun EmbeddedPlayer(
     var gestureAmount by remember { mutableFloatStateOf(0f) }
 
     var showNowPlayingList by remember { mutableStateOf(false) }
+    var playlistState by remember { mutableStateOf(PlaylistState.COLLAPSED) }
     var showDownloadDialog by remember { mutableStateOf(false) }
 
     var availableAudioTracks by remember { mutableStateOf<List<Pair<Int, Int>>>(emptyList()) }
@@ -372,6 +378,28 @@ fun EmbeddedPlayer(
 
     val animatedOffset by animateFloatAsState(targetValue = if (isMinimized) 0f else offsetY, label = "offset")
 
+    val minimizationNestedScroll = remember {
+        object : NestedScrollConnection {
+            override fun onPostScroll(consumed: Offset, available: Offset, source: NestedScrollSource): Offset {
+                val delta = available.y
+                if (delta > 0 && !isLandscape && playlistState == PlaylistState.COLLAPSED) {
+                    offsetY = (offsetY + delta).coerceAtLeast(0f)
+                    return available
+                }
+                return Offset.Zero
+            }
+
+            override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
+                if (offsetY > 0 && available.y < 0) {
+                    val consumed = available.y.coerceAtLeast(-offsetY)
+                    offsetY += consumed
+                    return Offset(0f, consumed)
+                }
+                return Offset.Zero
+            }
+        }
+    }
+
     Box(modifier = modifier.fillMaxSize().then(if (isMinimized || isLandscape) Modifier else Modifier.offset { IntOffset(0, animatedOffset.roundToInt()) })) {
         if (isMinimized) {
             Box(modifier = Modifier.fillMaxSize().padding(start = 12.dp, end = 12.dp, bottom = 80.dp), contentAlignment = Alignment.BottomCenter) {
@@ -391,10 +419,34 @@ fun EmbeddedPlayer(
                 }
             }
         } else {
-            Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black)
+            ) {
                 Column(Modifier.fillMaxSize()) {
                     if (!isLandscape) {
-                        Row(Modifier.fillMaxWidth().statusBarsPadding().padding(horizontal = 12.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Row(
+                            Modifier
+                                .fillMaxWidth()
+                                .statusBarsPadding()
+                                .padding(horizontal = 12.dp, vertical = 8.dp)
+                                .pointerInput(Unit) {
+                                    detectVerticalDragGestures(
+                                        onVerticalDrag = { change, dragAmount ->
+                                            if (dragAmount > 0) {
+                                                offsetY = (offsetY + dragAmount).coerceAtLeast(0f)
+                                                change.consume()
+                                            }
+                                        },
+                                        onDragEnd = {
+                                            if (offsetY > 300) onMinimizedChange(true)
+                                            offsetY = 0f
+                                        }
+                                    )
+                                }, 
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
                             IconButton(onClick = { onMinimizedChange(true) }) { Icon(Icons.Default.KeyboardArrowDown, null, tint = Color.White, modifier = Modifier.size(32.dp)) }
                             Spacer(Modifier.weight(1f))
                             IconButton(onClick = { showDownloadDialog = true }) { Icon(Icons.Default.FileDownload, null, tint = Color.White) }
@@ -404,7 +456,33 @@ fun EmbeddedPlayer(
                         }
                     }
 
-                    Box(modifier = Modifier.fillMaxWidth().weight(if (isLandscape) 1f else 0.45f)) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(if (isLandscape) 1f else 0.45f)
+                            .pointerInput(isLandscape, isLocked) {
+                                if (!isLocked) {
+                                    detectVerticalDragGestures(
+                                        onVerticalDrag = { change, dragAmount ->
+                                            if (dragAmount > 0) {
+                                                if (isLandscape) {
+                                                    activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+                                                    onFullScreenToggle(false)
+                                                    change.consume()
+                                                } else {
+                                                    offsetY = (offsetY + dragAmount).coerceAtLeast(0f)
+                                                    change.consume()
+                                                }
+                                            }
+                                        },
+                                        onDragEnd = {
+                                            if (offsetY > 300) onMinimizedChange(true)
+                                            offsetY = 0f
+                                        }
+                                    )
+                                }
+                            }
+                    ) {
                         AndroidView(
                             factory = { PlayerView(it).apply { player = exoPlayer; useController = false; setBackgroundColor(android.graphics.Color.BLACK); this.resizeMode = resizeMode; layoutParams = FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT, android.view.Gravity.CENTER) } },
                             modifier = Modifier.fillMaxSize().rotate(rotation).pointerInput(isLandscape, isLocked) {
@@ -540,7 +618,14 @@ fun EmbeddedPlayer(
                     }
 
                     if (!isLandscape) {
-                        Column(modifier = Modifier.fillMaxWidth().weight(0.55f).background(Color.Black).verticalScroll(rememberScrollState())) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .weight(0.55f)
+                                .background(Color.Black)
+                                .nestedScroll(minimizationNestedScroll)
+                                .verticalScroll(rememberScrollState())
+                        ) {
                             Column(Modifier.padding(16.dp)) {
                                 Text(text = if (fullInfo != null) fullInfo!!.name else title, color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis)
                                 Spacer(Modifier.height(4.dp))
@@ -646,8 +731,8 @@ fun EmbeddedPlayer(
         if (!isMinimized && !isLandscape) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) {
                 PlaylistPanel(
-                    visible = showNowPlayingList,
-                    onToggle = { showNowPlayingList = !showNowPlayingList },
+                    state = playlistState,
+                    onStateChange = { playlistState = it },
                     currentVideoId = id,
                     mediaType = mediaType,
                     relatedVideos = relatedVideos,
@@ -662,8 +747,8 @@ fun EmbeddedPlayer(
 
 @Composable
 fun PlaylistPanel(
-    visible: Boolean,
-    onToggle: () -> Unit,
+    state: PlaylistState,
+    onStateChange: (PlaylistState) -> Unit,
     currentVideoId: String,
     mediaType: String,
     relatedVideos: List<SearchResult>,
@@ -671,64 +756,121 @@ fun PlaylistPanel(
     onVideoSelect: (SearchResult) -> Unit,
     onEpisodeSelect: (Episode) -> Unit
 ) {
-    val height by animateDpAsState(targetValue = if (visible) 550.dp else 70.dp, label = "playlist_height")
+    val configuration = androidx.compose.ui.platform.LocalConfiguration.current
+    val screenHeight = configuration.screenHeightDp.dp
     
+    val targetHeight = when (state) {
+        PlaylistState.COLLAPSED -> 70.dp
+        PlaylistState.HALF -> screenHeight * 0.5f
+        PlaylistState.FULL -> screenHeight * 0.9f
+    }
+    
+    val height by animateDpAsState(
+        targetValue = targetHeight,
+        animationSpec = spring(stiffness = Spring.StiffnessLow),
+        label = "playlist_height"
+    )
+    
+    val nestedScrollConnection = remember(state) {
+        object : androidx.compose.ui.input.nestedscroll.NestedScrollConnection {
+            override fun onPreScroll(available: androidx.compose.ui.geometry.Offset, source: androidx.compose.ui.input.nestedscroll.NestedScrollSource): androidx.compose.ui.geometry.Offset {
+                val delta = available.y
+                if (delta < 0 && state == PlaylistState.COLLAPSED) {
+                    onStateChange(PlaylistState.HALF)
+                    return available
+                }
+                if (delta < 0 && state == PlaylistState.HALF) {
+                    onStateChange(PlaylistState.FULL)
+                    return available
+                }
+                return androidx.compose.ui.geometry.Offset.Zero
+            }
+
+            override fun onPostScroll(consumed: androidx.compose.ui.geometry.Offset, available: androidx.compose.ui.geometry.Offset, source: androidx.compose.ui.input.nestedscroll.NestedScrollSource): androidx.compose.ui.geometry.Offset {
+                val delta = available.y
+                if (delta > 0) { // Dragging down
+                    if (state == PlaylistState.FULL) {
+                        onStateChange(PlaylistState.HALF)
+                        return available
+                    } else if (state == PlaylistState.HALF) {
+                        onStateChange(PlaylistState.COLLAPSED)
+                        return available
+                    }
+                }
+                return androidx.compose.ui.geometry.Offset.Zero
+            }
+        }
+    }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .height(height)
-            .pointerInput(Unit) {
-                detectVerticalDragGestures { _, dragAmount ->
-                    if (dragAmount < -15 && !visible) onToggle()
-                    else if (dragAmount > 15 && visible) onToggle()
-                }
-            },
+            .nestedScroll(nestedScrollConnection),
         colors = CardDefaults.cardColors(containerColor = Color(0xFF1A1A1A)),
-        shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
-        border = BorderStroke(1.dp, Color.White.copy(0.05f))
+        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+        border = BorderStroke(1.dp, Color.White.copy(0.05f)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
     ) {
         Column {
-            // Header Bar (similar to Image 3)
-            Row(
+            // Header Bar
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(70.dp)
-                    .clickable { onToggle() }
-                    .padding(horizontal = 20.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column(Modifier.weight(1f)) {
-                    val headerText = when(mediaType) {
-                        "adult" -> "Recommended Videos"
-                        "youtube" -> "Up Next"
-                        "movie", "tv" -> if (episodes.isNotEmpty()) "Episodes" else "Related Movies"
-                        else -> "Now Playing"
+                    .clickable { 
+                        if (state == PlaylistState.FULL) onStateChange(PlaylistState.COLLAPSED)
+                        else onStateChange(PlaylistState.FULL)
                     }
-                    Text(headerText, color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 16.sp)
-                    val subText = if (episodes.isNotEmpty()) {
-                        val currentIdx = episodes.indexOfFirst { it.data == currentVideoId }
-                        "${currentIdx + 1} / ${episodes.size}"
-                    } else if (relatedVideos.isNotEmpty()) {
-                        "1 / ${relatedVideos.size + 1}"
-                    } else "1 / 1"
-                    Text(subText, color = Color.Gray, fontSize = 13.sp)
-                }
-                
-                IconButton(onClick = onToggle) {
-                    Icon(
-                        if (visible) Icons.Default.KeyboardArrowDown else Icons.Default.KeyboardArrowUp,
-                        null,
-                        tint = Color.White,
-                        modifier = Modifier.size(28.dp)
-                    )
-                }
-                
-                IconButton(onClick = { /* More options */ }) {
-                    Icon(Icons.Default.MoreVert, null, tint = Color.White)
+                    .padding(horizontal = 20.dp)
+            ) {
+                // Drag Handle
+                Box(
+                    Modifier
+                        .align(Alignment.TopCenter)
+                        .padding(top = 8.dp)
+                        .width(40.dp)
+                        .height(4.dp)
+                        .clip(CircleShape)
+                        .background(Color.White.copy(0.2f))
+                )
+
+                Row(
+                    modifier = Modifier.fillMaxSize(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(Modifier.weight(1f)) {
+                        val headerText = when(mediaType) {
+                            "adult" -> "Recommended Videos"
+                            "youtube" -> "Up Next"
+                            "movie", "tv" -> if (episodes.isNotEmpty()) "Episodes" else "Related Movies"
+                            else -> "Now Playing"
+                        }
+                        Text(headerText, color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 16.sp)
+                        val subText = if (episodes.isNotEmpty()) {
+                            val currentIdx = episodes.indexOfFirst { it.data == currentVideoId }
+                            "${currentIdx + 1} / ${episodes.size}"
+                        } else if (relatedVideos.isNotEmpty()) {
+                            "1 / ${relatedVideos.size + 1}"
+                        } else "1 / 1"
+                        Text(subText, color = Color.Gray, fontSize = 13.sp)
+                    }
+                    
+                    IconButton(onClick = { 
+                        if (state == PlaylistState.FULL) onStateChange(PlaylistState.COLLAPSED)
+                        else onStateChange(PlaylistState.FULL)
+                    }) {
+                        Icon(
+                            if (state != PlaylistState.COLLAPSED) Icons.Default.KeyboardArrowDown else Icons.Default.KeyboardArrowUp,
+                            null,
+                            tint = Color.White,
+                            modifier = Modifier.size(28.dp)
+                        )
+                    }
                 }
             }
             
-            if (visible) {
+            if (state != PlaylistState.COLLAPSED) {
                 Divider(color = Color.White.copy(0.1f))
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
@@ -737,16 +879,26 @@ fun PlaylistPanel(
                     if (mediaType == "movie" || mediaType == "tv") {
                         if (episodes.isNotEmpty()) {
                             itemsIndexed(episodes) { index, ep ->
-                                EpisodeItem(ep, ep.data == currentVideoId, index + 1) { onEpisodeSelect(ep) }
+                                EpisodeItem(ep, ep.data == currentVideoId, index + 1) { 
+                                    onEpisodeSelect(ep)
+                                    // Collapse playlist on select if full? Maybe just to HALF
+                                    if (state == PlaylistState.FULL) onStateChange(PlaylistState.HALF)
+                                }
                             }
                         } else {
                             items(relatedVideos) { video ->
-                                RelatedVideoItem(video) { onVideoSelect(video) }
+                                RelatedVideoItem(video) { 
+                                    onVideoSelect(video)
+                                    if (state == PlaylistState.FULL) onStateChange(PlaylistState.HALF)
+                                }
                             }
                         }
                     } else {
                         items(relatedVideos) { video ->
-                            RelatedVideoItem(video) { onVideoSelect(video) }
+                            RelatedVideoItem(video) { 
+                                onVideoSelect(video)
+                                if (state == PlaylistState.FULL) onStateChange(PlaylistState.HALF)
+                            }
                         }
                     }
                 }

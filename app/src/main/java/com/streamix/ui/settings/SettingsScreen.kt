@@ -42,6 +42,7 @@ fun SettingsScreen(
     val tertiaryColor by viewModel.tertiaryColor.collectAsState()
     
     val youtubeAccountName by viewModel.youtubeAccountName.collectAsState(initial = null)
+    val autoScrollShorts by viewModel.autoScrollShorts.collectAsState()
 
     Column(
         modifier = Modifier
@@ -111,6 +112,16 @@ fun SettingsScreen(
                 )
             }
 
+            item { SettingsSectionTitle("Video Player") }
+            item {
+                SettingsSwitchItem(
+                    title = "Auto-scroll Shorts",
+                    subtitle = "Automatically scroll to next video when current one ends",
+                    checked = autoScrollShorts,
+                    onCheckedChange = { viewModel.setAutoScrollShorts(it) }
+                )
+            }
+
             item { SettingsSectionTitle("Accounts") }
             item {
                 SettingsItem(
@@ -169,6 +180,33 @@ fun SettingsSectionTitle(title: String) {
         letterSpacing = 1.sp,
         modifier = Modifier.padding(start = 20.dp, top = 24.dp, bottom = 12.dp)
     )
+}
+
+@Composable
+fun SettingsSwitchItem(title: String, subtitle: String, checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
+    val colors = LocalCustomColors.current
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onCheckedChange(!checked) }
+            .padding(horizontal = 20.dp, vertical = 16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Column(Modifier.weight(1f)) {
+            Text(title, color = colors.secondary, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+            Spacer(Modifier.height(2.dp))
+            Text(subtitle, color = colors.secondary.copy(alpha = 0.5f), fontSize = 13.sp)
+        }
+        Switch(
+            checked = checked,
+            onCheckedChange = onCheckedChange,
+            colors = SwitchDefaults.colors(
+                checkedThumbColor = colors.tertiary,
+                checkedTrackColor = colors.tertiary.copy(alpha = 0.5f)
+            )
+        )
+    }
 }
 
 @Composable

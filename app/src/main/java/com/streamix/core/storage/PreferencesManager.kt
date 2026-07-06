@@ -33,6 +33,14 @@ class PreferencesManager @Inject constructor(
         val SUBSCRIBED_CHANNELS = stringPreferencesKey("subscribed_channels")
         val USER_INTERESTS      = stringPreferencesKey("user_interests")
         val SHORTS_SEARCH_HISTORY = stringPreferencesKey("shorts_search_history")
+        val AUTO_SCROLL_SHORTS  = booleanPreferencesKey("auto_scroll_shorts")
+    }
+
+    val autoScrollShorts: Flow<Boolean> = context.dataStore.data
+        .map { it[AUTO_SCROLL_SHORTS] ?: false }
+
+    suspend fun setAutoScrollShorts(enabled: Boolean) {
+        context.dataStore.edit { it[AUTO_SCROLL_SHORTS] = enabled }
     }
 
     val userInterests: Flow<Set<String>> = context.dataStore.data
