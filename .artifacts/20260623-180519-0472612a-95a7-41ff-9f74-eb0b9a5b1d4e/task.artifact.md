@@ -1,0 +1,21 @@
+# Tasks
+
+- [ ] Infrastructure Enhancement
+    - [ ] Update `MainAPI.kt` with missing classes/enums
+    - [ ] Add helper builders in `MainAPI.kt`
+- [ ] Provider Implementation
+    - [ ] Implement Gizlikeyif Providers
+    - [ ] Implement CXXX Providers
+    - [ ] Implement `OkxxxProvider.kt`
+- [ ] Logic & Repository Update
+    - [ ] Update `AdultScraperRepository.kt`
+    - [ ] Update `AdultHomeViewModel.kt` (Home = PornHat, Search = All)
+    - [ ] Update `ShortsViewModel.kt` (Random All)
+- [ ] UI/UX Enhancement
+    - [ ] Refine Theme & Colors
+    - [ ] Update Player UI
+- [ ] Cleanup
+    - [ ] Remove old scrapers from `com.streamix.scraper.cloudstream.providers`
+- [ ] Verification & Build
+    - [ ] Manual verification of features
+    - [x] Build APK `Streamix_Date_BuildNumber.apk`

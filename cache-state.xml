@@ -1,0 +1,394 @@
+<project version="4">
+  <component name="GradleLocalSettings">
+    <option name="myGradleUserHome" value="$PROJECT_DIR$/../Projects" />
+    <option name="myGradleHomes">
+      <map>
+        <entry key="$PROJECT_DIR$" value="D:\Android\Projects\wrapper\dists\gradle-8.5-bin\5t9huq95ubn472n8rpzujfbqh\gradle-8.5" />
+      </map>
+    </option>
+    <option name="myGradleVersions">
+      <map>
+        <entry key="$PROJECT_DIR$" value="8.5" />
+      </map>
+    </option>
+    <option name="availableProjects">
+      <map>
+        <entry>
+          <key>
+            <ExternalProjectPojo>
+              <option name="name" value="Streamix" />
+              <option name="path" value="$PROJECT_DIR$" />
+            </ExternalProjectPojo>
+          </key>
+          <value>
+            <list>
+              <ExternalProjectPojo>
+                <option name="name" value="Streamix" />
+                <option name="path" value="$PROJECT_DIR$" />
+              </ExternalProjectPojo>
+              <ExternalProjectPojo>
+                <option name="name" value=":app" />
+                <option name="path" value="$PROJECT_DIR$/app" />
+              </ExternalProjectPojo>
+            </list>
+          </value>
+        </entry>
+      </map>
+    </option>
+    <option name="projectSyncType">
+      <map>
+        <entry key="$PROJECT_DIR$" value="RE_IMPORT" />
+      </map>
+    </option>
+  </component>
+  <component name="KotlinGradleFUSSettings">
+    <option name="gradleUserDirs" value="D:\Android\Projects" />
+  </component>
+  <component name="MarkdownArtifactFilesPersistentStateV2">
+    <knownArtifactFiles>
+      <entry virtualFileUrl="file://$USER_HOME$/AppData/Local/Google/AndroidStudio2025.3.4/projects/streamix.c87a1108/.artifacts/20260605-165254-af2735a0-a421-4bce-884c-112d68fce2b5/implementation_plan.artifact.md">
+        <fileState commentingSessionTitle="implementation_plan.artifact" lastModifiedTimeUtc="2026-06-09T15:00:00Z" />
+      </entry>
+      <entry virtualFileUrl="file://$USER_HOME$/AppData/Local/Google/AndroidStudio2025.3.4/projects/streamix.c87a1108/.artifacts/20260605-165254-af2735a0-a421-4bce-884c-112d68fce2b5/task.artifact.md">
+        <fileState commentingSessionTitle="task.artifact" lastModifiedTimeUtc="2026-06-09T15:00:00Z" />
+      </entry>
+      <entry virtualFileUrl="file://$USER_HOME$/AppData/Local/Google/AndroidStudio2025.3.4/projects/streamix.c87a1108/.artifacts/20260605-165254-af2735a0-a421-4bce-884c-112d68fce2b5/walkthrough.artifact.md">
+        <fileState commentingSessionTitle="walkthrough.artifact" lastModifiedTimeUtc="2026-06-09T15:00:00Z" />
+      </entry>
+      <entry virtualFileUrl="file://$USER_HOME$/AppData/Local/Google/AndroidStudio2025.3.4/projects/streamix.c87a1108/.artifacts/20260605-182321-530f5542-ab24-400a-b63e-5dcaea3bc872/implementation_plan.artifact.md">
+        <fileState commentingSessionTitle="implementation_plan.artifact" lastModifiedTimeUtc="2026-06-09T15:00:00Z" />
+      </entry>
+      <entry virtualFileUrl="file://$USER_HOME$/AppData/Local/Google/AndroidStudio2025.3.4/projects/streamix.c87a1108/.artifacts/20260605-182321-530f5542-ab24-400a-b63e-5dcaea3bc872/walkthrough.artifact.md">
+        <fileState commentingSessionTitle="walkthrough.artifact" lastModifiedTimeUtc="2026-06-09T15:00:00Z" />
+      </entry>
+      <entry virtualFileUrl="file://$USER_HOME$/AppData/Local/Google/AndroidStudio2025.3.4/projects/streamix.c87a1108/.artifacts/20260607-222402-f4bf91eb-4282-4901-ade5-96309186a3a4/implementation_plan.artifact.md">
+        <fileState commentingSessionTitle="implementation_plan.artifact" lastModifiedTimeUtc="2026-06-09T15:00:00Z" />
+      </entry>
+      <entry virtualFileUrl="file://$USER_HOME$/AppData/Local/Google/AndroidStudio2025.3.4/projects/streamix.c87a1108/.artifacts/20260608-191603-edec48af-1552-4b4d-976a-94f7f857b4f5/walkthrough.artifact.md">
+        <fileState commentingSessionTitle="walkthrough.artifact" lastModifiedTimeUtc="2026-06-09T15:00:00Z" />
+      </entry>
+      <entry virtualFileUrl="file://$USER_HOME$/AppData/Local/Google/AndroidStudio2025.3.4/projects/streamix.c87a1108/.artifacts/20260608-203546-26053af5-0e93-42cd-8af7-3644cf764144/implementation_plan.artifact.md">
+        <fileState commentingSessionTitle="implementation_plan.artifact" lastModifiedTimeUtc="2026-06-09T15:00:00Z" />
+      </entry>
+      <entry virtualFileUrl="file://$USER_HOME$/AppData/Local/Google/AndroidStudio2025.3.4/projects/streamix.c87a1108/.artifacts/20260609-192734-63f6bcfe-e7fc-409e-86fb-ca7be7a66fb6/task.artifact.md">
+        <fileState commentingSessionTitle="task.artifact" lastModifiedTimeUtc="2026-06-09T15:00:00Z" />
+      </entry>
+      <entry virtualFileUrl="file://$USER_HOME$/AppData/Local/Google/AndroidStudio2026.1.1/projects/streamix.c87a1108/.artifacts/20260621-134042-3998a55c-847e-4ba4-941c-10ae83b608ed/implementation_plan.artifact.md">
+        <fileState commentingSessionTitle="Implementation Plan" detailEnabled="true" lastModifiedTimeUtc="2026-06-21T08:00:00Z" />
+      </entry>
+      <entry virtualFileUrl="file://$USER_HOME$/AppData/Local/Google/AndroidStudio2026.1.1/projects/streamix.c87a1108/.artifacts/20260621-134042-3998a55c-847e-4ba4-941c-10ae83b608ed/task.artifact.md">
+        <fileState commentingSessionTitle="Task List" lastModifiedTimeUtc="2026-06-21T08:00:00Z" />
+      </entry>
+      <entry virtualFileUrl="file://$USER_HOME$/AppData/Local/Google/AndroidStudio2026.1.1/projects/streamix.c87a1108/.artifacts/20260621-134042-3998a55c-847e-4ba4-941c-10ae83b608ed/walkthrough.artifact.md">
+        <fileState commentingSessionTitle="Walkthrough" detailEnabled="true" lastModifiedTimeUtc="2026-06-21T08:00:00Z" />
+      </entry>
+      <entry virtualFileUrl="file://$USER_HOME$/AppData/Local/Google/AndroidStudio2026.1.1/projects/streamix.c87a1108/.artifacts/20260621-134954-47c0676c-0c90-4c98-8b6d-547d979a687f/implementation_plan.artifact.md">
+        <fileState commentingSessionTitle="Implementation Plan" detailEnabled="true" lastModifiedTimeUtc="2026-06-21T08:00:00Z" />
+      </entry>
+      <entry virtualFileUrl="file://$USER_HOME$/AppData/Local/Google/AndroidStudio2026.1.1/projects/streamix.c87a1108/.artifacts/20260621-134954-47c0676c-0c90-4c98-8b6d-547d979a687f/task.artifact.md">
+        <fileState commentingSessionTitle="Task List" lastModifiedTimeUtc="2026-06-21T08:00:00Z" />
+      </entry>
+      <entry virtualFileUrl="file://$USER_HOME$/AppData/Local/Google/AndroidStudio2026.1.1/projects/streamix.c87a1108/.artifacts/20260621-134954-47c0676c-0c90-4c98-8b6d-547d979a687f/visual_research.artifact.md">
+        <fileState commentingSessionTitle="visual_research.artifact" lastModifiedTimeUtc="2026-06-21T08:00:00Z" />
+      </entry>
+    </knownArtifactFiles>
+  </component>
+  <component name="ProcessedFilesStorage">
+    <timestamps>
+      <entry key="2292e3c8fcdd9556888141bb25436c63" value="1782030704663" />
+      <entry key="48185fc695ea3f8450491786a7fd4856" value="1782029240474" />
+      <entry key="a732de9c2611448d474455f63562ad64" value="1782030672830" />
+      <entry key="c762770db63c72197d3423c1bc017240" value="1782030652428" />
+    </timestamps>
+  </component>
+  <component name="Project">
+    <option name="lastProjectScan" value="1781016641" />
+  </component>
+  <component name="RestoreUpdateTree">{}</component>
+  <component name="StoredSessionsInfoStore">
+    <option name="sessions">
+      <list>
+        <SessionInfoState>
+          <option name="id" value="20260609-201454-83930d7c-cbbf-4ff9-b5fb-51b644397910" />
+          <option name="lastUpdateTimestamp" value="1781016386488" />
+          <option name="responseMode" value="Agent" />
+          <option name="title" value="ead the whole directory then &#10;&#10;remove all extensions from the app (movies" />
+          <option name="user" value="shabdk110@gmail.com" />
+        </SessionInfoState>
+        <SessionInfoState>
+          <option name="id" value="20260609-201650-7d3e5fbe-9828-4556-ba72-5aced3ee02f6" />
+          <option name="lastUpdateTimestamp" value="1781016633540" />
+          <option name="responseMode" value="Agent" />
+          <option name="title" value="ead the whole directory then &#10;&#10;remove all extensions from the app (movies" />
+          <option name="totalTokenCount" value="102540" />
+          <option name="user" value="shabdk114@gmail.com" />
+        </SessionInfoState>
+        <SessionInfoState>
+          <option name="id" value="20260609-202208-81d3c82b-f9b2-4e48-8487-d78f2aa4d672" />
+          <option name="lastUpdateTimestamp" value="1781016836033" />
+          <option name="responseMode" value="Agent" />
+          <option name="title" value="ead the whole directory then &#10;&#10;remove all extensions from the app (movies" />
+          <option name="user" value="shabdk111@gmail.com" />
+        </SessionInfoState>
+        <SessionInfoState>
+          <option name="id" value="20260609-202835-63fd84e0-4713-4b33-8176-16d13f7ac6f5" />
+          <option name="lastUpdateTimestamp" value="1782029406460" />
+          <option name="responseMode" value="Agent" />
+          <option name="title" value="ead the whole directory then &#10;&#10;remove all extensions from the app (movies" />
+          <option name="totalTokenCount" value="17825" />
+          <option name="user" value="shabdk119@gmail.com" />
+        </SessionInfoState>
+        <SessionInfoState>
+          <option name="id" value="20260621-134954-47c0676c-0c90-4c98-8b6d-547d979a687f" />
+          <option name="lastUpdateTimestamp" value="1782030855579" />
+          <option name="responseMode" value="Agent" />
+          <option name="title" value="read all the files inside D:\Android\Streamix\Ideas every photo,.mht file,txt" />
+          <option name="totalTokenCount" value="111131" />
+          <option name="user" value="shabdk112@gmail.com" />
+        </SessionInfoState>
+      </list>
+    </option>
+  </component>
+  <component name="sourceFolderManager">
+    <sourceFolders>
+      <SourceFolderModelState>
+        <option name="moduleName" value="Streamix.app.main" />
+        <option name="type" value="SOURCE" />
+        <option name="url" value="file://$PROJECT_DIR$/app/src/main/kotlin" />
+      </SourceFolderModelState>
+      <SourceFolderModelState>
+        <option name="moduleName" value="Streamix.app.main" />
+        <option name="type" value="SOURCE" />
+        <option name="url" value="file://$PROJECT_DIR$/app/src/main/shaders" />
+      </SourceFolderModelState>
+      <SourceFolderModelState>
+        <option name="moduleName" value="Streamix.app.main" />
+        <option name="type" value="RESOURCE" />
+        <option name="url" value="file://$PROJECT_DIR$/app/src/main/baselineProfiles" />
+      </SourceFolderModelState>
+      <SourceFolderModelState>
+        <option name="moduleName" value="Streamix.app.main" />
+        <option name="type" value="RESOURCE" />
+        <option name="url" value="file://$PROJECT_DIR$/app/src/main/resources" />
+      </SourceFolderModelState>
+      <SourceFolderModelState>
+        <option name="moduleName" value="Streamix.app.main" />
+        <option name="type" value="SOURCE" />
+        <option name="url" value="file://$PROJECT_DIR$/app/src/debug/java" />
+      </SourceFolderModelState>
+      <SourceFolderModelState>
+        <option name="moduleName" value="Streamix.app.main" />
+        <option name="type" value="SOURCE" />
+        <option name="url" value="file://$PROJECT_DIR$/app/src/debug/kotlin" />
+      </SourceFolderModelState>
+      <SourceFolderModelState>
+        <option name="moduleName" value="Streamix.app.main" />
+        <option name="type" value="SOURCE" />
+        <option name="url" value="file://$PROJECT_DIR$/app/src/debug/shaders" />
+      </SourceFolderModelState>
+      <SourceFolderModelState>
+        <option name="moduleName" value="Streamix.app.main" />
+        <option name="type" value="RESOURCE" />
+        <option name="url" value="file://$PROJECT_DIR$/app/src/debug/assets" />
+      </SourceFolderModelState>
+      <SourceFolderModelState>
+        <option name="moduleName" value="Streamix.app.main" />
+        <option name="type" value="RESOURCE" />
+        <option name="url" value="file://$PROJECT_DIR$/app/src/debug/baselineProfiles" />
+      </SourceFolderModelState>
+      <SourceFolderModelState>
+        <option name="moduleName" value="Streamix.app.main" />
+        <option name="type" value="RESOURCE" />
+        <option name="url" value="file://$PROJECT_DIR$/app/src/debug/res" />
+      </SourceFolderModelState>
+      <SourceFolderModelState>
+        <option name="moduleName" value="Streamix.app.main" />
+        <option name="type" value="RESOURCE" />
+        <option name="url" value="file://$PROJECT_DIR$/app/src/debug/resources" />
+      </SourceFolderModelState>
+      <SourceFolderModelState>
+        <option name="moduleName" value="Streamix.app.unitTest" />
+        <option name="type" value="TEST_SOURCE" />
+        <option name="url" value="file://$PROJECT_DIR$/app/src/testDebug/java" />
+      </SourceFolderModelState>
+      <SourceFolderModelState>
+        <option name="moduleName" value="Streamix.app.unitTest" />
+        <option name="type" value="TEST_SOURCE" />
+        <option name="url" value="file://$PROJECT_DIR$/app/src/testDebug/kotlin" />
+      </SourceFolderModelState>
+      <SourceFolderModelState>
+        <option name="moduleName" value="Streamix.app.unitTest" />
+        <option name="type" value="TEST_SOURCE" />
+        <option name="url" value="file://$PROJECT_DIR$/app/src/testDebug/shaders" />
+      </SourceFolderModelState>
+      <SourceFolderModelState>
+        <option name="moduleName" value="Streamix.app.unitTest" />
+        <option name="type" value="TEST_RESOURCE" />
+        <option name="url" value="file://$PROJECT_DIR$/app/src/testDebug/assets" />
+      </SourceFolderModelState>
+      <SourceFolderModelState>
+        <option name="moduleName" value="Streamix.app.unitTest" />
+        <option name="type" value="TEST_RESOURCE" />
+        <option name="url" value="file://$PROJECT_DIR$/app/src/testDebug/baselineProfiles" />
+      </SourceFolderModelState>
+      <SourceFolderModelState>
+        <option name="moduleName" value="Streamix.app.unitTest" />
+        <option name="type" value="TEST_RESOURCE" />
+        <option name="url" value="file://$PROJECT_DIR$/app/src/testDebug/res" />
+      </SourceFolderModelState>
+      <SourceFolderModelState>
+        <option name="moduleName" value="Streamix.app.unitTest" />
+        <option name="type" value="TEST_RESOURCE" />
+        <option name="url" value="file://$PROJECT_DIR$/app/src/testDebug/resources" />
+      </SourceFolderModelState>
+      <SourceFolderModelState>
+        <option name="moduleName" value="Streamix.app.unitTest" />
+        <option name="type" value="TEST_SOURCE" />
+        <option name="url" value="file://$PROJECT_DIR$/app/src/test/kotlin" />
+      </SourceFolderModelState>
+      <SourceFolderModelState>
+        <option name="moduleName" value="Streamix.app.unitTest" />
+        <option name="type" value="TEST_SOURCE" />
+        <option name="url" value="file://$PROJECT_DIR$/app/src/test/shaders" />
+      </SourceFolderModelState>
+      <SourceFolderModelState>
+        <option name="moduleName" value="Streamix.app.unitTest" />
+        <option name="type" value="TEST_RESOURCE" />
+        <option name="url" value="file://$PROJECT_DIR$/app/src/test/assets" />
+      </SourceFolderModelState>
+      <SourceFolderModelState>
+        <option name="moduleName" value="Streamix.app.unitTest" />
+        <option name="type" value="TEST_RESOURCE" />
+        <option name="url" value="file://$PROJECT_DIR$/app/src/test/baselineProfiles" />
+      </SourceFolderModelState>
+      <SourceFolderModelState>
+        <option name="moduleName" value="Streamix.app.unitTest" />
+        <option name="type" value="TEST_RESOURCE" />
+        <option name="url" value="file://$PROJECT_DIR$/app/src/test/res" />
+      </SourceFolderModelState>
+      <SourceFolderModelState>
+        <option name="moduleName" value="Streamix.app.unitTest" />
+        <option name="type" value="TEST_RESOURCE" />
+        <option name="url" value="file://$PROJECT_DIR$/app/src/test/resources" />
+      </SourceFolderModelState>
+      <SourceFolderModelState>
+        <option name="moduleName" value="Streamix.app.androidTest" />
+        <option name="type" value="TEST_SOURCE" />
+        <option name="url" value="file://$PROJECT_DIR$/app/src/androidTestDebug/java" />
+      </SourceFolderModelState>
+      <SourceFolderModelState>
+        <option name="moduleName" value="Streamix.app.androidTest" />
+        <option name="type" value="TEST_SOURCE" />
+        <option name="url" value="file://$PROJECT_DIR$/app/src/androidTestDebug/kotlin" />
+      </SourceFolderModelState>
+      <SourceFolderModelState>
+        <option name="moduleName" value="Streamix.app.androidTest" />
+        <option name="type" value="TEST_SOURCE" />
+        <option name="url" value="file://$PROJECT_DIR$/app/src/androidTestDebug/shaders" />
+      </SourceFolderModelState>
+      <SourceFolderModelState>
+        <option name="moduleName" value="Streamix.app.androidTest" />
+        <option name="type" value="TEST_RESOURCE" />
+        <option name="url" value="file://$PROJECT_DIR$/app/src/androidTestDebug/assets" />
+      </SourceFolderModelState>
+      <SourceFolderModelState>
+        <option name="moduleName" value="Streamix.app.androidTest" />
+        <option name="type" value="TEST_RESOURCE" />
+        <option name="url" value="file://$PROJECT_DIR$/app/src/androidTestDebug/baselineProfiles" />
+      </SourceFolderModelState>
+      <SourceFolderModelState>
+        <option name="moduleName" value="Streamix.app.androidTest" />
+        <option name="type" value="TEST_RESOURCE" />
+        <option name="url" value="file://$PROJECT_DIR$/app/src/androidTestDebug/res" />
+      </SourceFolderModelState>
+      <SourceFolderModelState>
+        <option name="moduleName" value="Streamix.app.androidTest" />
+        <option name="type" value="TEST_RESOURCE" />
+        <option name="url" value="file://$PROJECT_DIR$/app/src/androidTestDebug/resources" />
+      </SourceFolderModelState>
+      <SourceFolderModelState>
+        <option name="moduleName" value="Streamix.app.androidTest" />
+        <option name="type" value="TEST_SOURCE" />
+        <option name="url" value="file://$PROJECT_DIR$/app/src/androidTest/java" />
+      </SourceFolderModelState>
+      <SourceFolderModelState>
+        <option name="moduleName" value="Streamix.app.androidTest" />
+        <option name="type" value="TEST_SOURCE" />
+        <option name="url" value="file://$PROJECT_DIR$/app/src/androidTest/kotlin" />
+      </SourceFolderModelState>
+      <SourceFolderModelState>
+        <option name="moduleName" value="Streamix.app.androidTest" />
+        <option name="type" value="TEST_SOURCE" />
+        <option name="url" value="file://$PROJECT_DIR$/app/src/androidTest/shaders" />
+      </SourceFolderModelState>
+      <SourceFolderModelState>
+        <option name="moduleName" value="Streamix.app.androidTest" />
+        <option name="type" value="TEST_RESOURCE" />
+        <option name="url" value="file://$PROJECT_DIR$/app/src/androidTest/assets" />
+      </SourceFolderModelState>
+      <SourceFolderModelState>
+        <option name="moduleName" value="Streamix.app.androidTest" />
+        <option name="type" value="TEST_RESOURCE" />
+        <option name="url" value="file://$PROJECT_DIR$/app/src/androidTest/baselineProfiles" />
+      </SourceFolderModelState>
+      <SourceFolderModelState>
+        <option name="moduleName" value="Streamix.app.androidTest" />
+        <option name="type" value="TEST_RESOURCE" />
+        <option name="url" value="file://$PROJECT_DIR$/app/src/androidTest/res" />
+      </SourceFolderModelState>
+      <SourceFolderModelState>
+        <option name="moduleName" value="Streamix.app.androidTest" />
+        <option name="type" value="TEST_RESOURCE" />
+        <option name="url" value="file://$PROJECT_DIR$/app/src/androidTest/resources" />
+      </SourceFolderModelState>
+      <SourceFolderModelState>
+        <option name="generated" value="true" />
+        <option name="moduleName" value="Streamix.app.unitTest" />
+        <option name="type" value="TEST_SOURCE" />
+        <option name="url" value="file://$PROJECT_DIR$/app/build/generated/source/kaptKotlin/debugUnitTest" />
+      </SourceFolderModelState>
+      <SourceFolderModelState>
+        <option name="generated" value="true" />
+        <option name="moduleName" value="Streamix.app.androidTest" />
+        <option name="type" value="TEST_SOURCE" />
+        <option name="url" value="file://$PROJECT_DIR$/app/build/generated/source/kaptKotlin/debugAndroidTest" />
+      </SourceFolderModelState>
+      <SourceFolderModelState>
+        <option name="generated" value="true" />
+        <option name="moduleName" value="Streamix.app.unitTest" />
+        <option name="type" value="TEST_SOURCE" />
+        <option name="url" value="file://$PROJECT_DIR$/app/build/generated/source/kapt/debugUnitTest" />
+      </SourceFolderModelState>
+      <SourceFolderModelState>
+        <option name="generated" value="true" />
+        <option name="moduleName" value="Streamix.app.androidTest" />
+        <option name="type" value="TEST_SOURCE" />
+        <option name="url" value="file://$PROJECT_DIR$/app/build/generated/source/kapt/debugAndroidTest" />
+      </SourceFolderModelState>
+      <SourceFolderModelState>
+        <option name="generated" value="true" />
+        <option name="moduleName" value="Streamix.app.unitTest" />
+        <option name="type" value="TEST_SOURCE" />
+        <option name="url" value="file://$PROJECT_DIR$/app/build/generated/ap_generated_sources/debugUnitTest/out" />
+      </SourceFolderModelState>
+      <SourceFolderModelState>
+        <option name="generated" value="true" />
+        <option name="moduleName" value="Streamix.app.androidTest" />
+        <option name="type" value="TEST_SOURCE" />
+        <option name="url" value="file://$PROJECT_DIR$/app/build/generated/ap_generated_sources/debugAndroidTest/out" />
+      </SourceFolderModelState>
+      <SourceFolderModelState>
+        <option name="generated" value="true" />
+        <option name="moduleName" value="Streamix.app.androidTest" />
+        <option name="type" value="TEST_SOURCE" />
+        <option name="url" value="file://$PROJECT_DIR$/app/build/generated/source/buildConfig/androidTest/debug" />
+      </SourceFolderModelState>
+      <SourceFolderModelState>
+        <option name="generated" value="true" />
+        <option name="moduleName" value="Streamix.app.androidTest" />
+        <option name="type" value="TEST_RESOURCE" />
+        <option name="url" value="file://$PROJECT_DIR$/app/build/generated/res/resValues/androidTest/debug" />
+      </SourceFolderModelState>
+    </sourceFolders>
+  </component>
+</project>

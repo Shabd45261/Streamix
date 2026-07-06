@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Background -->
+    <path
+        android:fillColor="#000000"
+        android:pathData="M0,0h108v108h-108z" />
+
+    <!-- Stylized 'S' -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M54,20 C40,20 28,32 28,46 C28,54 34,60 42,60 L66,60 C74,60 80,66 80,74 C80,88 68,100 54,100 C40,100 28,88 28,74 L38,74 C38,82 45,89 54,89 C63,89 70,82 70,74 C70,68 64,63 56,63 L32,63 C24,63 18,57 18,46 C18,26 34,10 54,10 C74,10 90,26 90,46 L80,46 C80,32 68,20 54,20 Z" />
+
+    <!-- Play Symbol in the middle -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M48,40 L64,50 L48,60 Z" />
+</vector>

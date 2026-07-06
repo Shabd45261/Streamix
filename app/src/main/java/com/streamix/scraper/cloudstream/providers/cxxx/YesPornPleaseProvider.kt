@@ -1,0 +1,90 @@
+package com.streamix.scraper.cloudstream.providers.cxxx
+
+import com.streamix.scraper.cloudstream.*
+import org.jsoup.nodes.Element
+
+class YesPornPleaseProvider : MainAPI() {
+    override var mainUrl = "https://yespornpleasexxx.com"
+    override var name = "YesPornPlease"
+    override val hasMainPage = true
+    override var lang = "en"
+    override val supportedTypes = setOf(TvType.NSFW)
+
+    override val mainPage = mainPageOf(
+        "${mainUrl}" to "Home",
+        "${mainUrl}/xnxx/small-tits/" to "Small Tits",
+        "${mainUrl}/xnxx/teen/" to "Teen",
+        "${mainUrl}/xnxx/threesome/" to "Threesome",
+    )
+
+    override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
+        val document = app.get("${request.data}/page/${page}/").document
+        val home = document.select("div.post-preview-styling").mapNotNull { it.toSearchResult() }
+
+        return newHomePageResponse(
+            list = HomePageList(
+                name = request.name,
+                list = home,
+                isHorizontalImages = true
+            ),
+            hasNext = true
+        )
+    }
+
+    private fun Element.toSearchResult(): SearchResponse? {
+        val a = this.selectFirst("a") ?: return null
+        val title = a.attr("title")
+        val href = a.attr("href")
+        val img = a.selectFirst("img")
+        val posterUrl = img?.attr("data-src")?.ifEmpty { img.attr("src") } ?: ""
+        
+        return newMovieSearchResponse(title, href, TvType.NSFW) {
+            this.posterUrl = posterUrl
+        }
+    }
+
+    override suspend fun search(query: String): List<SearchResponse> {
+        val searchResponse = mutableListOf<SearchResponse>()
+        for (i in 1..2) { // Limited search pages
+            val document = app.get("${mainUrl}/page/${i}/?s=${query}").document
+            val results = document.select("div.post-preview-styling").mapNotNull { it.toSearchResult() }
+            searchResponse.addAll(results)
+            if (results.isEmpty()) break
+        }
+        return searchResponse
+    }
+
+    override suspend fun load(url: String): LoadResponse? {
+        val document = app.get(url).document
+        val title = document.selectFirst("meta[property=og:title]")?.attr("content") ?: "Video"
+        val posterUrl = document.selectFirst("meta[property=og:image]")?.attr("content") ?: ""
+        return newMovieLoadResponse(title, url, TvType.NSFW, url) {
+            this.posterUrl = posterUrl
+        }
+    }
+
+    override suspend fun loadLinks(
+        data: String,
+        isCasting: Boolean,
+        subtitleCallback: (SubtitleFile) -> Unit,
+        callback: (ExtractorLink) -> Unit
+    ): Boolean {
+        val document = app.get(data).document
+        val iframe = document.select("#post > div.wp-video > div > iframe").attr("data-litespeed-src")
+        if (iframe.isEmpty()) return false
+        
+        val source = app.get(iframe).document.select("video a").attr("href")
+        if (source.isEmpty()) return false
+        
+        callback.invoke(
+            newExtractorLink(
+                source = this.name,
+                name = this.name,
+                url = source,
+                referer = mainUrl,
+                quality = 0
+            )
+        )
+        return true
+    }
+}

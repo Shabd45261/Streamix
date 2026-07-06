@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="VcsDirectoryMappings">
+    <mapping directory="$PROJECT_DIR$" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/Extensions/Adult/CXXX/CXXX" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/Extensions/Adult/Gizlikeyif/Cs-GizliKeyif" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/Extensions/Movies/CNCVerse-Cloud-Stream-Extension" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/Extensions/Movies/CSX" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/Extensions/Movies/Cloudstream/cloudstream" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/Extensions/Movies/cloudstream-extensions-phisher" vcs="Git" />
+  </component>
+</project>

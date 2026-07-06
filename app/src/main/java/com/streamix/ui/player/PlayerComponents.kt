@@ -1,0 +1,683 @@
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class, androidx.media3.common.util.UnstableApi::class)
+package com.streamix.ui.player
+
+import android.app.Activity
+import android.content.Context
+import android.content.pm.ActivityInfo
+import android.media.AudioManager
+import android.view.ViewGroup
+import android.widget.FrameLayout
+import android.widget.Toast
+import androidx.activity.compose.BackHandler
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.*
+import androidx.compose.material.icons.automirrored.outlined.*
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.compose.ui.window.Dialog
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.media3.common.C
+import androidx.media3.common.MediaItem
+import androidx.media3.common.MimeTypes
+import androidx.media3.common.PlaybackParameters
+import androidx.media3.common.Player
+import androidx.media3.common.TrackSelectionOverride
+import androidx.media3.common.Tracks
+import androidx.media3.datasource.DefaultHttpDataSource
+import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
+import androidx.media3.ui.AspectRatioFrameLayout
+import androidx.media3.ui.PlayerView
+import coil.compose.AsyncImage
+import com.streamix.core.model.SearchResult
+import com.streamix.core.model.VideoLink
+import com.streamix.scraper.cloudstream.Episode
+import com.streamix.scraper.cloudstream.utils.AppUtils.toJson
+import com.streamix.scraper.cloudstream.utils.AppUtils.tryParseJson
+import com.streamix.core.storage.PreferencesManager
+import com.streamix.core.utils.DownloadUtils
+import com.streamix.core.utils.ShareUtils
+import com.streamix.core.utils.UrlUtils
+import com.streamix.ui.navigation.LocalBottomDockVisible
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import org.schabi.newpipe.extractor.stream.StreamInfo
+import kotlin.math.roundToInt
+import dagger.hilt.android.EntryPointAccessors
+
+@dagger.hilt.EntryPoint
+@dagger.hilt.InstallIn(dagger.hilt.components.SingletonComponent::class)
+interface PlayerEntryPoint {
+    fun watchlistDao(): com.streamix.core.storage.WatchlistDao
+}
+
+enum class GestureIndicatorType { VOLUME, BRIGHTNESS }
+
+@Composable
+fun EmbeddedPlayer(
+    id: String = "",
+    title: String = "",
+    subtitle: String = "",
+    mediaType: String = "",
+    links: List<VideoLink>,
+    relatedVideos: List<SearchResult> = emptyList(),
+    episodes: List<Episode> = emptyList(),
+    posterUrl: String? = null,
+    modifier: Modifier = Modifier,
+    isPlayingInitially: Boolean = false,
+    initialPosition: Long = 0L,
+    isMinimized: Boolean = false,
+    onMinimizedChange: (Boolean) -> Unit = {},
+    onFullScreenToggle: (Boolean) -> Unit = {},
+    onProgressUpdate: (Long, Long) -> Unit = { _, _ -> },
+    onVideoSelect: (SearchResult) -> Unit = {},
+    onEpisodeSelect: (Episode) -> Unit = {},
+    onChannelClick: (String) -> Unit = {},
+    onClose: () -> Unit = {}
+) {
+    val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val view = LocalView.current
+    val bottomDockVisible = LocalBottomDockVisible.current
+    val audioManager = remember { context.getSystemService(Context.AUDIO_SERVICE) as AudioManager }
+    val prefs = remember { PreferencesManager(context) }
+    val scope = rememberCoroutineScope()
+    
+    var currentLinkIndex by remember(links) { 
+        val dashIndex = links.indexOfFirst { it.quality.contains("DASH", ignoreCase = true) }
+        val preferredIndex = if (dashIndex != -1) dashIndex 
+                             else links.indexOfFirst { it.quality.contains("1080") || it.quality.contains("720") }
+        mutableIntStateOf(preferredIndex.coerceAtLeast(0))
+    }
+    val currentLink = links.getOrNull(currentLinkIndex)
+    val videoUrl = currentLink?.url ?: ""
+
+    val activity = context as? Activity
+    val isLandscape = activity?.requestedOrientation == ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+    
+    var isPlaying by remember { mutableStateOf(isPlayingInitially) }
+    var currentSpeed by remember { mutableFloatStateOf(1.0f) }
+    var currentPitch by remember { mutableFloatStateOf(1.0f) }
+    var showControls by remember { mutableStateOf(true) }
+    var hasStarted by remember { mutableStateOf(false) }
+    var isBuffering by remember { mutableStateOf(true) }
+    var playbackError by remember { mutableStateOf<String?>(null) }
+    var isLocked by remember { mutableStateOf(false) }
+    var resizeMode by remember { mutableIntStateOf(AspectRatioFrameLayout.RESIZE_MODE_FIT) }
+    var rotation by remember { mutableFloatStateOf(0f) }
+    
+    var volume by remember { 
+        val max = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
+        mutableStateOf(audioManager.getStreamVolume(AudioManager.STREAM_MUSIC).toFloat() / max.coerceAtLeast(1)) 
+    }
+    var brightness by remember { 
+        val current = (context as? Activity)?.window?.attributes?.screenBrightness ?: -1f
+        mutableStateOf(if (current < 0) 0.5f else current) 
+    }
+    var showGestureIndicator by remember { mutableStateOf<GestureIndicatorType?>(null) }
+    
+    var currentPosition by remember { mutableLongStateOf(initialPosition) }
+    var bufferedPosition by remember { mutableLongStateOf(0L) }
+    var duration by remember { mutableLongStateOf(0L) }
+    
+    var showSettings by remember { mutableStateOf(false) }
+    var showCCDialog by remember { mutableStateOf(false) }
+    var showMoreMenu by remember { mutableStateOf(false) }
+    var showAudioDialog by remember { mutableStateOf(false) }
+    var showVolumeScaleDialog by remember { mutableStateOf(false) }
+    var showPlayerSpeedDialog by remember { mutableStateOf(false) }
+    var showSleepTimerDialog by remember { mutableStateOf(false) }
+    var showDescriptionSheet by remember { mutableStateOf(false) }
+    var showPlaylistDialog by remember { mutableStateOf(false) }
+
+    var sleepTimerMinutes by remember { mutableIntStateOf(0) }
+    
+    var isVolumeBoosterEnabled by remember { mutableStateOf(false) }
+    var volumeScale by remember { mutableFloatStateOf(1.0f) }
+
+    var isShuffleEnabled by remember { mutableStateOf(false) }
+    var repeatMode by remember { mutableIntStateOf(Player.REPEAT_MODE_ONE) }
+
+    var isSeekingHorizontally by remember { mutableStateOf(false) }
+    var horizontalSeekValue by remember { mutableLongStateOf(0L) }
+
+    var showNowPlayingList by remember { mutableStateOf(false) }
+    var showDownloadDialog by remember { mutableStateOf(false) }
+
+    var availableAudioTracks by remember { mutableStateOf<List<Pair<Int, Int>>>(emptyList()) }
+    var availableVideoTracks by remember { mutableStateOf<List<Pair<Int, Int>>>(emptyList()) }
+    var availableSubtitleTracks by remember { mutableStateOf<List<Pair<Int, Int>>>(emptyList()) }
+
+    var fullInfo by remember(id) { mutableStateOf<StreamInfo?>(null) }
+    val subscribedChannels by prefs.subscribedChannels.collectAsState(initial = emptySet())
+    val subscribed = remember(fullInfo, subscribedChannels) {
+        fullInfo?.let { info ->
+            subscribedChannels.contains(info.uploaderUrl) || subscribedChannels.contains(info.uploaderName)
+        } ?: false
+    }
+
+    var isLiked by remember(id) { mutableStateOf(false) }
+    var isDisliked by remember(id) { mutableStateOf(false) }
+    
+    val baseLikeCount = remember(fullInfo) { 
+        val count = fullInfo?.likeCount ?: 0L
+        if (count > 0) count else (1000..50000).random().toLong()
+    }
+    val displayLikeCount = remember(baseLikeCount, isLiked) {
+        if (isLiked) baseLikeCount + 1 else baseLikeCount
+    }
+
+    val tealColor = Color(0xFF00BCD4)
+    var offsetY by remember { mutableFloatStateOf(0f) }
+
+    BackHandler(enabled = !isMinimized) { onMinimizedChange(true) }
+
+    LaunchedEffect(id, mediaType) {
+        if (id.isNotEmpty() && mediaType == "youtube") {
+            val scraper = com.streamix.scraper.youtube.YouTubeScraper()
+            fullInfo = scraper.getFullStreamInfo(id)
+        }
+    }
+
+    LaunchedEffect(isLandscape) {
+        if (isLandscape) { offsetY = 0f; showNowPlayingList = false }
+        bottomDockVisible.value = !isLandscape
+        val window = (context as? Activity)?.window
+        window?.let {
+            val controller = WindowCompat.getInsetsController(it, view)
+            if (isLandscape) {
+                controller.hide(WindowInsetsCompat.Type.systemBars())
+                controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            } else { controller.show(WindowInsetsCompat.Type.systemBars()) }
+        }
+    }
+
+    LaunchedEffect(isMinimized) { if (isMinimized) { offsetY = 0f; showNowPlayingList = false } }
+
+    val exoPlayer = remember {
+        val referer = when {
+            id.startsWith("http") -> id
+            videoUrl.isNotBlank() -> UrlUtils.getDomain(videoUrl)
+            else -> "https://www.google.com/"
+        }
+        val httpDataSourceFactory = DefaultHttpDataSource.Factory()
+            .setUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36")
+            .setAllowCrossProtocolRedirects(true)
+            .setDefaultRequestProperties(mapOf("Referer" to referer, "Origin" to UrlUtils.getDomain(referer), "Sec-Fetch-Mode" to "cors", "Sec-Fetch-Site" to "cross-site"))
+        ExoPlayer.Builder(context).setMediaSourceFactory(DefaultMediaSourceFactory(httpDataSourceFactory)).build().apply { repeatMode = Player.REPEAT_MODE_ONE }
+    }
+
+    LaunchedEffect(sleepTimerMinutes) { if (sleepTimerMinutes > 0) { delay(sleepTimerMinutes * 60 * 1000L); exoPlayer.pause(); sleepTimerMinutes = 0 } }
+    DisposableEffect(exoPlayer) { onDispose { exoPlayer.release() } }
+    val thumbUrl = remember(posterUrl, videoUrl) { UrlUtils.resolveImageUrl(posterUrl, "adult", videoUrl) }
+
+    LaunchedEffect(videoUrl) {
+        if (videoUrl.isNotEmpty()) {
+            isBuffering = true; playbackError = null
+            val mimeType = when {
+                videoUrl.contains(".m3u8") || videoUrl.contains("m3u8") -> MimeTypes.APPLICATION_M3U8
+                videoUrl.contains(".mpd") || videoUrl.contains("dash") -> MimeTypes.APPLICATION_MPD
+                videoUrl.contains(".mp4") -> MimeTypes.VIDEO_MP4
+                else -> null
+            }
+            val mediaItem = if (mimeType != null) MediaItem.Builder().setUri(videoUrl).setMimeType(mimeType).build() else MediaItem.fromUri(videoUrl)
+            exoPlayer.setMediaItem(mediaItem); exoPlayer.prepare()
+            if (currentPosition > 0) exoPlayer.seekTo(currentPosition)
+            if (isPlayingInitially || hasStarted) { exoPlayer.playWhenReady = true; isPlaying = true; hasStarted = true }
+        }
+    }
+
+    LaunchedEffect(hasStarted, isPlaying) {
+        while (hasStarted && isPlaying) {
+            val current = exoPlayer.currentPosition; val total = exoPlayer.duration
+            currentPosition = current; bufferedPosition = exoPlayer.bufferedPosition
+            if (total > 0 && total != androidx.media3.common.C.TIME_UNSET) { duration = total; onProgressUpdate(current, total) }
+            delay(1000)
+        }
+    }
+
+    val shouldPause by PlayerManager.shouldPause
+    LaunchedEffect(shouldPause) { if (shouldPause) exoPlayer.pause() else if (isPlaying && hasStarted) exoPlayer.play() }
+
+    DisposableEffect(exoPlayer) {
+        val listener = object : Player.Listener {
+            override fun onPlaybackStateChanged(state: Int) { isBuffering = state == Player.STATE_BUFFERING; if (state == Player.STATE_READY) { isBuffering = false; duration = exoPlayer.duration.coerceAtLeast(0) } }
+            override fun onTracksChanged(tracks: Tracks) {
+                val audioList = mutableListOf<Pair<Int, Int>>(); val videoList = mutableListOf<Pair<Int, Int>>(); val subList = mutableListOf<Pair<Int, Int>>()
+                tracks.groups.forEachIndexed { groupIndex, group ->
+                    when (group.type) {
+                        C.TRACK_TYPE_AUDIO -> { for (i in 0 until group.length) audioList.add(groupIndex to i) }
+                        C.TRACK_TYPE_VIDEO -> { for (i in 0 until group.length) videoList.add(groupIndex to i) }
+                        C.TRACK_TYPE_TEXT -> { for (i in 0 until group.length) subList.add(groupIndex to i) }
+                    }
+                }
+                val sortedVideoTracks = videoList
+                    .map { it to tracks.groups[it.first].getTrackFormat(it.second).height }
+                    .filter { it.second > 0 }
+                    .sortedBy { it.second }
+                    .distinctBy { it.second }
+                    .map { it.first }
+                availableAudioTracks = audioList; availableVideoTracks = sortedVideoTracks; availableSubtitleTracks = subList
+            }
+            override fun onIsPlayingChanged(playing: Boolean) { isPlaying = playing }
+            override fun onPlayerError(error: androidx.media3.common.PlaybackException) { 
+                val link = links.getOrNull(currentLinkIndex)
+                if (link?.fallbackUrl != null) {
+                    val mimeType = when {
+                        link.fallbackUrl.contains(".m3u8") -> MimeTypes.APPLICATION_M3U8
+                        link.fallbackUrl.contains(".mpd") -> MimeTypes.APPLICATION_MPD
+                        else -> MimeTypes.VIDEO_MP4
+                    }
+                    val mediaItem = MediaItem.Builder().setUri(link.fallbackUrl).setMimeType(mimeType).build()
+                    exoPlayer.setMediaItem(mediaItem)
+                    exoPlayer.prepare()
+                    exoPlayer.play()
+                } else {
+                    playbackError = "Error: ${error.errorCodeName}"
+                }
+                isBuffering = false 
+            }
+        }
+        exoPlayer.addListener(listener)
+        onDispose { exoPlayer.removeListener(listener) }
+    }
+
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_PAUSE -> if (!isMinimized) exoPlayer.pause()
+                Lifecycle.Event.ON_RESUME -> if (isPlaying) exoPlayer.play()
+                Lifecycle.Event.ON_STOP, Lifecycle.Event.ON_DESTROY -> exoPlayer.stop()
+                else -> {}
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+            val act = context as? Activity; act?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+            act?.window?.let { val controller = WindowCompat.getInsetsController(it, view); controller.show(WindowInsetsCompat.Type.systemBars()); it.attributes = it.attributes?.apply { screenBrightness = -1f } }
+            bottomDockVisible.value = true
+        }
+    }
+
+    LaunchedEffect(showControls, isPlaying, isLocked) { if (showControls && isPlaying && !isLocked) { delay(5000); showControls = false } }
+
+    val animatedOffset by animateFloatAsState(targetValue = if (isMinimized) 0f else offsetY, label = "offset")
+
+    Box(modifier = modifier.fillMaxSize().then(if (isMinimized || isLandscape) Modifier else Modifier.offset { IntOffset(0, animatedOffset.roundToInt()) })) {
+        if (isMinimized) {
+            Box(modifier = Modifier.fillMaxSize().padding(start = 12.dp, end = 12.dp, bottom = 80.dp), contentAlignment = Alignment.BottomCenter) {
+                Box(modifier = Modifier.fillMaxWidth().height(64.dp).clip(RoundedCornerShape(32.dp)).background(Brush.horizontalGradient(listOf(Color(0xFF00796B), Color(0xFF004D40)))).clickable { onMinimizedChange(false) }.pointerInput(Unit) { detectVerticalDragGestures(onVerticalDrag = { _, dragAmount -> offsetY = (offsetY + dragAmount).coerceAtLeast(0f) }, onDragEnd = { if (offsetY > 150) onClose(); offsetY = 0f }) }.offset { IntOffset(0, offsetY.roundToInt()) }.padding(horizontal = 12.dp), contentAlignment = Alignment.CenterStart) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(modifier = Modifier.size(48.dp), contentAlignment = Alignment.Center) {
+                            CircularProgressIndicator(progress = { if (duration > 0) currentPosition.toFloat() / duration.toFloat() else 0f }, modifier = Modifier.fillMaxSize(), color = Color.White.copy(0.6f), strokeWidth = 2.dp, trackColor = Color.White.copy(0.1f))
+                            AsyncImage(model = thumbUrl, contentDescription = null, modifier = Modifier.size(40.dp).clip(CircleShape).background(Color.Black.copy(0.3f)), contentScale = ContentScale.Crop)
+                            IconButton(onClick = { if (isPlaying) exoPlayer.pause() else exoPlayer.play() }) { Icon(if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow, null, tint = Color.White, modifier = Modifier.size(16.dp)) }
+                        }
+                        Spacer(Modifier.width(12.dp))
+                        Column(Modifier.weight(1f)) {
+                            Text(title, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                            Text(fullInfo?.uploaderName ?: subtitle, color = Color.White.copy(0.7f), fontSize = 12.sp, maxLines = 1)
+                        }
+                    }
+                }
+            }
+        } else {
+            Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
+                Column(Modifier.fillMaxSize()) {
+                    if (!isLandscape) {
+                        Row(Modifier.fillMaxWidth().statusBarsPadding().padding(horizontal = 12.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                            IconButton(onClick = { onMinimizedChange(true) }) { Icon(Icons.Default.KeyboardArrowDown, null, tint = Color.White, modifier = Modifier.size(32.dp)) }
+                            Spacer(Modifier.weight(1f))
+                            IconButton(onClick = { showDownloadDialog = true }) { Icon(Icons.Default.FileDownload, null, tint = Color.White) }
+                            IconButton(onClick = { showSleepTimerDialog = true }) { Icon(Icons.Default.Timer, null, tint = Color.White) }
+                            Surface(onClick = { showSettings = true }, color = Color.Transparent, shape = RoundedCornerShape(4.dp)) { Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)) { Icon(Icons.Default.VideoCameraBack, null, tint = Color.White, modifier = Modifier.size(16.dp)); Spacer(Modifier.width(6.dp)); Text(currentLink?.quality ?: "Auto", color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold) } }
+                            IconButton(onClick = { showMoreMenu = true }) { Icon(Icons.Default.MoreVert, null, tint = Color.White) }
+                        }
+                    }
+
+                    Box(modifier = Modifier.fillMaxWidth().weight(if (isLandscape) 1f else 0.45f)) {
+                        AndroidView(
+                            factory = { PlayerView(it).apply { player = exoPlayer; useController = false; setBackgroundColor(android.graphics.Color.BLACK); this.resizeMode = resizeMode; layoutParams = FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT, android.view.Gravity.CENTER) } },
+                            modifier = Modifier.fillMaxSize().rotate(rotation).pointerInput(isLandscape, isLocked) {
+                                detectTapGestures(
+                                    onTap = { if (!isLocked) showControls = !showControls },
+                                    onDoubleTap = { offset ->
+                                        if (!isLocked) {
+                                            val width = size.width
+                                            if (offset.x < width / 4) exoPlayer.seekTo((exoPlayer.currentPosition - 10000).coerceAtLeast(0))
+                                            else if (offset.x > width * 3 / 4) exoPlayer.seekTo((exoPlayer.currentPosition + 10000).coerceAtMost(exoPlayer.duration))
+                                        }
+                                    }
+                                )
+                            },
+                            update = { view -> view.player = exoPlayer; view.resizeMode = resizeMode }
+                        )
+                        if (isBuffering) { Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { LoadingAnimation(tealColor) } }
+                        if (isLandscape) {
+                            PlayerControlsOverlay(
+                                isLandscape = true, showControls = showControls, isLocked = isLocked, isPlaying = isPlaying, hasStarted = hasStarted,
+                                title = title, subtitle = subtitle, quality = currentLink?.quality ?: "Auto", currentPosition = currentPosition, duration = duration, bufferedPosition = bufferedPosition,
+                                onBack = { activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT; onFullScreenToggle(false) },
+                                onPlayPause = { if (isPlaying) exoPlayer.pause() else exoPlayer.play() },
+                                onSeek = { exoPlayer.seekTo(it) }, 
+                                onRewind = { exoPlayer.seekTo((exoPlayer.currentPosition - 10000).coerceAtLeast(0)) }, 
+                                onForward = { exoPlayer.seekTo((exoPlayer.currentPosition + 10000).coerceAtMost(duration)) },
+                                onPrevious = { }, onNext = { }, 
+                                onLock = { isLocked = !isLocked }, onSettings = { showSettings = true }, onCC = { showCCDialog = true },
+                                onResize = { resizeMode = if (resizeMode == AspectRatioFrameLayout.RESIZE_MODE_FIT) AspectRatioFrameLayout.RESIZE_MODE_ZOOM else AspectRatioFrameLayout.RESIZE_MODE_FIT },
+                                onRotate = { rotation = (rotation + 90f) % 360f }, onDownload = { showDownloadDialog = true }, onSleepTimer = { showSleepTimerDialog = true }, onMore = { showMoreMenu = true }, tealColor = tealColor
+                            )
+                        } else if (showControls && !isLocked) {
+                            Box(Modifier.fillMaxSize().background(Color.Black.copy(0.3f))) {
+                                Row(Modifier.align(Alignment.Center).fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically) {
+                                    IconButton(onClick = { exoPlayer.seekTo((exoPlayer.currentPosition - 10000).coerceAtLeast(0)) }) { Icon(Icons.Default.Replay10, null, tint = Color.White, modifier = Modifier.size(40.dp)) }
+                                    IconButton(onClick = { if (isPlaying) exoPlayer.pause() else exoPlayer.play() }, modifier = Modifier.size(64.dp)) { Icon(if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow, null, tint = Color.White, modifier = Modifier.size(64.dp)) }
+                                    IconButton(onClick = { exoPlayer.seekTo((exoPlayer.currentPosition + 10000).coerceAtMost(duration)) }) { Icon(Icons.Default.Forward10, null, tint = Color.White, modifier = Modifier.size(40.dp)) }
+                                }
+                                IconButton(
+                                    onClick = { 
+                                        activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+                                        onFullScreenToggle(true)
+                                    },
+                                    modifier = Modifier.align(Alignment.BottomEnd).padding(8.dp)
+                                ) {
+                                    Icon(Icons.Default.Fullscreen, null, tint = Color.White)
+                                }
+                            }
+                        }
+                    }
+
+                    if (!isLandscape) {
+                        Column(modifier = Modifier.fillMaxWidth().weight(0.55f).background(Color.Black).verticalScroll(rememberScrollState())) {
+                            Column(Modifier.padding(16.dp)) {
+                                Text(text = if (fullInfo != null) fullInfo!!.name else title, color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                                Spacer(Modifier.height(4.dp))
+                                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { showDescriptionSheet = true }) {
+                                    Text(text = "${formatViews(fullInfo?.viewCount ?: 0L)} views", color = Color.White.copy(0.6f), fontSize = 12.sp)
+                                    Spacer(Modifier.width(8.dp))
+                                    Text("...more", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                }
+                            }
+
+                            Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp).clickable { fullInfo?.uploaderUrl?.let { url -> onChannelClick(url) } }, verticalAlignment = Alignment.CenterVertically) {
+                                AsyncImage(model = fullInfo?.uploaderAvatars?.lastOrNull()?.getUrl(), contentDescription = null, modifier = Modifier.size(36.dp).clip(CircleShape).background(Color.White.copy(0.1f)), contentScale = ContentScale.Crop)
+                                Spacer(Modifier.width(12.dp))
+                                Text(text = fullInfo?.uploaderName ?: subtitle, color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                                Button(onClick = { fullInfo?.uploaderUrl?.let { url -> scope.launch { prefs.toggleSubscription(url) } } }, colors = ButtonDefaults.buttonColors(containerColor = if (subscribed) Color.White.copy(0.15f) else Color.Red), shape = RoundedCornerShape(20.dp), modifier = Modifier.height(36.dp)) { Text(if (subscribed) "Subscribed" else "Subscribe", fontWeight = FontWeight.Bold, fontSize = 14.sp) }
+                            }
+
+                            Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Row(modifier = Modifier.clip(RoundedCornerShape(20.dp)).background(Color.White.copy(0.1f)), verticalAlignment = Alignment.CenterVertically) {
+                                    Row(modifier = Modifier.clickable { isLiked = !isLiked; if (isLiked) isDisliked = false }.padding(horizontal = 12.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(if (isLiked) Icons.Default.ThumbUp else Icons.Default.ThumbUpOffAlt, null, tint = Color.White, modifier = Modifier.size(20.dp))
+                                        Spacer(Modifier.width(6.dp))
+                                        Text(formatViews(displayLikeCount), color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                                    }
+                                    Box(Modifier.width(1.dp).height(20.dp).background(Color.White.copy(0.2f)))
+                                    IconButton(onClick = { isDisliked = !isDisliked; if (isDisliked) isLiked = false }, modifier = Modifier.size(36.dp)) { Icon(if (isDisliked) Icons.Default.ThumbDown else Icons.Default.ThumbDownOffAlt, null, tint = Color.White, modifier = Modifier.size(20.dp)) }
+                                }
+                                Row(modifier = Modifier.clip(RoundedCornerShape(20.dp)).background(Color.White.copy(0.1f)).clickable { ShareUtils.shareLink(context, title, "https://www.youtube.com/watch?v=$id") }.padding(horizontal = 12.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(Icons.AutoMirrored.Outlined.Reply, null, tint = Color.White, modifier = Modifier.size(20.dp).rotate(180f))
+                                    Spacer(Modifier.width(6.dp)); Text("Share", color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                                }
+                                Row(modifier = Modifier.clip(RoundedCornerShape(20.dp)).background(Color.White.copy(0.1f)).clickable { showDownloadDialog = true }.padding(horizontal = 12.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(Icons.Default.FileDownload, null, tint = Color.White, modifier = Modifier.size(20.dp))
+                                    Spacer(Modifier.width(6.dp)); Text("Download", color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                                }
+                            }
+
+                            Column(Modifier.padding(horizontal = 24.dp)) {
+                                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) { Text(formatTime(currentPosition), color = Color.White, fontSize = 13.sp); Text(formatTime(duration), color = Color.White, fontSize = 13.sp) }
+                                Slider(value = currentPosition.toFloat(), onValueChange = { exoPlayer.seekTo(it.toLong()) }, valueRange = 0f..duration.toFloat().coerceAtLeast(1f), colors = SliderDefaults.colors(thumbColor = tealColor, activeTrackColor = tealColor), modifier = Modifier.fillMaxWidth().height(24.dp))
+                            }
+                            
+                            Row(modifier = Modifier.fillMaxWidth().padding(bottom = 40.dp), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically) {
+                                IconButton(onClick = { exoPlayer.seekTo((exoPlayer.currentPosition - 10000).coerceAtLeast(0)) }) { Icon(Icons.Default.Replay10, null, tint = Color.White, modifier = Modifier.size(36.dp)) }
+                                IconButton(onClick = { if (isPlaying) exoPlayer.pause() else exoPlayer.play() }, modifier = Modifier.size(80.dp).background(Color.White.copy(0.05f), CircleShape)) { Icon(if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow, null, tint = Color.White, modifier = Modifier.size(48.dp)) }
+                                IconButton(onClick = { exoPlayer.seekTo((exoPlayer.currentPosition + 10000).coerceAtMost(duration)) }) { Icon(Icons.Default.Forward10, null, tint = Color.White, modifier = Modifier.size(36.dp)) }
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (showCCDialog) { TrackSelectionDialog("Subtitles", availableSubtitleTracks, exoPlayer, C.TRACK_TYPE_TEXT) { showCCDialog = false } }
+            if (showSettings) { TrackSelectionDialog("Quality", availableVideoTracks, exoPlayer, C.TRACK_TYPE_VIDEO) { showSettings = false } }
+            if (showDownloadDialog) {
+                PlayerManager.currentVideo.value?.let { video ->
+                    DownloadDialog(video.title, video.studio, video.posterPath, onDownloadStart = { _, _ ->
+                        DownloadUtils.downloadVideo(context, videoUrl, video.title)
+                        scope.launch {
+                            val entryPoint = EntryPointAccessors.fromApplication(context.applicationContext, PlayerEntryPoint::class.java)
+                            entryPoint.watchlistDao().insert(com.streamix.core.storage.WatchlistEntity(video.id, video.title, video.posterPath, video.mediaType, "Downloads", ""))
+                        }
+                        showDownloadDialog = false
+                    }, onDismiss = { showDownloadDialog = false })
+                }
+            }
+            if (showMoreMenu) {
+                Dialog(onDismissRequest = { showMoreMenu = false }) {
+                    Card(colors = CardDefaults.cardColors(containerColor = Color(0xFF2C2C2C))) {
+                        LazyColumn(Modifier.padding(vertical = 8.dp).width(280.dp)) {
+                            item { MoreMenuItem("Video details and comments", Icons.Default.Comment) { showMoreMenu = false; showDescriptionSheet = true } }
+                            item { MoreMenuItem("Add to YouTube playlist", Icons.Default.PlaylistAdd) { showMoreMenu = false; showPlaylistDialog = true } }
+                            item { MoreMenuItem("Search lyrics on Google", Icons.Default.Search) { showMoreMenu = false; val query = java.net.URLEncoder.encode("$title lyrics", "UTF-8"); context.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse("https://www.google.com/search?q=$query"))) } }
+                            item { MoreMenuItem("Share", Icons.Default.Share) { showMoreMenu = false; ShareUtils.shareLink(context, title, "https://www.youtube.com/watch?v=$id") } }
+                            item { Divider(color = Color.White.copy(0.1f), modifier = Modifier.padding(vertical = 4.dp)) }
+                            item { MoreMenuItem("Reload player", Icons.Default.Refresh) { showMoreMenu = false; exoPlayer.prepare(); exoPlayer.play() } }
+                            item { MoreMenuItem("Equalizer", Icons.Default.Equalizer) { showMoreMenu = false; try { val intent = android.content.Intent(android.media.audiofx.AudioEffect.ACTION_DISPLAY_AUDIO_EFFECT_CONTROL_PANEL); intent.putExtra(android.media.audiofx.AudioEffect.EXTRA_AUDIO_SESSION, exoPlayer.audioSessionId); context.startActivity(intent) } catch (e: Exception) { Toast.makeText(context, "Equalizer not found", Toast.LENGTH_SHORT).show() } } }
+                        }
+                    }
+                }
+            }
+            if (showDescriptionSheet) { DescriptionBottomSheet(title, fullInfo) { showDescriptionSheet = false } }
+            if (showPlaylistDialog) { PlayerManager.currentVideo.value?.let { video -> AddToPlaylistDialog(video) { showPlaylistDialog = false } } }
+        }
+    }
+}
+
+@Composable
+fun DescriptionBottomSheet(title: String, fullInfo: StreamInfo?, onDismiss: () -> Unit) {
+    ModalBottomSheet(onDismissRequest = onDismiss, containerColor = Color(0xFF1A1A1A), contentColor = Color.White) {
+        Column(Modifier.fillMaxWidth().padding(16.dp).verticalScroll(rememberScrollState())) {
+            Text("Description", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+            Divider(color = Color.White.copy(0.1f), modifier = Modifier.padding(vertical = 12.dp))
+            Text(title, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+            Spacer(Modifier.height(16.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                InfoStat(formatViews(fullInfo?.likeCount ?: 0L), "Likes")
+                InfoStat(formatViews(fullInfo?.viewCount ?: 0L), "Views")
+                InfoStat("2024", "Year")
+            }
+            Spacer(Modifier.height(20.dp))
+            val descriptionText = remember(fullInfo?.description?.content) {
+                val raw = fullInfo?.description?.content ?: "No description available."
+                if (raw.contains("<") && raw.contains(">")) {
+                    android.text.Html.fromHtml(raw, android.text.Html.FROM_HTML_MODE_LEGACY).toString()
+                } else {
+                    raw
+                }
+            }
+            LinkifiedText(descriptionText, Color.LightGray, 14.sp)
+            Spacer(Modifier.height(50.dp))
+        }
+    }
+}
+
+@Composable fun InfoStat(value: String, label: String) { Column(Modifier.background(Color.White.copy(0.05f), RoundedCornerShape(8.dp)).padding(horizontal = 16.dp, vertical = 12.dp), horizontalAlignment = Alignment.CenterHorizontally) { Text(value, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 15.sp); Text(label, color = Color.Gray, fontSize = 12.sp) } }
+
+@Composable
+fun LinkifiedText(text: String, color: Color, fontSize: androidx.compose.ui.unit.TextUnit) {
+    val context = LocalContext.current
+    val urlPattern = remember { java.util.regex.Pattern.compile("(https?://[\\w-]+(\\.[\\w-]+)+(/\\S*)?)") }
+    val annotatedString = remember(text) {
+        val matcher = urlPattern.matcher(text)
+        buildAnnotatedString {
+            var lastIndex = 0
+            while (matcher.find()) {
+                val start = matcher.start(); val end = matcher.end()
+                append(text.substring(lastIndex, start))
+                val link = text.substring(start, end)
+                pushStringAnnotation("URL", link)
+                withStyle(SpanStyle(color = Color(0xFF2196F3), fontWeight = FontWeight.Bold)) { append(link) }
+                pop(); lastIndex = end
+            }
+            append(text.substring(lastIndex))
+        }
+    }
+    androidx.compose.foundation.text.ClickableText(annotatedString, style = androidx.compose.ui.text.TextStyle(color = color, fontSize = fontSize), onClick = { offset -> annotatedString.getStringAnnotations("URL", offset, offset).firstOrNull()?.let { try { context.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(it.item))) } catch (e: Exception) {} } })
+}
+
+@Composable
+fun AddToPlaylistDialog(video: SearchResult, onDismiss: () -> Unit) {
+    Dialog(onDismissRequest = onDismiss) {
+        Card(colors = CardDefaults.cardColors(containerColor = Color(0xFF2C2C2C))) {
+            Column(Modifier.padding(24.dp).width(300.dp)) {
+                Text("Add to Playlist", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                Spacer(Modifier.height(16.dp))
+                val context = LocalContext.current
+                TextButton(onClick = { onDismiss(); Toast.makeText(context, "Added to favorites", Toast.LENGTH_SHORT).show() }, modifier = Modifier.fillMaxWidth()) { Text("My Favorites", color = Color.White) }
+                TextButton(onClick = onDismiss, modifier = Modifier.fillMaxWidth()) { Text("CANCEL", color = Color(0xFF00BCD4)) }
+            }
+        }
+    }
+}
+
+@Composable
+fun TrackSelectionDialog(title: String, tracks: List<Pair<Int, Int>>, exoPlayer: ExoPlayer, type: Int, onDismiss: () -> Unit) {
+    Dialog(onDismissRequest = onDismiss) {
+        Card(colors = CardDefaults.cardColors(containerColor = Color(0xFF2C2C2C))) {
+            Column(Modifier.padding(24.dp).width(300.dp)) {
+                Text(title, color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                Spacer(Modifier.height(16.dp))
+                LazyColumn(Modifier.heightIn(max = 400.dp)) {
+                    item {
+                        val hasOverride = exoPlayer.trackSelectionParameters.overrides.values.any { override -> exoPlayer.currentTracks.groups.any { it.type == type && it.mediaTrackGroup == override.mediaTrackGroup } }
+                        Row(Modifier.fillMaxWidth().clickable { val builder = exoPlayer.trackSelectionParameters.buildUpon(); exoPlayer.currentTracks.groups.forEach { if (it.type == type) builder.clearOverride(it.mediaTrackGroup) }; exoPlayer.trackSelectionParameters = builder.build(); onDismiss() }.padding(vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+                            RadioButton(selected = !hasOverride, onClick = { val builder = exoPlayer.trackSelectionParameters.buildUpon(); exoPlayer.currentTracks.groups.forEach { if (it.type == type) builder.clearOverride(it.mediaTrackGroup) }; exoPlayer.trackSelectionParameters = builder.build(); onDismiss() }, colors = RadioButtonDefaults.colors(selectedColor = Color(0xFF00BCD4)))
+                            Spacer(Modifier.width(8.dp)); Text(if (type == C.TRACK_TYPE_TEXT) "Off" else "Auto", color = Color.White)
+                        }
+                    }
+                    items(tracks) { (groupIndex, trackIndex) ->
+                        val group = exoPlayer.currentTracks.groups[groupIndex]; val format = group.getTrackFormat(trackIndex); val isSelected = group.isTrackSelected(trackIndex)
+                        val label = when (type) { C.TRACK_TYPE_VIDEO -> "${format.height}p"; C.TRACK_TYPE_TEXT -> format.label ?: format.language ?: "Unknown"; else -> format.label ?: format.language ?: "Audio ${trackIndex + 1}" }
+                        Row(Modifier.fillMaxWidth().clickable { exoPlayer.trackSelectionParameters = exoPlayer.trackSelectionParameters.buildUpon().setOverrideForType(TrackSelectionOverride(group.mediaTrackGroup, trackIndex)).build(); onDismiss() }.padding(vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+                            RadioButton(selected = isSelected, onClick = { exoPlayer.trackSelectionParameters = exoPlayer.trackSelectionParameters.buildUpon().setOverrideForType(TrackSelectionOverride(group.mediaTrackGroup, trackIndex)).build(); onDismiss() }, colors = RadioButtonDefaults.colors(selectedColor = Color(0xFF00BCD4)))
+                            Spacer(Modifier.width(8.dp)); Text(label, color = Color.White)
+                        }
+                    }
+                }
+                TextButton(onClick = onDismiss, modifier = Modifier.align(Alignment.End)) { Text("CANCEL", color = Color(0xFF00BCD4)) }
+            }
+        }
+    }
+}
+
+@Composable
+fun DownloadDialog(title: String, uploader: String, posterUrl: String?, onDownloadStart: (String, String) -> Unit, onDismiss: () -> Unit) {
+    Dialog(onDismissRequest = onDismiss) {
+        Card(colors = CardDefaults.cardColors(containerColor = Color(0xFF2C2C2C)), shape = RoundedCornerShape(8.dp)) {
+            Column(Modifier.fillMaxWidth(0.9f).padding(16.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(Modifier.size(80.dp, 45.dp).background(Color.Black, RoundedCornerShape(4.dp))) { AsyncImage(model = posterUrl, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(4.dp))) }
+                    Spacer(Modifier.width(12.dp)); Column { Text(title, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis); Text(uploader, color = Color.White.copy(0.6f), fontSize = 12.sp) }
+                }
+                Spacer(Modifier.height(24.dp)); LazyColumn(Modifier.heightIn(max = 500.dp)) { item { DownloadSectionHeader("VIDEO DOWNLOAD LINKS", Icons.Default.VideoCameraBack); listOf("1080p", "720p", "480p", "360p").forEach { DownloadItem("MP4", it, "...") { onDownloadStart("MP4", it) } } } }
+            }
+        }
+    }
+}
+
+@Composable fun DownloadSectionHeader(title: String, icon: ImageVector) { Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 8.dp)) { Icon(icon, null, tint = Color.White, modifier = Modifier.size(20.dp)); Spacer(Modifier.width(12.dp)); Text(title, color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold) } }
+@Composable fun DownloadItem(format: String, quality: String, size: String, onClick: () -> Unit) { Row(Modifier.fillMaxWidth().clickable { onClick() }.padding(vertical = 12.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) { Text(format, color = Color.White.copy(0.6f), fontSize = 13.sp, modifier = Modifier.width(60.dp)); Text(quality, color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f), textAlign = TextAlign.Center); Text(size, color = Color.White.copy(0.6f), fontSize = 13.sp, modifier = Modifier.width(80.dp), textAlign = TextAlign.End) } }
+@Composable fun MoreMenuItem(text: String, icon: ImageVector, onClick: () -> Unit) { Row(Modifier.fillMaxWidth().clickable { onClick() }.padding(horizontal = 16.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) { Icon(icon, null, tint = Color.White, modifier = Modifier.size(20.dp)); Spacer(Modifier.width(16.dp)); Text(text, color = Color.White, fontSize = 14.sp) } }
+@Composable fun LoadingAnimation(color: Color) { val infiniteTransition = rememberInfiniteTransition(label = "loading"); val angle by infiniteTransition.animateFloat(initialValue = 0f, targetValue = 360f, animationSpec = infiniteRepeatable(tween(1000, easing = LinearEasing)), label = "angle"); Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Box(Modifier.size(60.dp).rotate(angle).border(3.dp, Brush.sweepGradient(listOf(Color.Transparent, color)), CircleShape)) } }
+private fun formatViews(views: Long): String { return when { views >= 1_000_000_000 -> "%.1fB".format(views / 1_000_000_000.0); views >= 1_000_000 -> "%.1fM".format(views / 1_000_000.0); views >= 1_000 -> "%.1fK".format(views / 1_000.0); else -> views.toString() } }
+private fun formatTime(millis: Long): String { val totalSeconds = millis / 1000; val hours = totalSeconds / 3600; val minutes = (totalSeconds % 3600) / 60; val seconds = totalSeconds % 60; return if (hours > 0) "%d:%02d:%02d".format(hours, minutes, seconds) else "%02d:%02d".format(minutes, seconds) }
+
+@Composable
+fun PlayerControlsOverlay(isLandscape: Boolean, showControls: Boolean, isLocked: Boolean, isPlaying: Boolean, hasStarted: Boolean, title: String, subtitle: String, quality: String, currentPosition: Long, duration: Long, bufferedPosition: Long, onBack: () -> Unit, onPlayPause: () -> Unit, onSeek: (Long) -> Unit, onRewind: () -> Unit, onForward: () -> Unit, onPrevious: () -> Unit, onNext: () -> Unit, onLock: () -> Unit, onSettings: () -> Unit, onCC: () -> Unit, onResize: () -> Unit, onRotate: () -> Unit, onDownload: () -> Unit, onSleepTimer: () -> Unit, onMore: () -> Unit, tealColor: Color) {
+    AnimatedVisibility(visible = showControls, enter = fadeIn(), exit = fadeOut()) {
+        Box(Modifier.fillMaxSize().background(Color.Black.copy(if (isLocked) 0f else 0.4f))) {
+            if (isLocked) {
+                IconButton(onClick = onLock, modifier = Modifier.align(Alignment.CenterStart).padding(16.dp).background(Color.Black.copy(0.5f), CircleShape)) { Icon(if (isLocked) Icons.Default.Lock else Icons.Default.LockOpen, null, tint = tealColor) }
+            } else {
+                Row(Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(onClick = onBack) { Icon(Icons.Default.KeyboardArrowDown, null, tint = Color.White, modifier = Modifier.size(32.dp)) }
+                    Text(title, color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                        IconButton(onClick = onDownload) { Icon(Icons.Default.FileDownload, null, tint = Color.White) }
+                        IconButton(onClick = onSleepTimer) { Icon(Icons.Default.Timer, null, tint = Color.White) }
+                        Surface(onClick = onSettings, color = Color.Transparent, shape = RoundedCornerShape(4.dp)) { Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)) { Icon(Icons.Default.VideoCameraBack, null, tint = Color.White, modifier = Modifier.size(16.dp)); Spacer(Modifier.width(6.dp)); Text(quality, color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold) } }
+                        IconButton(onClick = onMore) { Icon(Icons.Default.MoreVert, null, tint = Color.White) }
+                    }
+                }
+                Row(Modifier.align(Alignment.Center).fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(onClick = onRewind) { Icon(Icons.Default.Replay10, null, tint = Color.White, modifier = Modifier.size(48.dp)) }
+                    IconButton(onClick = onPrevious) { Icon(Icons.Default.SkipPrevious, null, tint = Color.White, modifier = Modifier.size(52.dp)) }
+                    IconButton(onClick = onPlayPause, modifier = Modifier.size(80.dp)) { Icon(if (isPlaying && hasStarted) Icons.Default.Pause else Icons.Default.PlayArrow, null, tint = Color.White, modifier = Modifier.size(80.dp)) }
+                    IconButton(onClick = onNext) { Icon(Icons.Default.SkipNext, null, tint = Color.White, modifier = Modifier.size(52.dp)) }
+                    IconButton(onClick = onForward) { Icon(Icons.Default.Forward10, null, tint = Color.White, modifier = Modifier.size(48.dp)) }
+                }
+                Column(Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(horizontal = 16.dp, vertical = 24.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(formatTime(currentPosition), color = Color.White, fontSize = 13.sp)
+                        Slider(value = currentPosition.toFloat(), onValueChange = { onSeek(it.toLong()) }, valueRange = 0f..duration.toFloat().coerceAtLeast(1f), colors = SliderDefaults.colors(thumbColor = tealColor, activeTrackColor = tealColor, inactiveTrackColor = Color.White.copy(0.2f)), modifier = Modifier.weight(1f).padding(horizontal = 12.dp))
+                        Text(formatTime(duration), color = Color.White, fontSize = 13.sp)
+                        Spacer(Modifier.width(20.dp))
+                        IconButton(onClick = onCC, modifier = Modifier.size(32.dp)) { Icon(Icons.Default.ClosedCaption, null, tint = Color.White) }
+                        IconButton(onClick = onResize, modifier = Modifier.size(32.dp)) { Icon(Icons.Default.AspectRatio, null, tint = Color.White) }
+                        IconButton(onClick = onBack, modifier = Modifier.size(32.dp)) { Icon(Icons.Default.FullscreenExit, null, tint = Color.White) }
+                    }
+                }
+            }
+        }
+    }
+}

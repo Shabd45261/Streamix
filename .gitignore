@@ -1,0 +1,27 @@
+# Project-wide ignore rules
+*.iml
+.gradle
+/local.properties
+/.idea/caches
+/.idea/libraries
+/.idea/modules.xml
+/.idea/workspace.xml
+/.idea/navEditor.xml
+/.idea/assetWizardSettings.xml
+.DS_Store
+/build
+build/
+*/build/
+/captures
+.externalNativeBuild
+.cxx
+local.properties
+# *.apk
+*.ap_
+*.dex
+*.class
+bin/
+gen/
+# Ignore the apk folder if we don't want it in the repo (user asked for it in releases)
+apk/old/
+# apk/
