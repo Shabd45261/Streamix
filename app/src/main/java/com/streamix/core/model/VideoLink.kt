@@ -6,5 +6,6 @@ data class VideoLink(
     val server: String,        // "Moviebox", "Moviebox IN", "RedTube"
     val isM3u8: Boolean = url.contains(".m3u8"),
     val subtitleUrl: String? = null,
-    val fallbackUrl: String? = null
+    val fallbackUrl: String? = null,
+    val headers: Map<String, String> = emptyMap()
 )

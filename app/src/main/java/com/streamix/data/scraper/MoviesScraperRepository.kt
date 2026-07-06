@@ -81,7 +81,10 @@ class MoviesScraperRepository @Inject constructor() {
                         url = link.url,
                         quality = if (link.quality > 0) "${link.quality}p" else "Auto",
                         server = link.source,
-                        isM3u8 = link.isM3u8
+                        isM3u8 = link.isM3u8,
+                        headers = link.headers.toMutableMap().apply {
+                            if (link.referer.isNotEmpty()) put("Referer", link.referer)
+                        }
                     ))
                 }
             } catch (e: Exception) {
@@ -105,7 +108,10 @@ class MoviesScraperRepository @Inject constructor() {
                                     url = link.url,
                                     quality = if (link.quality > 0) "${link.quality}p" else "Auto",
                                     server = link.source,
-                                    isM3u8 = link.isM3u8
+                                    isM3u8 = link.isM3u8,
+                                    headers = link.headers.toMutableMap().apply {
+                                        if (link.referer.isNotEmpty()) put("Referer", link.referer)
+                                    }
                                 ))
                             }
                             if (links.isNotEmpty()) break

@@ -11,12 +11,15 @@ import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -186,6 +189,7 @@ fun EmbeddedPlayer(
 
     var isSeekingHorizontally by remember { mutableStateOf(false) }
     var horizontalSeekValue by remember { mutableLongStateOf(0L) }
+    var gestureAmount by remember { mutableFloatStateOf(0f) }
 
     var showNowPlayingList by remember { mutableStateOf(false) }
     var showDownloadDialog by remember { mutableStateOf(false) }
@@ -216,7 +220,14 @@ fun EmbeddedPlayer(
     val tealColor = Color(0xFF00BCD4)
     var offsetY by remember { mutableFloatStateOf(0f) }
 
-    BackHandler(enabled = !isMinimized) { onMinimizedChange(true) }
+    BackHandler(enabled = !isMinimized) {
+        if (isLandscape) {
+            activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_USER
+            onFullScreenToggle(false)
+        } else {
+            onMinimizedChange(true)
+        }
+    }
 
     LaunchedEffect(id, mediaType) {
         if (id.isNotEmpty() && mediaType == "youtube") {
@@ -234,44 +245,50 @@ fun EmbeddedPlayer(
             if (isLandscape) {
                 controller.hide(WindowInsetsCompat.Type.systemBars())
                 controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-            } else { controller.show(WindowInsetsCompat.Type.systemBars()) }
+            } else { 
+                controller.show(WindowInsetsCompat.Type.systemBars()) 
+            }
         }
     }
 
     LaunchedEffect(isMinimized) { if (isMinimized) { offsetY = 0f; showNowPlayingList = false } }
 
     val exoPlayer = remember {
-        val referer = when {
-            id.startsWith("http") -> id
-            videoUrl.isNotBlank() -> UrlUtils.getDomain(videoUrl)
-            else -> "https://www.google.com/"
-        }
-        val httpDataSourceFactory = DefaultHttpDataSource.Factory()
-            .setUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36")
-            .setAllowCrossProtocolRedirects(true)
-            .setDefaultRequestProperties(mapOf("Referer" to referer, "Origin" to UrlUtils.getDomain(referer), "Sec-Fetch-Mode" to "cors", "Sec-Fetch-Site" to "cross-site"))
-        ExoPlayer.Builder(context).setMediaSourceFactory(DefaultMediaSourceFactory(httpDataSourceFactory)).build().apply { repeatMode = Player.REPEAT_MODE_ONE }
+        ExoPlayer.Builder(context).build().apply { repeatMode = Player.REPEAT_MODE_ONE }
     }
 
     LaunchedEffect(sleepTimerMinutes) { if (sleepTimerMinutes > 0) { delay(sleepTimerMinutes * 60 * 1000L); exoPlayer.pause(); sleepTimerMinutes = 0 } }
     DisposableEffect(exoPlayer) { onDispose { exoPlayer.release() } }
     val thumbUrl = remember(posterUrl, videoUrl) { UrlUtils.resolveImageUrl(posterUrl, "adult", videoUrl) }
 
-    LaunchedEffect(videoUrl) {
-        if (videoUrl.isNotEmpty()) {
+    LaunchedEffect(currentLink) {
+        if (currentLink != null) {
+            val link = currentLink!!
+            val url = link.url
             isBuffering = true; playbackError = null
+            
             val mimeType = when {
-                videoUrl.contains(".m3u8") || videoUrl.contains("m3u8") -> MimeTypes.APPLICATION_M3U8
-                videoUrl.contains(".mpd") || videoUrl.contains("dash") -> MimeTypes.APPLICATION_MPD
-                videoUrl.contains(".mp4") -> MimeTypes.VIDEO_MP4
+                url.contains(".m3u8") || url.contains("m3u8") -> MimeTypes.APPLICATION_M3U8
+                url.contains(".mpd") || url.contains("dash") -> MimeTypes.APPLICATION_MPD
+                url.contains(".mp4") -> MimeTypes.VIDEO_MP4
                 else -> null
             }
-            val mediaItem = if (mimeType != null) MediaItem.Builder().setUri(videoUrl).setMimeType(mimeType).build() else MediaItem.fromUri(videoUrl)
-            exoPlayer.setMediaItem(mediaItem); exoPlayer.prepare()
+
+            val httpDataSourceFactory = DefaultHttpDataSource.Factory()
+                .setUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36")
+                .setAllowCrossProtocolRedirects(true)
+                .setDefaultRequestProperties(link.headers)
+            
+            val mediaSourceFactory = DefaultMediaSourceFactory(httpDataSourceFactory)
+            val mediaItem = MediaItem.Builder().setUri(url).setMimeType(mimeType).build()
+            val mediaSource = mediaSourceFactory.createMediaSource(mediaItem)
+            
+            exoPlayer.setMediaSource(mediaSource)
+            exoPlayer.prepare()
             if (currentPosition > 0) exoPlayer.seekTo(currentPosition)
             
-            // Force play if initially playing or if we have already started (resolution switch)
             if (isPlayingInitially || hasStarted) {
+                exoPlayer.playWhenReady = true
                 exoPlayer.play()
                 isPlaying = true
                 hasStarted = true
@@ -304,10 +321,9 @@ fun EmbeddedPlayer(
                     }
                 }
                 val sortedVideoTracks = videoList
-                    .map { it to tracks.groups[it.first].getTrackFormat(it.second).height }
-                    .filter { it.second > 0 }
-                    .sortedBy { it.second }
-                    .distinctBy { it.second }
+                    .map { it to tracks.groups[it.first].getTrackFormat(it.second) }
+                    .filter { it.second.height > 0 || it.second.bitrate > 0 }
+                    .sortedByDescending { it.second.height.coerceAtLeast(0) * 10000 + it.second.bitrate.coerceAtLeast(0) }
                     .map { it.first }
                 availableAudioTracks = audioList; availableVideoTracks = sortedVideoTracks; availableSubtitleTracks = subList
             }
@@ -392,20 +408,103 @@ fun EmbeddedPlayer(
                         AndroidView(
                             factory = { PlayerView(it).apply { player = exoPlayer; useController = false; setBackgroundColor(android.graphics.Color.BLACK); this.resizeMode = resizeMode; layoutParams = FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT, android.view.Gravity.CENTER) } },
                             modifier = Modifier.fillMaxSize().rotate(rotation).pointerInput(isLandscape, isLocked) {
-                                detectTapGestures(
-                                    onTap = { if (!isLocked) showControls = !showControls },
-                                    onDoubleTap = { offset ->
-                                        if (!isLocked) {
+                                if (isLocked) {
+                                    detectTapGestures(onTap = { showControls = !showControls })
+                                } else {
+                                    detectTapGestures(
+                                        onTap = { showControls = !showControls },
+                                        onDoubleTap = { offset ->
                                             val width = size.width
                                             if (offset.x < width / 4) exoPlayer.seekTo((exoPlayer.currentPosition - 10000).coerceAtLeast(0))
                                             else if (offset.x > width * 3 / 4) exoPlayer.seekTo((exoPlayer.currentPosition + 10000).coerceAtMost(exoPlayer.duration))
                                         }
+                                    )
+                                }
+                            }.then(if (isLandscape && !isLocked) Modifier.pointerInput(Unit) {
+                                detectDragGestures(
+                                    onDragStart = { offset: Offset ->
+                                        gestureAmount = 0f
+                                        val width = size.width
+                                        if (offset.x < width / 3) {
+                                            showGestureIndicator = GestureIndicatorType.BRIGHTNESS
+                                        } else if (offset.x > width * 2 / 3) {
+                                            showGestureIndicator = GestureIndicatorType.VOLUME
+                                        } else {
+                                            isSeekingHorizontally = true
+                                            horizontalSeekValue = exoPlayer.currentPosition
+                                        }
+                                    },
+                                    onDrag = { change, dragAmount: Offset ->
+                                        change.consume()
+                                        if (isSeekingHorizontally) {
+                                            gestureAmount += dragAmount.x
+                                            val seekChange = (gestureAmount * 100).toLong()
+                                            horizontalSeekValue = (exoPlayer.currentPosition + seekChange).coerceIn(0, duration)
+                                        } else if (showGestureIndicator == GestureIndicatorType.VOLUME) {
+                                            gestureAmount -= dragAmount.y
+                                            val max = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
+                                            val current = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
+                                            val delta = (gestureAmount / 50).toInt()
+                                            if (delta != 0) {
+                                                val next = (current + delta).coerceIn(0, max)
+                                                audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, next, 0)
+                                                volume = next.toFloat() / max
+                                                gestureAmount = 0f
+                                            }
+                                        } else if (showGestureIndicator == GestureIndicatorType.BRIGHTNESS) {
+                                            gestureAmount -= dragAmount.y
+                                            val delta = gestureAmount / 500f
+                                            if (delta != 0f) {
+                                                brightness = (brightness + delta).coerceIn(0f, 1f)
+                                                (context as? Activity)?.window?.attributes = (context as? Activity)?.window?.attributes?.apply { screenBrightness = brightness }
+                                                gestureAmount = 0f
+                                            }
+                                        }
+                                    },
+                                    onDragEnd = {
+                                        if (isSeekingHorizontally) {
+                                            exoPlayer.seekTo(horizontalSeekValue)
+                                            isSeekingHorizontally = false
+                                        }
+                                        showGestureIndicator = null
+                                        gestureAmount = 0f
                                     }
                                 )
-                            },
+                            } else Modifier),
                             update = { view -> view.player = exoPlayer; view.resizeMode = resizeMode }
                         )
                         if (isBuffering) { Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { LoadingAnimation(tealColor) } }
+                        
+                        // Gesture Indicators
+                        if (showGestureIndicator != null) {
+                            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                Card(colors = CardDefaults.cardColors(containerColor = Color.Black.copy(0.6f)), shape = RoundedCornerShape(12.dp)) {
+                                    Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(
+                                            if (showGestureIndicator == GestureIndicatorType.VOLUME) {
+                                                if (volume == 0f) Icons.Default.VolumeOff else if (volume < 0.5f) Icons.Default.VolumeDown else Icons.Default.VolumeUp
+                                            } else Icons.Default.Brightness6,
+                                            null, tint = Color.White
+                                        )
+                                        Spacer(Modifier.width(12.dp))
+                                        val percent = if (showGestureIndicator == GestureIndicatorType.VOLUME) (volume * 100).toInt() else (brightness * 100).toInt()
+                                        Text("$percent%", color = Color.White, fontWeight = FontWeight.Bold)
+                                    }
+                                }
+                            }
+                        }
+                        
+                        if (isSeekingHorizontally) {
+                            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                Card(colors = CardDefaults.cardColors(containerColor = Color.Black.copy(0.6f)), shape = RoundedCornerShape(12.dp)) {
+                                    Column(Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                                        Text(formatTime(horizontalSeekValue), color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Bold)
+                                        Text("[ ${formatTime(horizontalSeekValue - currentPosition)} ]", color = Color.White.copy(0.7f), fontSize = 14.sp)
+                                    }
+                                }
+                            }
+                        }
+
                         if (isLandscape) {
                             PlayerControlsOverlay(
                                 isLandscape = true, showControls = showControls, isLocked = isLocked, isPlaying = isPlaying, hasStarted = hasStarted,
@@ -501,13 +600,15 @@ fun EmbeddedPlayer(
                         links = links,
                         currentIndex = currentLinkIndex,
                         onLinkSelect = { index ->
+                            currentPosition = exoPlayer.currentPosition
                             currentLinkIndex = index
                             showSettings = false
                         },
                         onDismiss = { showSettings = false }
                     )
                 } else {
-                    TrackSelectionDialog("Quality", availableVideoTracks, exoPlayer, C.TRACK_TYPE_VIDEO) { showSettings = false }
+                    val title = if (mediaType == "movie" || mediaType == "tv") "Select Resolution" else "Quality"
+                    TrackSelectionDialog(title, availableVideoTracks, exoPlayer, C.TRACK_TYPE_VIDEO) { showSettings = false }
                 }
             }
             if (showDownloadDialog) {
@@ -539,6 +640,189 @@ fun EmbeddedPlayer(
             }
             if (showDescriptionSheet) { DescriptionBottomSheet(title, fullInfo) { showDescriptionSheet = false } }
             if (showPlaylistDialog) { PlayerManager.currentVideo.value?.let { video -> AddToPlaylistDialog(video) { showPlaylistDialog = false } } }
+        }
+
+        // Playlist Panel (Queue)
+        if (!isMinimized && !isLandscape) {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) {
+                PlaylistPanel(
+                    visible = showNowPlayingList,
+                    onToggle = { showNowPlayingList = !showNowPlayingList },
+                    currentVideoId = id,
+                    mediaType = mediaType,
+                    relatedVideos = relatedVideos,
+                    episodes = episodes,
+                    onVideoSelect = onVideoSelect,
+                    onEpisodeSelect = onEpisodeSelect
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun PlaylistPanel(
+    visible: Boolean,
+    onToggle: () -> Unit,
+    currentVideoId: String,
+    mediaType: String,
+    relatedVideos: List<SearchResult>,
+    episodes: List<Episode>,
+    onVideoSelect: (SearchResult) -> Unit,
+    onEpisodeSelect: (Episode) -> Unit
+) {
+    val height by animateDpAsState(targetValue = if (visible) 550.dp else 70.dp, label = "playlist_height")
+    
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(height)
+            .pointerInput(Unit) {
+                detectVerticalDragGestures { _, dragAmount ->
+                    if (dragAmount < -15 && !visible) onToggle()
+                    else if (dragAmount > 15 && visible) onToggle()
+                }
+            },
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF1A1A1A)),
+        shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
+        border = BorderStroke(1.dp, Color.White.copy(0.05f))
+    ) {
+        Column {
+            // Header Bar (similar to Image 3)
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(70.dp)
+                    .clickable { onToggle() }
+                    .padding(horizontal = 20.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(Modifier.weight(1f)) {
+                    val headerText = when(mediaType) {
+                        "adult" -> "Recommended Videos"
+                        "youtube" -> "Up Next"
+                        "movie", "tv" -> if (episodes.isNotEmpty()) "Episodes" else "Related Movies"
+                        else -> "Now Playing"
+                    }
+                    Text(headerText, color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 16.sp)
+                    val subText = if (episodes.isNotEmpty()) {
+                        val currentIdx = episodes.indexOfFirst { it.data == currentVideoId }
+                        "${currentIdx + 1} / ${episodes.size}"
+                    } else if (relatedVideos.isNotEmpty()) {
+                        "1 / ${relatedVideos.size + 1}"
+                    } else "1 / 1"
+                    Text(subText, color = Color.Gray, fontSize = 13.sp)
+                }
+                
+                IconButton(onClick = onToggle) {
+                    Icon(
+                        if (visible) Icons.Default.KeyboardArrowDown else Icons.Default.KeyboardArrowUp,
+                        null,
+                        tint = Color.White,
+                        modifier = Modifier.size(28.dp)
+                    )
+                }
+                
+                IconButton(onClick = { /* More options */ }) {
+                    Icon(Icons.Default.MoreVert, null, tint = Color.White)
+                }
+            }
+            
+            if (visible) {
+                Divider(color = Color.White.copy(0.1f))
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(bottom = 20.dp)
+                ) {
+                    if (mediaType == "movie" || mediaType == "tv") {
+                        if (episodes.isNotEmpty()) {
+                            itemsIndexed(episodes) { index, ep ->
+                                EpisodeItem(ep, ep.data == currentVideoId, index + 1) { onEpisodeSelect(ep) }
+                            }
+                        } else {
+                            items(relatedVideos) { video ->
+                                RelatedVideoItem(video) { onVideoSelect(video) }
+                            }
+                        }
+                    } else {
+                        items(relatedVideos) { video ->
+                            RelatedVideoItem(video) { onVideoSelect(video) }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun EpisodeItem(episode: Episode, isPlaying: Boolean, number: Int, onClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(if (isPlaying) Color.White.copy(0.05f) else Color.Transparent)
+            .clickable { onClick() }
+            .padding(horizontal = 16.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // Drag Handle icon as seen in Image 4
+        Icon(Icons.Default.Menu, null, tint = Color.Gray.copy(0.5f), modifier = Modifier.size(20.dp))
+        Spacer(Modifier.width(12.dp))
+        
+        Box(modifier = Modifier.size(110.dp, 62.dp).clip(RoundedCornerShape(8.dp)).background(Color(0xFF2C2C2C))) {
+            AsyncImage(model = episode.posterUrl, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
+            if (isPlaying) {
+                Box(Modifier.fillMaxSize().background(Color.Black.copy(0.6f)), contentAlignment = Alignment.Center) {
+                    Icon(Icons.Default.PlayArrow, null, tint = Color(0xFF00BCD4), modifier = Modifier.size(24.dp))
+                }
+            }
+        }
+        
+        Spacer(Modifier.width(16.dp))
+        
+        Column(Modifier.weight(1f)) {
+            Text(
+                text = "${episode.episode ?: number}. ${episode.name ?: "Episode ${episode.episode ?: number}"}", 
+                color = if (isPlaying) Color(0xFF00BCD4) else Color.White, 
+                fontSize = 14.sp, 
+                fontWeight = if (isPlaying) FontWeight.Bold else FontWeight.Medium, 
+                maxLines = 1, 
+                overflow = TextOverflow.Ellipsis
+            )
+            Text(
+                text = episode.description ?: "Season ${episode.season ?: 1}", 
+                color = Color.Gray, 
+                fontSize = 12.sp, 
+                maxLines = 1, 
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+        
+        IconButton(onClick = { /* Item options */ }) {
+            Icon(Icons.Default.MoreVert, null, tint = Color.Gray, modifier = Modifier.size(20.dp))
+        }
+    }
+}
+
+@Composable
+fun RelatedVideoItem(video: SearchResult, onClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() }
+            .padding(12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        AsyncImage(
+            model = video.posterPath,
+            contentDescription = null,
+            modifier = Modifier.size(120.dp, 68.dp).clip(RoundedCornerShape(4.dp)),
+            contentScale = ContentScale.Crop
+        )
+        Spacer(Modifier.width(12.dp))
+        Column {
+            Text(video.title, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            Text(video.studio, color = Color.Gray, fontSize = 12.sp)
         }
     }
 }
@@ -662,17 +946,49 @@ fun TrackSelectionDialog(title: String, tracks: List<Pair<Int, Int>>, exoPlayer:
                 Spacer(Modifier.height(16.dp))
                 LazyColumn(Modifier.heightIn(max = 400.dp)) {
                     item {
-                        val hasOverride = exoPlayer.trackSelectionParameters.overrides.values.any { override -> exoPlayer.currentTracks.groups.any { it.type == type && it.mediaTrackGroup == override.mediaTrackGroup } }
-                        Row(Modifier.fillMaxWidth().clickable { val builder = exoPlayer.trackSelectionParameters.buildUpon(); exoPlayer.currentTracks.groups.forEach { if (it.type == type) builder.clearOverride(it.mediaTrackGroup) }; exoPlayer.trackSelectionParameters = builder.build(); onDismiss() }.padding(vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-                            RadioButton(selected = !hasOverride, onClick = { val builder = exoPlayer.trackSelectionParameters.buildUpon(); exoPlayer.currentTracks.groups.forEach { if (it.type == type) builder.clearOverride(it.mediaTrackGroup) }; exoPlayer.trackSelectionParameters = builder.build(); onDismiss() }, colors = RadioButtonDefaults.colors(selectedColor = Color(0xFF00BCD4)))
+                        val hasOverride = exoPlayer.trackSelectionParameters.overrides.values.any { override -> 
+                            exoPlayer.currentTracks.groups.any { it.type == type && it.mediaTrackGroup == override.mediaTrackGroup } 
+                        }
+                        Row(Modifier.fillMaxWidth().clickable { 
+                            val builder = exoPlayer.trackSelectionParameters.buildUpon()
+                            exoPlayer.currentTracks.groups.forEach { if (it.type == type) builder.clearOverride(it.mediaTrackGroup) }
+                            exoPlayer.trackSelectionParameters = builder.build()
+                            onDismiss() 
+                        }.padding(vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+                            RadioButton(selected = !hasOverride, onClick = { 
+                                val builder = exoPlayer.trackSelectionParameters.buildUpon()
+                                exoPlayer.currentTracks.groups.forEach { if (it.type == type) builder.clearOverride(it.mediaTrackGroup) }
+                                exoPlayer.trackSelectionParameters = builder.build()
+                                onDismiss() 
+                            }, colors = RadioButtonDefaults.colors(selectedColor = Color(0xFF00BCD4)))
                             Spacer(Modifier.width(8.dp)); Text(if (type == C.TRACK_TYPE_TEXT) "Off" else "Auto", color = Color.White)
                         }
                     }
                     items(tracks) { (groupIndex, trackIndex) ->
-                        val group = exoPlayer.currentTracks.groups[groupIndex]; val format = group.getTrackFormat(trackIndex); val isSelected = group.isTrackSelected(trackIndex)
-                        val label = when (type) { C.TRACK_TYPE_VIDEO -> "${format.height}p"; C.TRACK_TYPE_TEXT -> format.label ?: format.language ?: "Unknown"; else -> format.label ?: format.language ?: "Audio ${trackIndex + 1}" }
-                        Row(Modifier.fillMaxWidth().clickable { exoPlayer.trackSelectionParameters = exoPlayer.trackSelectionParameters.buildUpon().setOverrideForType(TrackSelectionOverride(group.mediaTrackGroup, trackIndex)).build(); onDismiss() }.padding(vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-                            RadioButton(selected = isSelected, onClick = { exoPlayer.trackSelectionParameters = exoPlayer.trackSelectionParameters.buildUpon().setOverrideForType(TrackSelectionOverride(group.mediaTrackGroup, trackIndex)).build(); onDismiss() }, colors = RadioButtonDefaults.colors(selectedColor = Color(0xFF00BCD4)))
+                        val group = exoPlayer.currentTracks.groups[groupIndex]
+                        val format = group.getTrackFormat(trackIndex)
+                        val isSelected = group.isTrackSelected(trackIndex)
+                        
+                        val label = when (type) { 
+                            C.TRACK_TYPE_VIDEO -> "${format.height}p"
+                            C.TRACK_TYPE_TEXT -> format.label ?: format.language ?: "Unknown"
+                            else -> format.label ?: format.language ?: "Audio ${trackIndex + 1}"
+                        }
+                        
+                        Row(Modifier.fillMaxWidth().clickable { 
+                            exoPlayer.trackSelectionParameters = exoPlayer.trackSelectionParameters.buildUpon()
+                                .clearOverridesOfType(type)
+                                .setOverrideForType(TrackSelectionOverride(group.mediaTrackGroup, trackIndex))
+                                .build()
+                            onDismiss() 
+                        }.padding(vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+                            RadioButton(selected = isSelected, onClick = { 
+                                exoPlayer.trackSelectionParameters = exoPlayer.trackSelectionParameters.buildUpon()
+                                    .clearOverridesOfType(type)
+                                    .setOverrideForType(TrackSelectionOverride(group.mediaTrackGroup, trackIndex))
+                                    .build()
+                                onDismiss() 
+                            }, colors = RadioButtonDefaults.colors(selectedColor = Color(0xFF00BCD4)))
                             Spacer(Modifier.width(8.dp)); Text(label, color = Color.White)
                         }
                     }

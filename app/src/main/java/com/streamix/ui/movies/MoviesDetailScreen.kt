@@ -1,6 +1,5 @@
 package com.streamix.ui.movies
 
-import androidx.compose.animation.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -9,6 +8,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
@@ -208,7 +208,7 @@ fun DetailTopBar(navController: NavController) {
         verticalAlignment = Alignment.CenterVertically
     ) {
         IconButton(onClick = { navController.popBackStack() }) {
-            Icon(Icons.Default.ArrowBack, contentDescription = null, tint = Color.White)
+            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null, tint = Color.White)
         }
         
         Row {
@@ -224,8 +224,10 @@ fun DetailTopBar(navController: NavController) {
 
 @Composable
 fun DetailHeroSection(data: com.streamix.scraper.cloudstream.LoadResponse, trailerLinks: List<VideoLink>) {
+    val isPlayerVisible = PlayerManager.isVisible.value
+    
     Box(modifier = Modifier.fillMaxWidth().height(300.dp)) {
-        if (trailerLinks.isNotEmpty()) {
+        if (trailerLinks.isNotEmpty() && !isPlayerVisible) {
             DetailTrailerPlayer(trailerLinks)
         } else {
             AsyncImage(
