@@ -18,8 +18,8 @@ android {
         applicationId = "com.streamix"
         minSdk = 21
         targetSdk = 34
-        versionCode = 209
-        versionName = "1.209"
+        versionCode = 214
+        versionName = "1.214"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
