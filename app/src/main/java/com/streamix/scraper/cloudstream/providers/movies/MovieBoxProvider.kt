@@ -195,6 +195,7 @@ class MovieBoxProvider : MainAPI() {
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
         val perPage = 15
+        val token = getCachedToken()
         val url = if (request.data.contains("|")) "$mainUrl/wefeed-mobile-bff/subject-api/list" else "$mainUrl/wefeed-mobile-bff/tab/ranking-list?tabId=0&categoryType=${request.data}&page=$page&perPage=$perPage"
 
         val data1 = request.data
@@ -221,11 +222,12 @@ class MovieBoxProvider : MainAPI() {
         val sort     = options["sort"] ?: "ForYou"
 
         val jsonBody = """{"page":$pg,"perPage":$perPage,"channelId":"$channelId","classify":"$classify","country":"$country","year":"$year","genre":"$genre","sort":"$sort"}"""
-        val xClientToken = generateXClientToken()
+        val ts = System.currentTimeMillis()
+        val xClientToken = generateXClientToken(ts)
         val xTrSignature = if (request.data.contains("|")) 
-            generateXTrSignature("POST", "application/json", "application/json; charset=utf-8", url , jsonBody)
+            generateXTrSignature("POST", "application/json", "application/json; charset=utf-8", url , jsonBody, hardcodedTimestamp = ts)
         else 
-            generateXTrSignature("GET", "application/json", "application/json", url)
+            generateXTrSignature("GET", "application/json", "application/json", url, hardcodedTimestamp = ts)
 
         val headers = mapOf(
             "user-agent" to "com.community.mbox.in/50020042 (Linux; U; Android 16; en_IN; sdk_gphone64_x86_64; Build/BP22.250325.006; Cronet/133.0.6876.3)",
@@ -235,7 +237,7 @@ class MovieBoxProvider : MainAPI() {
             "x-tr-signature" to xTrSignature,
             "x-client-info" to """{"package_name":"com.community.mbox.in","version_name":"3.0.03.0529.03","version_code":50020042,"os":"android","os_version":"16","device_id":"$deviceId","install_store":"ps","gaid":"d7578036d13336cc","brand":"google","model":"sdk_gphone64_x86_64","system_language":"en","net":"NETWORK_WIFI","region":"IN","timezone":"Asia/Calcutta","sp_code":""}""",
             "x-client-status" to "0",
-            "Authorization" to "Bearer ${getCachedToken()}"
+            "Authorization" to "Bearer $token"
         )
 
         val response = if (request.data.contains("|")) 
@@ -258,10 +260,12 @@ class MovieBoxProvider : MainAPI() {
     }
 
     override suspend fun search(query: String, page: Int): SearchResponseList {
+        val token = getCachedToken()
         val url = "$mainUrl/wefeed-mobile-bff/subject-api/search/v2"
         val jsonBody = """{"page": $page, "perPage": 20, "keyword": "$query"}"""
-        val xClientToken = generateXClientToken()
-        val xTrSignature = generateXTrSignature("POST", "application/json", "application/json; charset=utf-8", url, jsonBody)
+        val ts = System.currentTimeMillis()
+        val xClientToken = generateXClientToken(ts)
+        val xTrSignature = generateXTrSignature("POST", "application/json", "application/json; charset=utf-8", url, jsonBody, hardcodedTimestamp = ts)
         val headers = mapOf(
             "user-agent" to "com.community.mbox.in/50020042 (Linux; U; Android 16; en_IN; sdk_gphone64_x86_64; Build/BP22.250325.006; Cronet/133.0.6876.3)",
             "accept" to "application/json",
@@ -270,7 +274,7 @@ class MovieBoxProvider : MainAPI() {
             "x-tr-signature" to xTrSignature,
             "x-client-info" to """{"package_name":"com.community.mbox.in","version_name":"3.0.03.0529.03","version_code":50020042,"os":"android","os_version":"16","device_id":"$deviceId","install_store":"ps","gaid":"d7578036d13336cc","brand":"google","model":"sdk_gphone64_x86_64","system_language":"en","net":"NETWORK_WIFI","region":"IN","timezone":"Asia/Calcutta","sp_code":""}""",
             "x-client-status" to "0",
-            "Authorization" to "Bearer ${getCachedToken()}"
+            "Authorization" to "Bearer $token"
         )
         val response = app.post(url, headers = headers, requestBody = jsonBody.toRequestBody("application/json".toMediaType()))
         val root = try { mapper.readTree(response.text) } catch (_: Exception) { null } ?: return newSearchResponseList(emptyList())
@@ -293,8 +297,9 @@ class MovieBoxProvider : MainAPI() {
 
     override suspend fun load(url: String): LoadResponse? {
         val id = if (url.contains("subjectId=")) url.substringAfter("subjectId=").substringBefore("&") else url.substringAfterLast("/")
+        val token = getCachedToken()
         val finalUrl = "$mainUrl/wefeed-mobile-bff/subject-api/get?subjectId=$id"
-        val headers = getHeaders(finalUrl, "GET")
+        val headers = getHeaders(finalUrl, "GET", token = token)
 
         val response = try { app.get(finalUrl, headers = headers) } catch (_: Exception) { return null }
         val detailData = try { mapper.readTree(response.text)["data"] } catch (_: Exception) { null } ?: return null
@@ -310,7 +315,7 @@ class MovieBoxProvider : MainAPI() {
             val episodes = mutableListOf<Episode>()
             try {
                 val seasonUrl = "$mainUrl/wefeed-mobile-bff/subject-api/season-info?subjectId=$id"
-                val sResponse = app.get(seasonUrl, headers = getHeaders(seasonUrl, "GET"))
+                val sResponse = app.get(seasonUrl, headers = getHeaders(seasonUrl, "GET", token = token))
                 mapper.readTree(sResponse.text)["data"]?.get("seasons")?.forEach { season ->
                     val se = season["se"]?.asInt() ?: 1
                     val maxEp = season["maxEp"]?.asInt() ?: 1
@@ -335,13 +340,21 @@ class MovieBoxProvider : MainAPI() {
             this.year = year
             this.score = rating
             this.tags = detailData["genre"]?.asText()?.split(",")?.map { it.trim() } ?: emptyList()
+            
+            // Extract trailers if available
+            detailData["trailer"]?.get("videoUrl")?.asText()?.let { trailerUrl ->
+                if (trailerUrl.isNotEmpty()) {
+                    this.trailers.add(TrailerData(trailerUrl))
+                }
+            }
         }
         return res
     }
 
-    private suspend fun getHeaders(url: String, method: String, body: String? = null): Map<String, String> {
+    private suspend fun getHeaders(url: String, method: String, body: String? = null, token: String? = null): Map<String, String> {
         val ts = System.currentTimeMillis()
-        val sig = generateXTrSignature(method, "application/json", "application/json", url, body)
+        val sig = generateXTrSignature(method, "application/json", "application/json", url, body, hardcodedTimestamp = ts)
+        val finalToken = token ?: getCachedToken()
         return mapOf(
             "user-agent" to "com.community.mbox.in/50020088 (Linux; U; Android 13; en_IN; Pixel 7; Build/TQ3A.230901.001; Cronet/145.0.7582.0)",
             "accept" to "application/json",
@@ -350,7 +363,7 @@ class MovieBoxProvider : MainAPI() {
             "x-tr-signature" to sig,
             "x-client-info" to """{"package_name":"com.community.mbox.in","version_name":"3.0.13.0325.03","version_code":50020088,"os":"android","os_version":"13","device_id":"$deviceId","install_store":"ps","gaid":"d7578036d13336cc","brand":"google","model":"Pixel 7","system_language":"en","net":"NETWORK_WIFI","region":"IN","timezone":"Asia/Calcutta","sp_code":""}""",
             "x-client-status" to "0",
-            "Authorization" to "Bearer ${getCachedToken()}"
+            "Authorization" to "Bearer $finalToken"
         )
     }
 
@@ -359,9 +372,12 @@ class MovieBoxProvider : MainAPI() {
         val sid = parts[0]
         val se = parts.getOrNull(1) ?: "1"
         val ep = parts.getOrNull(2) ?: "1"
+        
+        val token = getCachedToken()
         val url = "$mainUrl/wefeed-mobile-bff/subject-api/play-info?subjectId=$sid&se=$se&ep=$ep"
-        val xClientToken = generateXClientToken()
-        val xTrSignature = generateXTrSignature("GET", "application/json", "application/json", url)
+        val ts = System.currentTimeMillis()
+        val xClientToken = generateXClientToken(ts)
+        val xTrSignature = generateXTrSignature("GET", "application/json", "application/json", url, hardcodedTimestamp = ts)
         val headers = mapOf(
             "user-agent" to "com.community.mbox.in/50020042 (Linux; U; Android 13; en_IN; Pixel 7; Build/TQ3A.230901.001; Cronet/145.0.7582.0)",
             "accept" to "application/json",
@@ -370,7 +386,7 @@ class MovieBoxProvider : MainAPI() {
             "x-tr-signature" to xTrSignature,
             "x-client-info" to """{"package_name":"com.community.mbox.in","version_name":"3.0.03.0529.03","version_code":50020042,"os":"android","os_version":"13","device_id":"$deviceId","install_store":"ps","gaid":"d7578036d13336cc","brand":"google","model":"Pixel 7","system_language":"en","net":"NETWORK_WIFI","region":"IN","timezone":"Asia/Calcutta","sp_code":""}""",
             "x-client-status" to "0",
-            "Authorization" to "Bearer ${getCachedToken()}"
+            "Authorization" to "Bearer $token"
         )
 
         val response = try { app.get(url, headers = headers) } catch (_: Exception) { return false }

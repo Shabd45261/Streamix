@@ -18,8 +18,8 @@ android {
         applicationId = "com.streamix"
         minSdk = 21
         targetSdk = 34
-        versionCode = 207
-        versionName = "1.207"
+        versionCode = 209
+        versionName = "1.209"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -58,8 +58,9 @@ android {
     applicationVariants.all {
         outputs.forEach { output ->
             if (output is com.android.build.gradle.internal.api.ApkVariantOutputImpl) {
-                val dateStr = SimpleDateFormat("dd-MM-yyyy").format(Date())
+                val dateStr = SimpleDateFormat("yyyyMMdd").format(Date())
                 val dayStr = SimpleDateFormat("EEEE").format(Date())
+                val timeStr = SimpleDateFormat("hhmm a").format(Date()).replace(" ", "")
                 val buildNumber = versionCode ?: 0
                 val suffix = when {
                     buildNumber % 100 in 11..13 -> "th"
@@ -68,7 +69,7 @@ android {
                     buildNumber % 10 == 3 -> "rd"
                     else -> "th"
                 }
-                output.outputFileName = "Streamix_${dayStr}_${dateStr}_${buildNumber}${suffix}BuildNumber.apk"
+                output.outputFileName = "Streamix_${dateStr}_${dayStr}_${timeStr}_${buildNumber}${suffix}(${buildNumber}).apk"
             }
         }
     }

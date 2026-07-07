@@ -61,6 +61,26 @@ fun MoviesDetailScreen(
     
     val colors = LocalCustomColors.current
 
+    val context = LocalContext.current
+    val exoPlayer = remember {
+        ExoPlayer.Builder(context).build().apply {
+            repeatMode = Player.REPEAT_MODE_ONE
+            volume = 1f
+            playWhenReady = true
+        }
+    }
+
+    DisposableEffect(exoPlayer) {
+        onDispose { exoPlayer.release() }
+    }
+
+    LaunchedEffect(trailerLinks) {
+        val link = trailerLinks.firstOrNull()?.url ?: return@LaunchedEffect
+        exoPlayer.setMediaItem(MediaItem.fromUri(link))
+        exoPlayer.prepare()
+        exoPlayer.play()
+    }
+
     LaunchedEffect(movieId, apiName, fallbackUrl) {
         viewModel.load(movieId, apiName, fallbackUrl)
     }
@@ -85,7 +105,9 @@ fun MoviesDetailScreen(
                 ),
                 links = links,
                 related = emptyList(),
-                eps = episodes
+                eps = episodes,
+                startPosition = viewModel.startPosition,
+                episode = selectedEpisode
             )
             viewModel.clearLinks()
         }
@@ -98,13 +120,14 @@ fun MoviesDetailScreen(
                 contentPadding = PaddingValues(bottom = 120.dp)
             ) {
                 item {
-                    DetailHeroSection(data, trailerLinks)
+                    DetailHeroSection(data, trailerLinks, exoPlayer)
                 }
 
                 item {
-                    DetailInfoContent(data, selectedEpisode) {
-                        selectedEpisode?.let { viewModel.selectEpisode(it) }
-                            ?: viewModel.loadLinks(data.dataUrl, data.apiName, data.name)
+                    val history by viewModel.historyItem.collectAsState()
+                    DetailInfoContent(data, selectedEpisode, history) { episode, pos ->
+                        episode?.let { viewModel.selectEpisode(it, pos) }
+                            ?: viewModel.loadLinks(data.dataUrl, data.apiName, data.name, null, pos)
                     }
                 }
 
@@ -202,7 +225,7 @@ fun DetailTopBar(navController: NavController) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .statusBarsPadding()
+            .padding(top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding())
             .padding(horizontal = 8.dp, vertical = 4.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
@@ -222,13 +245,24 @@ fun DetailTopBar(navController: NavController) {
     }
 }
 
+@androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
 @Composable
-fun DetailHeroSection(data: com.streamix.scraper.cloudstream.LoadResponse, trailerLinks: List<VideoLink>) {
-    val isPlayerVisible = PlayerManager.isVisible.value
+fun DetailHeroSection(data: com.streamix.scraper.cloudstream.LoadResponse, trailerLinks: List<VideoLink>, exoPlayer: ExoPlayer) {
+    val isPlayerVisible by PlayerManager.isVisible
     
     Box(modifier = Modifier.fillMaxWidth().height(300.dp)) {
         if (trailerLinks.isNotEmpty() && !isPlayerVisible) {
-            DetailTrailerPlayer(trailerLinks)
+            AndroidView(
+                factory = {
+                    PlayerView(it).apply {
+                        player = exoPlayer
+                        useController = false
+                        resizeMode = AspectRatioFrameLayout.RESIZE_MODE_ZOOM
+                        setBackgroundColor(android.graphics.Color.BLACK)
+                    }
+                },
+                modifier = Modifier.fillMaxSize()
+            )
         } else {
             AsyncImage(
                 model = data.backgroundUrl ?: data.posterUrl,
@@ -264,48 +298,15 @@ fun DetailHeroSection(data: com.streamix.scraper.cloudstream.LoadResponse, trail
                 Text(
                     text = data.name,
                     color = Color.White,
-                    fontSize = 36.sp,
+                    fontSize = 32.sp, // Reduced slightly for better fit
                     fontWeight = FontWeight.Black,
-                    lineHeight = 40.sp
+                    lineHeight = 36.sp,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
         }
     }
-}
-
-@androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
-@Composable
-fun DetailTrailerPlayer(links: List<VideoLink>) {
-    val context = LocalContext.current
-    val exoPlayer = remember {
-        ExoPlayer.Builder(context).build().apply {
-            repeatMode = Player.REPEAT_MODE_ONE
-            volume = 0.5f 
-            playWhenReady = true
-        }
-    }
-
-    DisposableEffect(exoPlayer) {
-        onDispose { exoPlayer.release() }
-    }
-
-    LaunchedEffect(links) {
-        val link = links.firstOrNull()?.url ?: return@LaunchedEffect
-        exoPlayer.setMediaItem(MediaItem.fromUri(link))
-        exoPlayer.prepare()
-        exoPlayer.play()
-    }
-
-    AndroidView(
-        factory = {
-            PlayerView(it).apply {
-                player = exoPlayer
-                useController = false
-                resizeMode = AspectRatioFrameLayout.RESIZE_MODE_ZOOM
-            }
-        },
-        modifier = Modifier.fillMaxSize()
-    )
 }
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -313,7 +314,8 @@ fun DetailTrailerPlayer(links: List<VideoLink>) {
 fun DetailInfoContent(
     data: com.streamix.scraper.cloudstream.LoadResponse,
     selectedEpisode: Episode?,
-    onPlay: () -> Unit
+    history: com.streamix.core.storage.WatchHistoryEntity?,
+    onPlay: (Episode?, Long) -> Unit
 ) {
     val context = LocalContext.current
 
@@ -430,13 +432,31 @@ fun DetailInfoContent(
         }
 
         // Main Play Button
-        val buttonText = if (data.type == TvType.TvSeries) {
-            if (selectedEpisode != null) "S${selectedEpisode.season}:E${selectedEpisode.episode} ${selectedEpisode.name ?: ""}" 
-            else "Play"
-        } else "Play"
+        val buttonText = remember(data, selectedEpisode, history) {
+            if (data.type == TvType.TvSeries) {
+                if (history?.lastEpisodeName != null) {
+                    "S${history.lastEpisodeSeason}:E${history.lastEpisodeNumber} ${history.lastEpisodeName}"
+                } else if (selectedEpisode != null) {
+                    "S${selectedEpisode.season}:E${selectedEpisode.episode} ${selectedEpisode.name ?: ""}" 
+                } else "Play"
+            } else {
+                if (history != null && history.progress > 0) {
+                    formatTime(history.progress)
+                } else "Play"
+            }
+        }
 
         Button(
-            onClick = onPlay,
+            onClick = {
+                if (data.type == TvType.TvSeries && history?.lastEpisodeData != null) {
+                    // Try to find the episode in current list
+                    val episode = (com.streamix.scraper.cloudstream.utils.AppUtils.tryParseJson<List<Episode>>(data.dataUrl) ?: emptyList())
+                        .find { it.data == history.lastEpisodeData }
+                    onPlay(episode, history.progress)
+                } else {
+                    onPlay(selectedEpisode, history?.progress ?: 0L)
+                }
+            },
             modifier = Modifier.fillMaxWidth().height(56.dp).padding(bottom = 8.dp),
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE1E2E4)),
             shape = RoundedCornerShape(8.dp)
@@ -446,6 +466,14 @@ fun DetailInfoContent(
             Text(text = buttonText, color = Color.Black, fontWeight = FontWeight.ExtraBold, fontSize = 16.sp)
         }
     }
+}
+
+private fun formatTime(millis: Long): String { 
+    val totalSeconds = millis / 1000; 
+    val hours = totalSeconds / 3600; 
+    val minutes = (totalSeconds % 3600) / 60; 
+    val seconds = totalSeconds % 60; 
+    return if (hours > 0) "%d:%02d:%02d".format(hours, minutes, seconds) else "%02d:%02d".format(minutes, seconds)
 }
 
 @Composable

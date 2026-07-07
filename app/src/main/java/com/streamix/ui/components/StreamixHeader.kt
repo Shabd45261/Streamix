@@ -1,5 +1,6 @@
 package com.streamix.ui.components
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -33,70 +34,25 @@ fun StreamixHeader(
     var showMenu by remember { mutableStateOf(false) }
     val colors = LocalCustomColors.current
 
-    Column(
+    Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .background(colors.primary)
-            .padding(top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding())
-            .padding(horizontal = 16.dp, vertical = 12.dp)
+            .statusBarsPadding()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        shape = RoundedCornerShape(26.dp),
+        color = Color.Black.copy(alpha = 0.9f),
+        border = BorderStroke(0.5.dp, Color.White.copy(alpha = 0.1f)),
+        shadowElevation = 8.dp
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 12.dp, vertical = 8.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                // New Stylized "S" Logo with Play Button
-                Box(
-                    modifier = Modifier
-                        .size(42.dp)
-                        .background(Color.White, RoundedCornerShape(12.dp))
-                        .padding(4.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    androidx.compose.foundation.Canvas(modifier = Modifier.fillMaxSize()) {
-                        val w = size.width
-                        val h = size.height
-                        
-                        // Draw "S" shape or similar
-                        // For simplicity, let's draw a nice black "S" background and a white triangle
-                        drawRect(color = Color.Black, size = size)
-                        
-                        // Draw Triangle (Play)
-                        val path = Path().apply {
-                            moveTo(w * 0.35f, h * 0.25f)
-                            lineTo(w * 0.75f, h * 0.5f)
-                            lineTo(w * 0.35f, h * 0.75f)
-                            close()
-                        }
-                        drawPath(path, color = Color.White, style = Fill)
-                    }
-                }
-                
-                Spacer(Modifier.width(14.dp))
-                Text(
-                    text = "Streamix",
-                    style = MaterialTheme.typography.headlineMedium.copy(
-                        letterSpacing = (-1).sp
-                    ),
-                    color = colors.secondary,
-                    fontWeight = FontWeight.Black
-                )
-            }
-
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                IconButton(
-                    onClick = onSettingsTap,
-                    modifier = Modifier
-                        .size(38.dp)
-                        .background(colors.secondary.copy(alpha = 0.08f), CircleShape)
-                        .border(0.5.dp, colors.secondary.copy(alpha = 0.12f), CircleShape)
-                ) {
-                    Icon(Icons.Default.Settings, contentDescription = "Settings",
-                        tint = colors.secondary, modifier = Modifier.size(18.dp))
-                }
-                Spacer(Modifier.width(10.dp))
-                
+                // Profile Switcher on the left like Image 4
                 Box {
                     ProfileSwitcherButton(
                         currentProfile = currentProfile,
@@ -107,13 +63,13 @@ fun StreamixHeader(
                     DropdownMenu(
                         expanded = showMenu,
                         onDismissRequest = { showMenu = false },
-                        modifier = Modifier.background(colors.primary.copy(0.9f))
+                        modifier = Modifier.background(Color.Black.copy(0.9f))
                     ) {
                         val profiles = listOf(Profile.YOUTUBE, Profile.SONGS, Profile.MOVIES)
                         profiles.forEach { profile ->
                             DropdownMenuItem(
-                                text = { Text(profile.label, color = colors.secondary) },
-                                leadingIcon = { Icon(profile.icon, null, tint = colors.secondary, modifier = Modifier.size(18.dp)) },
+                                text = { Text(profile.label, color = Color.White) },
+                                leadingIcon = { Icon(profile.icon, null, tint = Color.White, modifier = Modifier.size(18.dp)) },
                                 onClick = {
                                     onProfileSelect(profile)
                                     showMenu = false
@@ -122,6 +78,24 @@ fun StreamixHeader(
                         }
                     }
                 }
+                
+                Spacer(Modifier.width(14.dp))
+                Text(
+                    text = "Streamix",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = Color.White,
+                    fontWeight = FontWeight.Black
+                )
+            }
+
+            IconButton(
+                onClick = onSettingsTap,
+                modifier = Modifier
+                    .size(38.dp)
+                    .background(Color.White.copy(alpha = 0.08f), CircleShape)
+            ) {
+                Icon(Icons.Default.Settings, contentDescription = "Settings",
+                    tint = Color.White, modifier = Modifier.size(18.dp))
             }
         }
     }

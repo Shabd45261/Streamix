@@ -24,6 +24,9 @@ class MoviesHomeViewModel @Inject constructor(
     private val _homeRows = MutableStateFlow<List<MovieHomeRow>>(emptyList())
     val homeRows = _homeRows.asStateFlow()
 
+    private val _availableProviders = MutableStateFlow(repo.getAvailableProviders())
+    val availableProviders = _availableProviders.asStateFlow()
+
     private val _selectedProvider = MutableStateFlow("MovieBoxPh")
     val selectedProvider = _selectedProvider.asStateFlow()
 
@@ -54,17 +57,17 @@ class MoviesHomeViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            loadHomeData()
+            loadHomeData(_selectedProvider.value)
         }
         observeHistory()
         observeWatchlist()
     }
 
-    private suspend fun loadHomeData() {
+    private suspend fun loadHomeData(providerName: String) {
         _isLoading.value = true
         try {
-            Log.d("MoviesVM", "Loading home data rows...")
-            val rows = repo.getHomeRows()
+            Log.d("MoviesVM", "Loading home data rows for $providerName...")
+            val rows = repo.getHomeRowsForProvider(providerName)
             Log.d("MoviesVM", "Loaded ${rows.size} rows")
             _homeRows.value = rows
         } catch (e: Exception) {
@@ -74,10 +77,18 @@ class MoviesHomeViewModel @Inject constructor(
         }
     }
 
+    fun selectProvider(name: String) {
+        if (_selectedProvider.value == name) return
+        _selectedProvider.value = name
+        viewModelScope.launch {
+            loadHomeData(name)
+        }
+    }
+
     fun refresh() {
         viewModelScope.launch {
             _isRefreshing.value = true
-            loadHomeData()
+            loadHomeData(_selectedProvider.value)
             _isRefreshing.value = false
         }
     }
@@ -111,6 +122,13 @@ class MoviesHomeViewModel @Inject constructor(
             _searchResults.value = emptyList()
             return 
         }
+        
+        // Strict ban check
+        if (MoviesScraperRepository.isBanned(q)) {
+            _searchResults.value = emptyList()
+            return
+        }
+
         searchJob = viewModelScope.launch {
             delay(500)
             search(q)

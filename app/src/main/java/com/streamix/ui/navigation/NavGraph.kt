@@ -31,7 +31,17 @@ import com.streamix.core.storage.PreferencesManager
 import androidx.compose.ui.platform.LocalContext
 import com.streamix.ui.player.PlayerManager
 import com.streamix.ui.player.EmbeddedPlayer
+import com.streamix.core.utils.UrlUtils
 import androidx.compose.ui.Alignment
+
+import com.streamix.ui.navigation.MainScreen
+import com.streamix.ui.components.StackedDock
+import com.streamix.ui.components.DockFront
+import com.streamix.ui.player.MinimizedPlayerBar
+import com.streamix.ui.player.HistoryViewModel
+import androidx.hilt.navigation.compose.hiltViewModel
+
+import androidx.activity.compose.BackHandler
 
 val LocalBottomDockVisible = compositionLocalOf { mutableStateOf(true) }
 
@@ -41,29 +51,78 @@ fun StreamixNavGraph() {
     val profileState  = rememberSaveable { mutableStateOf(Profile.YOUTUBE) }
     val colors = LocalCustomColors.current
     val bottomDockVisible = rememberSaveable { mutableStateOf(true) }
+    
+    val historyViewModel: HistoryViewModel = hiltViewModel()
+    
+    val context = LocalContext.current
+    val prefs = remember { PreferencesManager(context) }
+    val floatingDockEnabled by prefs.floatingDockEnabled.collectAsState(initial = false)
+    var frontCard by rememberSaveable { mutableStateOf(DockFront.NAV) }
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
-    val isHome = currentRoute == Screen.Home.route
-    val isChannel = currentRoute?.startsWith("youtube_channel") == true
-    val isDetail = currentRoute?.contains("youtube_detail") == true
-    val isMoviesDetail = currentRoute?.contains("movies_detail") == true
-    val isHidden = PlayerManager.isHiddenTemporarily.value
+    
+    val playerVisible by PlayerManager.isVisible
+    val playerMinimized by PlayerManager.isMinimized
+    val currentVideo by PlayerManager.currentVideo
+    val videoLinks by PlayerManager.videoLinks
+    val relatedVideos by PlayerManager.relatedVideos
+    val playerEpisodes by PlayerManager.episodes
+    val isHidden by PlayerManager.isHiddenTemporarily
+
+    // Check if current route is one of the main ones
+    val isMainScreen = currentRoute == null || 
+                      currentRoute == Screen.Home.route || 
+                      currentRoute == Screen.Shorts.route || 
+                      currentRoute.startsWith("search") || 
+                      currentRoute == Screen.Library.route || 
+                      currentRoute == Screen.Settings.route
+
+    val isDetail = currentRoute?.contains("detail") == true
 
     CompositionLocalProvider(LocalBottomDockVisible provides bottomDockVisible) {
-        val playerVisible = PlayerManager.isVisible.value
-        val playerMinimized = PlayerManager.isMinimized.value
-        val currentVideo = PlayerManager.currentVideo.value
-        val videoLinks = PlayerManager.videoLinks.value
-        val relatedVideos = PlayerManager.relatedVideos.value
-        val playerEpisodes = PlayerManager.episodes.value
+        BackHandler(enabled = playerVisible && !playerMinimized && !isHidden) {
+            PlayerManager.isMinimized.value = true
+        }
 
         Scaffold(
             containerColor = colors.primary,
             contentWindowInsets = WindowInsets(0, 0, 0, 0),
             bottomBar = { 
-                if (bottomDockVisible.value && !(!playerMinimized && playerVisible && !isHidden)) {
-                    StreamixBottomDock(navController) 
+                val showTraditionalDock = bottomDockVisible.value && 
+                                          !(!playerMinimized && playerVisible && !isHidden) &&
+                                          (!floatingDockEnabled || !playerVisible || !playerMinimized)
+
+                if (showTraditionalDock) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .navigationBarsPadding(),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        if (playerVisible && playerMinimized && !isHidden) {
+                            val thumbUrl = remember(currentVideo?.posterPath, currentVideo?.mediaType, currentVideo?.id) {
+                                UrlUtils.resolveImageUrl(currentVideo?.posterPath, currentVideo?.mediaType, currentVideo?.id ?: "")
+                            }
+                            Box(modifier = Modifier.padding(start = 12.dp, end = 12.dp, top = 8.dp)) {
+                                MinimizedPlayerBar(
+                                    title = currentVideo?.title ?: "",
+                                    subtitle = currentVideo?.studio ?: "Streamix",
+                                    thumbUrl = thumbUrl,
+                                    isPlaying = PlayerManager.isPlayingState.value,
+                                    progress = PlayerManager.playbackProgress.value,
+                                    onTogglePlay = {
+                                        if (PlayerManager.isPlayingState.value) PlayerManager.pause()
+                                        else PlayerManager.resume()
+                                    },
+                                    onClick = { PlayerManager.isMinimized.value = false },
+                                    onClose = { PlayerManager.close() },
+                                    height = 64.dp
+                                )
+                            }
+                        }
+                        StreamixBottomDock(navController, includePadding = false)
+                    }
                 }
             }
         ) { padding ->
@@ -73,19 +132,21 @@ fun StreamixNavGraph() {
                     startDestination = Screen.Home.route,
                     modifier         = Modifier.fillMaxSize()
                 ) {
-                    composable(Screen.Home.route) {
-                        HomeScreen(navController, profileState)
-                    }
+                    composable(Screen.Home.route) { MainScreen(navController, profileState) }
+                    composable(Screen.Shorts.route) { MainScreen(navController, profileState) }
                     composable(
-                        route = Screen.Search.route + "/{query}",
-                        arguments = listOf(navArgument("query") { 
-                            type = NavType.StringType
-                            nullable = true
-                        })
-                    ) { backStackEntry ->
-                        val query = backStackEntry.arguments?.getString("query")
-                        SearchScreen(navController, query)
-                    }
+                        route = Screen.Search.route,
+                        arguments = listOf(
+                            navArgument("query") { 
+                                type = NavType.StringType
+                                nullable = true
+                                defaultValue = null
+                            }
+                        )
+                    ) { MainScreen(navController, profileState) }
+                    composable(Screen.Library.route) { MainScreen(navController, profileState) }
+                    composable(Screen.Settings.route) { MainScreen(navController, profileState) }
+                    
                     composable(
                         route = Screen.Detail.route,
                         arguments = listOf(
@@ -103,12 +164,6 @@ fun StreamixNavGraph() {
                     ) { backStackEntry ->
                         val pageUrl = backStackEntry.arguments?.getString("pageUrl") ?: ""
                         AdultDetailScreen(pageUrl, navController)
-                    }
-                    composable(Screen.Library.route) {
-                        LibraryScreen(navController, profileState)
-                    }
-                    composable(Screen.Settings.route) {
-                        SettingsScreen(navController)
                     }
                     composable(Screen.YoutubeLogin.route) {
                         val context = LocalContext.current
@@ -147,7 +202,7 @@ fun StreamixNavGraph() {
                             },
                             navArgument("apiName") {
                                 type = NavType.StringType
-                                defaultValue = "MovieBox"
+                                defaultValue = "MovieBoxPh"
                             },
                             navArgument("fallbackUrl") {
                                 type = NavType.StringType
@@ -157,50 +212,81 @@ fun StreamixNavGraph() {
                         )
                     ) { backStackEntry ->
                         val movieId = backStackEntry.arguments?.getString("movieId") ?: ""
-                        val apiName = backStackEntry.arguments?.getString("apiName") ?: "MovieBox"
+                        val apiName = backStackEntry.arguments?.getString("apiName") ?: "MovieBoxPh"
                         val fallbackUrl = backStackEntry.arguments?.getString("fallbackUrl")
                         MoviesDetailScreen(navController, movieId, apiName, fallbackUrl)
                     }
                 }
 
-                if (playerVisible && currentVideo != null && (isHome || isChannel || isMoviesDetail) && !isHidden) {
+                if (playerVisible && currentVideo != null && !isHidden) {
                     EmbeddedPlayer(
-                        id = currentVideo.id,
-                        title = currentVideo.title,
-                        subtitle = currentVideo.studio.ifBlank { "MovieBox" },
-                        mediaType = currentVideo.mediaType,
+                        id = currentVideo!!.id,
+                        title = currentVideo!!.title,
+                        subtitle = currentVideo!!.studio.ifBlank { "Streamix" },
+                        mediaType = currentVideo!!.mediaType,
                         links = videoLinks,
                         relatedVideos = relatedVideos,
                         episodes = playerEpisodes,
-                        posterUrl = currentVideo.posterPath,
+                        posterUrl = currentVideo!!.posterPath,
                         isMinimized = playerMinimized,
+                        initialPosition = PlayerManager.initialPlaybackPosition.value,
                         onMinimizedChange = { PlayerManager.isMinimized.value = it },
                         onClose = { PlayerManager.close() },
                         isPlayingInitially = true,
+                        onProgressUpdate = { pos, total ->
+                            historyViewModel.updateProgress(currentVideo!!, pos, total, PlayerManager.currentEpisode.value)
+                        },
                         onVideoSelect = { video ->
                             val encoded = java.net.URLEncoder.encode(video.id, "UTF-8")
                             val apiEncoded = java.net.URLEncoder.encode(video.studio, "UTF-8")
                             if (video.mediaType == "youtube") {
                                 navController.navigate("youtube_detail?videoId=$encoded")
-                            } else if (video.mediaType == "movie") {
+                            } else if (video.mediaType == "movie" || video.mediaType == "tv") {
                                 navController.navigate("movies_detail?movieId=$encoded&apiName=$apiEncoded")
+                            } else if (video.mediaType == "adult") {
+                                navController.navigate("adult_detail/$encoded")
                             }
                         },
                         onEpisodeSelect = { ep ->
-                            // When an episode is selected from the player's now playing list
-                            // We need to fetch links for it. This logic should ideally be in a central place.
-                            // For now, we can trigger a re-load in the detail screen if it's open, 
-                            // or just call the repository directly.
-                            // However, the easiest way is to let the player components handle link fetching if we had a dedicated VM for it.
-                            // For now, let's keep it simple: if it's a series, the detail screen is likely the one that launched it.
+                            // Logic for episode selection in player can be added here if needed
                         },
                         onChannelClick = { url ->
                             val encoded = java.net.URLEncoder.encode(url, "UTF-8")
                             navController.navigate("youtube_channel?channelUrl=$encoded")
                             PlayerManager.isMinimized.value = true
                         },
-                        modifier = Modifier.fillMaxSize()
+                        modifier = Modifier.fillMaxSize(),
+                        isStacked = floatingDockEnabled && playerMinimized
                     )
+                }
+
+                if (floatingDockEnabled && playerVisible && playerMinimized && !isHidden && bottomDockVisible.value) {
+                    Box(modifier = Modifier.align(Alignment.BottomCenter)) {
+                        StackedDock(
+                            navBar = { StreamixBottomDock(navController) },
+                            playerBar = {
+                                val thumbUrl = remember(currentVideo?.posterPath, currentVideo?.mediaType, currentVideo?.id) {
+                                    UrlUtils.resolveImageUrl(currentVideo?.posterPath, currentVideo?.mediaType, currentVideo?.id ?: "")
+                                }
+                                MinimizedPlayerBar(
+                                    title = currentVideo?.title ?: "",
+                                    subtitle = currentVideo?.studio ?: "Streamix",
+                                    thumbUrl = thumbUrl,
+                                    isPlaying = PlayerManager.isPlayingState.value,
+                                    progress = PlayerManager.playbackProgress.value,
+                                    onTogglePlay = {
+                                        if (PlayerManager.isPlayingState.value) PlayerManager.pause()
+                                        else PlayerManager.resume()
+                                    },
+                                    onClick = { PlayerManager.isMinimized.value = false },
+                                    onClose = { PlayerManager.close() },
+                                    height = 70.dp
+                                )
+                            },
+                            frontCard = frontCard,
+                            onFrontCardChange = { frontCard = it }
+                        )
+                    }
                 }
             }
         }

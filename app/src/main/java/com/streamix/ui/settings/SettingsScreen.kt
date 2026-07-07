@@ -43,6 +43,7 @@ fun SettingsScreen(
     
     val youtubeAccountName by viewModel.youtubeAccountName.collectAsState(initial = null)
     val autoScrollShorts by viewModel.autoScrollShorts.collectAsState()
+    val floatingDockEnabled by viewModel.floatingDockEnabled.collectAsState()
 
     Column(
         modifier = Modifier
@@ -119,6 +120,15 @@ fun SettingsScreen(
                     subtitle = "Automatically scroll to next video when current one ends",
                     checked = autoScrollShorts,
                     onCheckedChange = { viewModel.setAutoScrollShorts(it) }
+                )
+            }
+
+            item {
+                SettingsSwitchItem(
+                    title = "Experimental Floating Dock",
+                    subtitle = "Stacked Samsung-style Dynamic Dock UI",
+                    checked = floatingDockEnabled,
+                    onCheckedChange = { viewModel.setFloatingDockEnabled(it) }
                 )
             }
 

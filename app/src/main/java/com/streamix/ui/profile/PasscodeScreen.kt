@@ -26,76 +26,85 @@ fun PasscodeScreen(
     var passcode by remember { mutableStateOf("") }
     val correctPasscode = "1234" // Default PIN
 
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.Black)
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
+        // Back button on the top left
+        IconButton(
+            onClick = { navController.popBackStack() },
+            modifier = Modifier
+                .statusBarsPadding()
+                .padding(16.dp)
+                .align(Alignment.TopStart)
         ) {
-            IconButton(onClick = { navController.popBackStack() }) {
-                Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.White)
-            }
-            Text("Enter PIN", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+            Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.White, modifier = Modifier.size(28.dp))
         }
 
-        Spacer(Modifier.height(60.dp))
-
-        // Dots
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-            verticalAlignment = Alignment.CenterVertically
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
-            repeat(4) { index ->
-                val filled = index < passcode.length
-                Box(
-                    modifier = Modifier
-                        .size(16.dp)
-                        .background(if (filled) Color.White else Color(0xFF333333), CircleShape)
-                )
+            Text("Enter PIN", color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.ExtraBold)
+
+            Spacer(Modifier.height(40.dp))
+
+            // Dots
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(20.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                repeat(4) { index ->
+                    val filled = index < passcode.length
+                    Box(
+                        modifier = Modifier
+                            .size(14.dp)
+                            .background(if (filled) Color.White else Color(0xFF333333), CircleShape)
+                    )
+                }
             }
-        }
 
-        Spacer(Modifier.height(60.dp))
+            Spacer(Modifier.height(60.dp))
 
-        // Keypad
-        val keys = listOf("1", "2", "3", "4", "5", "6", "7", "8", "9", "", "0", "DEL")
-        Column(verticalArrangement = Arrangement.spacedBy(20.dp)) {
-            keys.chunked(3).forEach { row ->
-                Row(horizontalArrangement = Arrangement.spacedBy(40.dp)) {
-                    row.forEach { key ->
-                        if (key.isEmpty()) {
-                            Spacer(Modifier.size(60.dp))
-                        } else {
-                            Box(
-                                modifier = Modifier
-                                    .size(60.dp)
-                                    .clickable {
-                                        if (key == "DEL") {
-                                            if (passcode.isNotEmpty()) passcode = passcode.dropLast(1)
-                                        } else if (passcode.length < 4) {
-                                            passcode += key
-                                            if (passcode.length == 4) {
-                                                if (passcode == correctPasscode) {
-                                                    profileState.value = Profile.ADULT
-                                                    navController.popBackStack()
-                                                } else {
-                                                    passcode = ""
-                                                    // Show error
+            // Keypad
+            val keys = listOf("1", "2", "3", "4", "5", "6", "7", "8", "9", "", "0", "DEL")
+            Column(verticalArrangement = Arrangement.spacedBy(20.dp)) {
+                keys.chunked(3).forEach { row ->
+                    Row(horizontalArrangement = Arrangement.spacedBy(40.dp)) {
+                        row.forEach { key ->
+                            if (key.isEmpty()) {
+                                Spacer(Modifier.size(60.dp))
+                            } else {
+                                Box(
+                                    modifier = Modifier
+                                        .size(60.dp)
+                                        .clickable {
+                                            if (key == "DEL") {
+                                                if (passcode.isNotEmpty()) passcode = passcode.dropLast(1)
+                                            } else if (passcode.length < 4) {
+                                                passcode += key
+                                                if (passcode.length == 4) {
+                                                    if (passcode == correctPasscode) {
+                                                        profileState.value = Profile.ADULT
+                                                        navController.popBackStack()
+                                                    } else {
+                                                        passcode = ""
+                                                        // Show error
+                                                    }
                                                 }
                                             }
-                                        }
-                                    },
-                                contentAlignment = Alignment.Center
-                            ) {
-                                if (key == "DEL") {
-                                    Icon(Icons.Default.Backspace, contentDescription = null, tint = Color.White)
-                                } else {
-                                    Text(key, color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Medium)
+                                        },
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    if (key == "DEL") {
+                                        Icon(Icons.Default.Backspace, contentDescription = null, tint = Color.White)
+                                    } else {
+                                        Text(key, color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Medium)
+                                    }
                                 }
                             }
                         }

@@ -2,6 +2,7 @@ package com.streamix.ui.components
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -11,6 +12,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -32,7 +34,7 @@ fun StreamixSearchBar(
     var isFocused by remember { mutableStateOf(false) }
     
     val borderColor by animateColorAsState(
-        targetValue = if (isFocused) Color.Red else Color.White.copy(0.1f),
+        targetValue = if (isFocused) Color.Red else Color.White.copy(0.15f),
         label = "borderColor"
     )
     val borderWidth by animateDpAsState(
@@ -40,13 +42,14 @@ fun StreamixSearchBar(
         label = "borderWidth"
     )
 
-    FrostedGlassBox(
+    Surface(
         modifier = modifier
             .fillMaxWidth()
-            .height(52.dp)
-            .border(borderWidth, borderColor, RoundedCornerShape(26.dp))
-            .padding(horizontal = 4.dp),
-        cornerRadius = 26.dp
+            .height(54.dp),
+        shape = RoundedCornerShape(27.dp),
+        color = Color.Black.copy(alpha = 0.9f),
+        border = BorderStroke(borderWidth, borderColor),
+        shadowElevation = 4.dp
     ) {
         BasicTextField(
             value = query,
@@ -57,11 +60,11 @@ fun StreamixSearchBar(
             keyboardActions = KeyboardActions(onSearch = { onSearch(query) }),
             modifier = Modifier
                 .fillMaxWidth()
-                .align(Alignment.CenterStart)
+                .padding(vertical = 12.dp)
                 .onFocusChanged { isFocused = it.isFocused },
             decorationBox = { inner ->
                 Row(
-                    Modifier.fillMaxWidth().padding(horizontal = 14.dp),
+                    Modifier.fillMaxWidth().padding(horizontal = 16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(

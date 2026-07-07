@@ -128,25 +128,29 @@ fun AdultHomeScreen(
             .background(colors.primary)
             .statusBarsPadding()
     ) {
-        StreamixHeader(
-            currentProfile = profileState.value,
-            onSettingsTap  = { navController.navigate(Screen.Settings.route) },
-            onProfileSelect = { profile -> profileState.value = profile },
-            onProfileTripleTap = { navController.navigate(Screen.Passcode.route) }
-        )
-
-        StreamixSearchBar(
-            query       = searchQuery,
-            onQueryChange = viewModel::onQueryChange,
-            onSearch    = { viewModel.search(searchQuery) },
-            modifier    = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-        )
-
         Box(Modifier.fillMaxSize().nestedScroll(pullToRefreshState.nestedScrollConnection)) {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(bottom = 100.dp)
             ) {
+                item {
+                    StreamixHeader(
+                        currentProfile = profileState.value,
+                        onSettingsTap = { navController.navigate(Screen.Settings.route) },
+                        onProfileSelect = { profile -> profileState.value = profile },
+                        onProfileTripleTap = { navController.navigate(Screen.Passcode.route) }
+                    )
+                }
+
+                item {
+                    StreamixSearchBar(
+                        query = searchQuery,
+                        onQueryChange = viewModel::onQueryChange,
+                        onSearch = { viewModel.search(searchQuery) },
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                    )
+                }
+
                 if (searchQuery.isBlank()) {
                     // Latest Videos Refresh Banner
                     if (showRefreshBanner) {

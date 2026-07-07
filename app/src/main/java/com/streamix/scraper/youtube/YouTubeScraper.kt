@@ -19,6 +19,19 @@ import android.util.Log
 @Singleton
 class YouTubeScraper @Inject constructor() : BaseScraper() {
 
+    companion object {
+        private val BANNED_WORDS = listOf("sex", "nude", "rape", "ass")
+        
+        fun isBanned(text: String?): Boolean {
+            if (text == null) return false
+            val lower = text.lowercase()
+            return BANNED_WORDS.any { 
+                if (it == "ass") lower.contains(Regex("\\bass\\b"))
+                else lower.contains(it)
+            }
+        }
+    }
+
     override val name = "YouTube"
     override val mainUrl = "https://www.youtube.com"
     private val service = ServiceList.YouTube
@@ -26,12 +39,13 @@ class YouTubeScraper @Inject constructor() : BaseScraper() {
         try {
             val searchInfo = SearchInfo.getInfo(service, service.searchQHFactory.fromQuery(query))
             searchInfo.relatedItems.mapNotNull { item ->
-                when (item) {
+                val result = when (item) {
                     is StreamInfoItem -> item.toSearchResult()
                     is ChannelInfoItem -> item.toSearchResult()
                     is PlaylistInfoItem -> item.toSearchResult()
                     else -> null
                 }
+                if (result != null && (isBanned(result.title) || isBanned(result.studio))) null else result
             }
         } catch (e: Exception) {
             Log.e("YouTubeScraper", "Search failed for query: $query", e)
@@ -48,11 +62,15 @@ class YouTubeScraper @Inject constructor() : BaseScraper() {
                 else -> mediaId
             }
 
-            // Prioritize /shorts/ URL for speed if it's likely a short
-            val urlsToTry = listOf(
-                "https://www.youtube.com/shorts/$cleanId",
-                "https://www.youtube.com/watch?v=$cleanId"
-            )
+            // Prioritize /watch?v= for trailers, /shorts/ for clips
+            val urlsToTry = if (cleanId.length > 12) { // Long IDs are usually URLs
+                 listOf(cleanId, "https://www.youtube.com/watch?v=$cleanId")
+            } else {
+                 listOf(
+                    "https://www.youtube.com/watch?v=$cleanId",
+                    "https://www.youtube.com/shorts/$cleanId"
+                 )
+            }
 
             var streamInfo: StreamInfo? = null
             var lastError: Exception? = null
@@ -118,6 +136,7 @@ class YouTubeScraper @Inject constructor() : BaseScraper() {
             val url = "https://www.youtube.com/feed/trending"
             val kioskInfo = KioskInfo.getInfo(service, url)
             kioskInfo.relatedItems.filterIsInstance<StreamInfoItem>().map { it.toSearchResult() }
+                .filter { !isBanned(it.title) && !isBanned(it.studio) }
         } catch (e: Exception) {
             Log.e("YouTubeScraper", "Failed to get trending", e)
             emptyList()
@@ -170,6 +189,7 @@ class YouTubeScraper @Inject constructor() : BaseScraper() {
             val url = "https://www.youtube.com/feed/subscriptions"
             val kioskInfo = KioskInfo.getInfo(service, url)
             kioskInfo.relatedItems.filterIsInstance<StreamInfoItem>().map { it.toSearchResult() }
+                .filter { !isBanned(it.title) && !isBanned(it.studio) }
         } catch (e: Exception) {
             Log.e("YouTubeScraper", "Failed to get subscription feed", e)
             emptyList()
@@ -203,7 +223,7 @@ class YouTubeScraper @Inject constructor() : BaseScraper() {
                 it.duration.isEmpty() || parts.size < 2 || (parts.size == 2 && (parts[0].toIntOrNull() ?: 0) < 2)
             }
             
-            (allShorts + homeShorts).distinctBy { it.id }
+            (allShorts + homeShorts).distinctBy { it.id }.filter { !isBanned(it.title) && !isBanned(it.studio) }
         } catch (e: Exception) {
             Log.e("YouTubeScraper", "Failed to get shorts feed", e)
             searchShorts("")
@@ -223,11 +243,12 @@ class YouTubeScraper @Inject constructor() : BaseScraper() {
             if (videosTab != null) {
                 val tabInfo = org.schabi.newpipe.extractor.channel.tabs.ChannelTabInfo.getInfo(service, videosTab)
                 tabInfo.relatedItems.mapNotNull { 
-                    when (it) {
+                    val result = when (it) {
                         is StreamInfoItem -> it.toSearchResult()
                         is PlaylistInfoItem -> it.toSearchResult()
                         else -> null
                     }
+                    if (result != null && (isBanned(result.title) || isBanned(result.studio))) null else result
                 }
             } else {
                 // Fallback to search if no tabs found

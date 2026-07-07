@@ -17,19 +17,51 @@ data class MovieHomeRow(
 @Singleton
 class MoviesScraperRepository @Inject constructor() {
 
+    companion object {
+        private val BANNED_WORDS = listOf("sex", "nude", "rape", "ass")
+        
+        fun isBanned(text: String?): Boolean {
+            if (text == null) return false
+            val lower = text.lowercase()
+            // Strict match for banned words
+            return BANNED_WORDS.any { 
+                if (it == "ass") lower.contains(Regex("\\bass\\b"))
+                else lower.contains(it)
+            }
+        }
+    }
+
     private val providerPriority = listOf("MovieBoxPh", "MovieBoxIN")
+
+    fun getAvailableProviders(): List<String> = providerPriority
 
     suspend fun getHomeRowsForProvider(name: String): List<MovieHomeRow> = coroutineScope {
         val provider = ProviderRegistry.getProviderByName(name) ?: return@coroutineScope emptyList()
         try {
-            Log.d("MoviesRepo", "Fetching home data rows for $name...")
-            val resp = provider.getMainPage(1, MainPageRequest("Home", "1"))
-            return@coroutineScope resp?.items?.map { homeList ->
-                MovieHomeRow(
-                    name = homeList.name,
-                    items = homeList.list.map { it.toSearchResult(provider.name) }
-                )
-            } ?: emptyList()
+            Log.d("MoviesRepo", "Fetching home data rows for $name using all mainPage sections...")
+            
+            if (name == "MovieBoxIN") {
+                val resp = provider.getMainPage(1, MainPageRequest(name, ""))
+                return@coroutineScope resp?.items?.map { MovieHomeRow(it.name, it.list.map { res -> res.toSearchResult(name) }) } ?: emptyList()
+            }
+
+            // Parallel fetch all sections from provider's mainPage
+            val rowRequests = provider.mainPage
+            val rows = rowRequests.amap { request ->
+                try {
+                    val resp = provider.getMainPage(1, request)
+                    val items = resp?.items?.flatMap { it.list }?.map { it.toSearchResult(provider.name) } 
+                        ?.filter { !isBanned(it.title) } ?: emptyList()
+                    if (items.isNotEmpty()) {
+                        MovieHomeRow(name = request.name, items = items)
+                    } else null
+                } catch (e: Exception) {
+                    Log.e("MoviesRepo", "Failed to fetch row ${request.name} for $name", e)
+                    null
+                }
+            }.filterNotNull()
+            
+            return@coroutineScope rows
         } catch (e: Exception) {
             Log.e("MoviesRepo", "$name top level failed", e)
             emptyList()
@@ -41,25 +73,28 @@ class MoviesScraperRepository @Inject constructor() {
     suspend fun search(query: String): List<SearchResult> = coroutineScope {
         Log.d("MoviesRepo", "Searching for '$query' with fallback logic")
         
+        val results = mutableListOf<SearchResult>()
         for (name in providerPriority) {
             val provider = ProviderRegistry.getProviderByName(name) ?: continue
             try {
-                val results = provider.search(query, 1)
-                val items = results?.items?.map { it.toSearchResult(provider.name) } ?: emptyList()
+                val searchList = provider.search(query, 1)
+                val items = searchList?.items?.map { it.toSearchResult(provider.name) } 
+                    ?.filter { !isBanned(it.title) } ?: emptyList()
                 if (items.isNotEmpty()) {
                     Log.d("MoviesRepo", "Found ${items.size} results from $name")
-                    return@coroutineScope items
+                    results.addAll(items)
                 }
             } catch (e: Exception) {
                 Log.e("MoviesRepo", "$name search error", e)
             }
         }
-        emptyList()
+        results.distinctBy { it.id }
     }
 
     suspend fun getDetail(url: String, apiName: String): LoadResponse? {
         val provider = ProviderRegistry.getProviderByName(apiName) 
             ?: ProviderRegistry.getProviderByName("MovieBoxPh") 
+            ?: ProviderRegistry.getProviderByName("MovieBoxIN")
             ?: return null
             
         return try {
@@ -73,7 +108,11 @@ class MoviesScraperRepository @Inject constructor() {
     suspend fun getVideoLinks(data: String, apiName: String, title: String? = null): List<VideoLink> = coroutineScope {
         val links = mutableListOf<VideoLink>()
         
-        val primaryProvider = ProviderRegistry.getProviderByName(apiName)
+        var primaryProvider = ProviderRegistry.getProviderByName(apiName)
+        if (primaryProvider == null) {
+            primaryProvider = ProviderRegistry.getProviderByName("MovieBoxPh")
+        }
+
         if (primaryProvider != null) {
             try {
                 primaryProvider.loadLinks(data, false, {}) { link ->

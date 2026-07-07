@@ -20,6 +20,8 @@ import android.util.Log
 import com.streamix.scraper.cloudstream.ProviderRegistry
 import com.streamix.scraper.cloudstream.ExtractorLinkType
 
+enum class ShortsSource { FEED, SEARCH, CHANNEL }
+
 @HiltViewModel
 class ShortsViewModel @Inject constructor(
     private val youtubeScraper: YouTubeScraper,
@@ -46,6 +48,8 @@ class ShortsViewModel @Inject constructor(
     private val _searchResults = MutableStateFlow<List<ShortsItem>>(emptyList())
     val searchResults = _searchResults.asStateFlow()
 
+    private var currentSource = ShortsSource.FEED
+
     private var channelPlaylistInfo: Pair<String, String>? = null // channelUrl, startVideoId
 
     private val likedIds   = mutableSetOf<String>()
@@ -69,6 +73,7 @@ class ShortsViewModel @Inject constructor(
     fun loadChannelShorts(channelUrl: String, startVideoId: String) {
         viewModelScope.launch {
             _isLoading.value = true
+            currentSource = ShortsSource.CHANNEL
             try {
                 val channelInfo = withContext(Dispatchers.IO) {
                     org.schabi.newpipe.extractor.channel.ChannelInfo.getInfo(org.schabi.newpipe.extractor.ServiceList.YouTube, channelUrl)
@@ -98,6 +103,7 @@ class ShortsViewModel @Inject constructor(
     fun load(context: ShortsContext) {
         viewModelScope.launch {
             _isLoading.value = true
+            currentSource = ShortsSource.FEED
             currentAdultPage = 1
             youtubeFeedPage = 0
             _searchQuery.value = ""
@@ -141,15 +147,21 @@ class ShortsViewModel @Inject constructor(
                 val results = mutableListOf<ShortsItem>()
                 youtubeScraper.searchShortsIncremental(query, targetTotal = 150) { newResults ->
                     results.addAll(newResults.map { it.toShortsItem() })
-                    _searchResults.value = results.distinctBy { it.id }
+                    // Buffering to avoid excessive UI flickering, update in chunks of 40
+                    if (results.size % 40 == 0) {
+                        _searchResults.value = results.distinctBy { it.id }
+                    }
                 }
                 
-                if (results.isEmpty()) {
+                val finalResults = results.distinctBy { it.id }
+                if (finalResults.isEmpty()) {
                     // One last try with normal search if incremental failed or was empty
                     val fallback = youtubeScraper.search(query)
                         .filter { it.duration.isEmpty() || !it.duration.contains(":") || (it.duration.split(":").getOrNull(0)?.toIntOrNull() ?: 0) < 2 }
                         .map { it.toShortsItem() }
                     _searchResults.value = fallback
+                } else {
+                    _searchResults.value = finalResults
                 }
             } catch (e: Exception) {
                 Log.e("ShortsVM", "Search failed for: $query", e)
@@ -169,6 +181,7 @@ class ShortsViewModel @Inject constructor(
         
         viewModelScope.launch {
             _isLoading.value = true
+            currentSource = ShortsSource.SEARCH
             try {
                 // Feature: Start from clicked item, then play everything from the start of the list
                 val clickedItem = results[index]
@@ -189,7 +202,7 @@ class ShortsViewModel @Inject constructor(
     }
 
     fun loadMore(context: ShortsContext) {
-        if (isFetchingMore) return
+        if (isFetchingMore || currentSource == ShortsSource.SEARCH) return
         
         isFetchingMore = true
         viewModelScope.launch {

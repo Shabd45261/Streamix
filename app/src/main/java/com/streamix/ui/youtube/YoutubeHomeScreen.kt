@@ -93,27 +93,30 @@ fun YoutubeHomeScreen(
             .background(colors.primary)
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
-            StreamixHeader(
-                currentProfile = profileState.value,
-                onSettingsTap  = { navController.navigate(Screen.Settings.route) },
-                onProfileSelect = { profile -> profileState.value = profile },
-                onProfileTripleTap = { navController.navigate(Screen.Passcode.route) }
-            )
-
-            // SearchBar with explicit background to cover anything behind it if needed
-            Box(modifier = Modifier.fillMaxWidth().background(colors.primary).padding(horizontal = 16.dp, vertical = 8.dp)) {
-                StreamixSearchBar(
-                    query       = searchQuery,
-                    onQueryChange = viewModel::onQueryChange,
-                    onSearch    = { viewModel.search(searchQuery) }
-                )
-            }
-
             Box(modifier = Modifier.fillMaxSize().nestedScroll(pullToRefreshState.nestedScrollConnection)) {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(bottom = 100.dp)
                 ) {
+                    item {
+                        StreamixHeader(
+                            currentProfile = profileState.value,
+                            onSettingsTap = { navController.navigate(Screen.Settings.route) },
+                            onProfileSelect = { profile -> profileState.value = profile },
+                            onProfileTripleTap = { navController.navigate(Screen.Passcode.route) }
+                        )
+                    }
+
+                    item {
+                        Box(modifier = Modifier.fillMaxWidth().background(colors.primary).padding(horizontal = 16.dp, vertical = 8.dp)) {
+                            StreamixSearchBar(
+                                query = searchQuery,
+                                onQueryChange = viewModel::onQueryChange,
+                                onSearch = { viewModel.search(searchQuery) }
+                            )
+                        }
+                    }
+
                     if (searchQuery.isBlank()) {
                         if (showRefreshBanner) {
                             item {

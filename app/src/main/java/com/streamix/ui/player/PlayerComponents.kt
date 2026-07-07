@@ -108,6 +108,70 @@ enum class GestureIndicatorType { VOLUME, BRIGHTNESS }
 enum class PlaylistState { COLLAPSED, HALF, FULL }
 
 @Composable
+fun MinimizedPlayerBar(
+    title: String,
+    subtitle: String,
+    thumbUrl: String?,
+    isPlaying: Boolean,
+    progress: Float,
+    onTogglePlay: () -> Unit,
+    onClick: () -> Unit,
+    onClose: () -> Unit,
+    height: androidx.compose.ui.unit.Dp = 64.dp
+) {
+    var offsetY by remember { mutableFloatStateOf(0f) }
+    
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(height)
+            .clip(RoundedCornerShape(height / 2))
+            .background(Brush.horizontalGradient(listOf(Color(0xFF00796B), Color(0xFF004D40))))
+            .clickable { onClick() }
+            .pointerInput(Unit) {
+                detectVerticalDragGestures(
+                    onVerticalDrag = { _, dragAmount -> offsetY = (offsetY + dragAmount).coerceAtLeast(0f) },
+                    onDragEnd = { if (offsetY > 100) onClose(); offsetY = 0f }
+                )
+            }
+            .offset { IntOffset(0, offsetY.roundToInt()) }
+            .padding(horizontal = 12.dp),
+        contentAlignment = Alignment.CenterStart
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Box(modifier = Modifier.size(48.dp), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator(
+                    progress = { progress },
+                    modifier = Modifier.fillMaxSize(),
+                    color = Color.White.copy(0.6f),
+                    strokeWidth = 2.dp,
+                    trackColor = Color.White.copy(0.1f)
+                )
+                AsyncImage(
+                    model = thumbUrl,
+                    contentDescription = null,
+                    modifier = Modifier.size(40.dp).clip(CircleShape).background(Color.Black.copy(0.3f)),
+                    contentScale = ContentScale.Crop
+                )
+                IconButton(onClick = onTogglePlay) {
+                    Icon(
+                        if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+                        null,
+                        tint = Color.White,
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
+            }
+            Spacer(Modifier.width(12.dp))
+            Column(Modifier.weight(1f)) {
+                Text(title, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(subtitle, color = Color.White.copy(0.7f), fontSize = 12.sp, maxLines = 1)
+            }
+        }
+    }
+}
+
+@Composable
 fun EmbeddedPlayer(
     id: String = "",
     title: String = "",
@@ -127,7 +191,8 @@ fun EmbeddedPlayer(
     onVideoSelect: (SearchResult) -> Unit = {},
     onEpisodeSelect: (Episode) -> Unit = {},
     onChannelClick: (String) -> Unit = {},
-    onClose: () -> Unit = {}
+    onClose: () -> Unit = {},
+    isStacked: Boolean = false
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -259,16 +324,28 @@ fun EmbeddedPlayer(
 
     LaunchedEffect(isMinimized) { if (isMinimized) { offsetY = 0f; showNowPlayingList = false } }
 
-    val exoPlayer = remember {
+    // Reset state for new video
+    LaunchedEffect(id) {
+        currentPosition = initialPosition
+        bufferedPosition = 0L
+        duration = 0L
+        isBuffering = true
+        playbackError = null
+        hasStarted = false
+    }
+
+    val exoPlayer = remember(id) {
         ExoPlayer.Builder(context).build().apply { repeatMode = Player.REPEAT_MODE_ONE }
     }
 
     LaunchedEffect(sleepTimerMinutes) { if (sleepTimerMinutes > 0) { delay(sleepTimerMinutes * 60 * 1000L); exoPlayer.pause(); sleepTimerMinutes = 0 } }
     DisposableEffect(exoPlayer) { onDispose { exoPlayer.release() } }
-    val thumbUrl = remember(posterUrl, videoUrl) { UrlUtils.resolveImageUrl(posterUrl, "adult", videoUrl) }
+    val thumbUrl = remember(posterUrl, mediaType, videoUrl, id) {
+        UrlUtils.resolveImageUrl(posterUrl, mediaType, videoUrl) 
+    }
 
-    LaunchedEffect(currentLink) {
-        if (currentLink != null) {
+    LaunchedEffect(currentLink, id) {
+        if (currentLink != null && currentLink!!.url.isNotBlank()) {
             val link = currentLink!!
             val url = link.url
             isBuffering = true; playbackError = null
@@ -291,7 +368,11 @@ fun EmbeddedPlayer(
             
             exoPlayer.setMediaSource(mediaSource)
             exoPlayer.prepare()
-            if (currentPosition > 0) exoPlayer.seekTo(currentPosition)
+            
+            // Start fresh for new video unless explicit initialPosition is provided
+            val seekPos = if (initialPosition > 0) initialPosition else 0L
+            exoPlayer.seekTo(seekPos)
+            currentPosition = seekPos
             
             if (isPlayingInitially || hasStarted) {
                 exoPlayer.playWhenReady = true
@@ -299,14 +380,21 @@ fun EmbeddedPlayer(
                 isPlaying = true
                 hasStarted = true
             }
+        } else if (links.isNotEmpty() && currentLink == null) {
+            // Fallback if index somehow became invalid
+            currentLinkIndex = 0
         }
     }
 
     LaunchedEffect(hasStarted, isPlaying) {
+        PlayerManager.isPlayingState.value = isPlaying
         while (hasStarted && isPlaying) {
             val current = exoPlayer.currentPosition; val total = exoPlayer.duration
             currentPosition = current; bufferedPosition = exoPlayer.bufferedPosition
-            if (total > 0 && total != androidx.media3.common.C.TIME_UNSET) { duration = total; onProgressUpdate(current, total) }
+            if (total > 0 && total != androidx.media3.common.C.TIME_UNSET) { 
+                duration = total; onProgressUpdate(current, total) 
+                PlayerManager.playbackProgress.value = current.toFloat() / total.toFloat()
+            }
             delay(1000)
         }
     }
@@ -376,7 +464,14 @@ fun EmbeddedPlayer(
 
     LaunchedEffect(showControls, isPlaying, isLocked) { if (showControls && isPlaying && !isLocked) { delay(5000); showControls = false } }
 
-    val animatedOffset by animateFloatAsState(targetValue = if (isMinimized) 0f else offsetY, label = "offset")
+    val animatedOffset by animateFloatAsState(
+        targetValue = if (isMinimized) 0f else offsetY,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioLowBouncy,
+            stiffness = Spring.StiffnessLow
+        ),
+        label = "offset"
+    )
 
     val minimizationNestedScroll = remember {
         object : NestedScrollConnection {
@@ -401,24 +496,7 @@ fun EmbeddedPlayer(
     }
 
     Box(modifier = modifier.fillMaxSize().then(if (isMinimized || isLandscape) Modifier else Modifier.offset { IntOffset(0, animatedOffset.roundToInt()) })) {
-        if (isMinimized) {
-            Box(modifier = Modifier.fillMaxSize().padding(start = 12.dp, end = 12.dp, bottom = 80.dp), contentAlignment = Alignment.BottomCenter) {
-                Box(modifier = Modifier.fillMaxWidth().height(64.dp).clip(RoundedCornerShape(32.dp)).background(Brush.horizontalGradient(listOf(Color(0xFF00796B), Color(0xFF004D40)))).clickable { onMinimizedChange(false) }.pointerInput(Unit) { detectVerticalDragGestures(onVerticalDrag = { _, dragAmount -> offsetY = (offsetY + dragAmount).coerceAtLeast(0f) }, onDragEnd = { if (offsetY > 150) onClose(); offsetY = 0f }) }.offset { IntOffset(0, offsetY.roundToInt()) }.padding(horizontal = 12.dp), contentAlignment = Alignment.CenterStart) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(modifier = Modifier.size(48.dp), contentAlignment = Alignment.Center) {
-                            CircularProgressIndicator(progress = { if (duration > 0) currentPosition.toFloat() / duration.toFloat() else 0f }, modifier = Modifier.fillMaxSize(), color = Color.White.copy(0.6f), strokeWidth = 2.dp, trackColor = Color.White.copy(0.1f))
-                            AsyncImage(model = thumbUrl, contentDescription = null, modifier = Modifier.size(40.dp).clip(CircleShape).background(Color.Black.copy(0.3f)), contentScale = ContentScale.Crop)
-                            IconButton(onClick = { if (isPlaying) exoPlayer.pause() else exoPlayer.play() }) { Icon(if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow, null, tint = Color.White, modifier = Modifier.size(16.dp)) }
-                        }
-                        Spacer(Modifier.width(12.dp))
-                        Column(Modifier.weight(1f)) {
-                            Text(title, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                            Text(fullInfo?.uploaderName ?: subtitle, color = Color.White.copy(0.7f), fontSize = 12.sp, maxLines = 1)
-                        }
-                    }
-                }
-            }
-        } else {
+        if (!isMinimized) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -460,8 +538,32 @@ fun EmbeddedPlayer(
                         modifier = Modifier
                             .fillMaxWidth()
                             .weight(if (isLandscape) 1f else 0.45f)
-                            .pointerInput(isLandscape, isLocked) {
-                                if (!isLocked) {
+                    ) {
+                        AndroidView(
+                            factory = { PlayerView(it).apply { player = exoPlayer; useController = false; setBackgroundColor(android.graphics.Color.BLACK); this.resizeMode = resizeMode; layoutParams = FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT, android.view.Gravity.CENTER) } },
+                            modifier = Modifier.fillMaxSize().rotate(rotation),
+                            update = { view -> view.player = exoPlayer; view.resizeMode = resizeMode }
+                        )
+
+                        // Drag & Tap Overlay to avoid AndroidView consumption issues
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .pointerInput(isLandscape, isLocked) {
+                                    if (isLocked) {
+                                        detectTapGestures(onTap = { showControls = !showControls })
+                                    } else {
+                                        detectTapGestures(
+                                            onTap = { showControls = !showControls },
+                                            onDoubleTap = { offset ->
+                                                val width = size.width
+                                                if (offset.x < width / 4) exoPlayer.seekTo((exoPlayer.currentPosition - 10000).coerceAtLeast(0))
+                                                else if (offset.x > width * 3 / 4) exoPlayer.seekTo((exoPlayer.currentPosition + 10000).coerceAtMost(exoPlayer.duration))
+                                            }
+                                        )
+                                    }
+                                }
+                                .then(if (!isLocked) Modifier.pointerInput(isLandscape) {
                                     detectVerticalDragGestures(
                                         onVerticalDrag = { change, dragAmount ->
                                             if (dragAmount > 0) {
@@ -473,6 +575,9 @@ fun EmbeddedPlayer(
                                                     offsetY = (offsetY + dragAmount).coerceAtLeast(0f)
                                                     change.consume()
                                                 }
+                                            } else if (dragAmount < 0 && offsetY > 0) {
+                                                offsetY = (offsetY + dragAmount).coerceAtLeast(0f)
+                                                change.consume()
                                             }
                                         },
                                         onDragEnd = {
@@ -480,76 +585,75 @@ fun EmbeddedPlayer(
                                             offsetY = 0f
                                         }
                                     )
-                                }
-                            }
-                    ) {
-                        AndroidView(
-                            factory = { PlayerView(it).apply { player = exoPlayer; useController = false; setBackgroundColor(android.graphics.Color.BLACK); this.resizeMode = resizeMode; layoutParams = FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT, android.view.Gravity.CENTER) } },
-                            modifier = Modifier.fillMaxSize().rotate(rotation).pointerInput(isLandscape, isLocked) {
-                                if (isLocked) {
-                                    detectTapGestures(onTap = { showControls = !showControls })
-                                } else {
-                                    detectTapGestures(
-                                        onTap = { showControls = !showControls },
-                                        onDoubleTap = { offset ->
-                                            val width = size.width
-                                            if (offset.x < width / 4) exoPlayer.seekTo((exoPlayer.currentPosition - 10000).coerceAtLeast(0))
-                                            else if (offset.x > width * 3 / 4) exoPlayer.seekTo((exoPlayer.currentPosition + 10000).coerceAtMost(exoPlayer.duration))
+                                } else Modifier)
+                                .then(if (!isLocked) Modifier.pointerInput(Unit) {
+                                    detectVerticalDragGestures(
+                                        onVerticalDrag = { change, dragAmount ->
+                                            if (dragAmount > 0) {
+                                                offsetY = (offsetY + dragAmount).coerceAtLeast(0f)
+                                                change.consume()
+                                            } else if (dragAmount < 0 && offsetY > 0) {
+                                                offsetY = (offsetY + dragAmount).coerceAtLeast(0f)
+                                                change.consume()
+                                            }
+                                        },
+                                        onDragEnd = {
+                                            if (offsetY > 300) onMinimizedChange(true)
+                                            offsetY = 0f
                                         }
                                     )
-                                }
-                            }.then(if (isLandscape && !isLocked) Modifier.pointerInput(Unit) {
-                                detectDragGestures(
-                                    onDragStart = { offset: Offset ->
-                                        gestureAmount = 0f
-                                        val width = size.width
-                                        if (offset.x < width / 3) {
-                                            showGestureIndicator = GestureIndicatorType.BRIGHTNESS
-                                        } else if (offset.x > width * 2 / 3) {
-                                            showGestureIndicator = GestureIndicatorType.VOLUME
-                                        } else {
-                                            isSeekingHorizontally = true
-                                            horizontalSeekValue = exoPlayer.currentPosition
-                                        }
-                                    },
-                                    onDrag = { change, dragAmount: Offset ->
-                                        change.consume()
-                                        if (isSeekingHorizontally) {
-                                            gestureAmount += dragAmount.x
-                                            val seekChange = (gestureAmount * 100).toLong()
-                                            horizontalSeekValue = (exoPlayer.currentPosition + seekChange).coerceIn(0, duration)
-                                        } else if (showGestureIndicator == GestureIndicatorType.VOLUME) {
-                                            gestureAmount -= dragAmount.y
-                                            val max = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
-                                            val current = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
-                                            val delta = (gestureAmount / 50).toInt()
-                                            if (delta != 0) {
-                                                val next = (current + delta).coerceIn(0, max)
-                                                audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, next, 0)
-                                                volume = next.toFloat() / max
-                                                gestureAmount = 0f
+                                } else Modifier)
+                                .then(if (isLandscape && !isLocked) Modifier.pointerInput(Unit) {
+                                    detectDragGestures(
+                                        onDragStart = { offset: Offset ->
+                                            gestureAmount = 0f
+                                            val width = size.width
+                                            if (offset.x < width / 3) {
+                                                showGestureIndicator = GestureIndicatorType.BRIGHTNESS
+                                            } else if (offset.x > width * 2 / 3) {
+                                                showGestureIndicator = GestureIndicatorType.VOLUME
+                                            } else {
+                                                isSeekingHorizontally = true
+                                                horizontalSeekValue = exoPlayer.currentPosition
                                             }
-                                        } else if (showGestureIndicator == GestureIndicatorType.BRIGHTNESS) {
-                                            gestureAmount -= dragAmount.y
-                                            val delta = gestureAmount / 500f
-                                            if (delta != 0f) {
-                                                brightness = (brightness + delta).coerceIn(0f, 1f)
-                                                (context as? Activity)?.window?.attributes = (context as? Activity)?.window?.attributes?.apply { screenBrightness = brightness }
-                                                gestureAmount = 0f
+                                        },
+                                        onDrag = { change, dragAmount: Offset ->
+                                            change.consume()
+                                            if (isSeekingHorizontally) {
+                                                gestureAmount += dragAmount.x
+                                                val seekChange = (gestureAmount * 100).toLong()
+                                                horizontalSeekValue = (exoPlayer.currentPosition + seekChange).coerceIn(0, duration)
+                                            } else if (showGestureIndicator == GestureIndicatorType.VOLUME) {
+                                                gestureAmount -= dragAmount.y
+                                                val max = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
+                                                val current = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
+                                                val delta = (gestureAmount / 50).toInt()
+                                                if (delta != 0) {
+                                                    val next = (current + delta).coerceIn(0, max)
+                                                    audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, next, 0)
+                                                    volume = next.toFloat() / max
+                                                    gestureAmount = 0f
+                                                }
+                                            } else if (showGestureIndicator == GestureIndicatorType.BRIGHTNESS) {
+                                                gestureAmount -= dragAmount.y
+                                                val delta = gestureAmount / 500f
+                                                if (delta != 0f) {
+                                                    brightness = (brightness + delta).coerceIn(0f, 1f)
+                                                    (context as? Activity)?.window?.attributes = (context as? Activity)?.window?.attributes?.apply { screenBrightness = brightness }
+                                                    gestureAmount = 0f
+                                                }
                                             }
+                                        },
+                                        onDragEnd = {
+                                            if (isSeekingHorizontally) {
+                                                exoPlayer.seekTo(horizontalSeekValue)
+                                                isSeekingHorizontally = false
+                                            }
+                                            showGestureIndicator = null
+                                            gestureAmount = 0f
                                         }
-                                    },
-                                    onDragEnd = {
-                                        if (isSeekingHorizontally) {
-                                            exoPlayer.seekTo(horizontalSeekValue)
-                                            isSeekingHorizontally = false
-                                        }
-                                        showGestureIndicator = null
-                                        gestureAmount = 0f
-                                    }
-                                )
-                            } else Modifier),
-                            update = { view -> view.player = exoPlayer; view.resizeMode = resizeMode }
+                                    )
+                                } else Modifier)
                         )
                         if (isBuffering) { Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { LoadingAnimation(tealColor) } }
                         
@@ -713,6 +817,9 @@ fun EmbeddedPlayer(
                     Card(colors = CardDefaults.cardColors(containerColor = Color(0xFF2C2C2C))) {
                         LazyColumn(Modifier.padding(vertical = 8.dp).width(280.dp)) {
                             item { MoreMenuItem("Video details and comments", Icons.Default.Comment) { showMoreMenu = false; showDescriptionSheet = true } }
+                            if (mediaType != "adult") {
+                                item { MoreMenuItem("Audio track", Icons.Default.Audiotrack) { showMoreMenu = false; showAudioDialog = true } }
+                            }
                             item { MoreMenuItem("Add to YouTube playlist", Icons.Default.PlaylistAdd) { showMoreMenu = false; showPlaylistDialog = true } }
                             item { MoreMenuItem("Search lyrics on Google", Icons.Default.Search) { showMoreMenu = false; val query = java.net.URLEncoder.encode("$title lyrics", "UTF-8"); context.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse("https://www.google.com/search?q=$query"))) } }
                             item { MoreMenuItem("Share", Icons.Default.Share) { showMoreMenu = false; ShareUtils.shareLink(context, title, "https://www.youtube.com/watch?v=$id") } }
@@ -725,11 +832,17 @@ fun EmbeddedPlayer(
             }
             if (showDescriptionSheet) { DescriptionBottomSheet(title, fullInfo) { showDescriptionSheet = false } }
             if (showPlaylistDialog) { PlayerManager.currentVideo.value?.let { video -> AddToPlaylistDialog(video) { showPlaylistDialog = false } } }
+            if (showAudioDialog) { TrackSelectionDialog("Audio Track", availableAudioTracks, exoPlayer, C.TRACK_TYPE_AUDIO) { showAudioDialog = false } }
         }
 
         // Playlist Panel (Queue)
         if (!isMinimized && !isLandscape) {
-            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .navigationBarsPadding(), 
+                contentAlignment = Alignment.BottomCenter
+            ) {
                 PlaylistPanel(
                     state = playlistState,
                     onStateChange = { playlistState = it },
@@ -807,65 +920,71 @@ fun PlaylistPanel(
             .fillMaxWidth()
             .height(height)
             .nestedScroll(nestedScrollConnection),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF1A1A1A)),
-        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
-        border = BorderStroke(1.dp, Color.White.copy(0.05f)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+        colors = CardDefaults.cardColors(containerColor = if (state == PlaylistState.COLLAPSED) Color.Black.copy(0.95f) else Color(0xFF1A1A1A)),
+        shape = if (state == PlaylistState.COLLAPSED) RoundedCornerShape(35.dp) else RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
+        border = BorderStroke(if (state == PlaylistState.COLLAPSED) 0.5.dp else 1.dp, Color.White.copy(0.12f)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 12.dp)
     ) {
         Column {
             // Header Bar
-            Box(
+            Surface(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(70.dp)
                     .clickable { 
                         if (state == PlaylistState.FULL) onStateChange(PlaylistState.COLLAPSED)
                         else onStateChange(PlaylistState.FULL)
-                    }
-                    .padding(horizontal = 20.dp)
+                    },
+                color = if (state == PlaylistState.COLLAPSED) Color.Transparent else Color.White.copy(0.05f),
+                shape = if (state == PlaylistState.COLLAPSED) RoundedCornerShape(35.dp) else RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
             ) {
-                // Drag Handle
-                Box(
-                    Modifier
-                        .align(Alignment.TopCenter)
-                        .padding(top = 8.dp)
-                        .width(40.dp)
-                        .height(4.dp)
-                        .clip(CircleShape)
-                        .background(Color.White.copy(0.2f))
-                )
+                Box(modifier = Modifier.padding(horizontal = 20.dp)) {
+                    // Drag Handle
+                    Box(
+                        Modifier
+                            .align(Alignment.TopCenter)
+                            .padding(top = 8.dp)
+                            .width(40.dp)
+                            .height(4.dp)
+                            .clip(CircleShape)
+                            .background(Color.White.copy(0.2f))
+                    )
 
-                Row(
-                    modifier = Modifier.fillMaxSize(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column(Modifier.weight(1f)) {
-                        val headerText = when(mediaType) {
-                            "adult" -> "Recommended Videos"
-                            "youtube" -> "Up Next"
-                            "movie", "tv" -> if (episodes.isNotEmpty()) "Episodes" else "Related Movies"
-                            else -> "Now Playing"
+                    Row(
+                        modifier = Modifier.fillMaxSize(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(Modifier.weight(1f)) {
+                            val headerText = when(mediaType) {
+                                "adult" -> "Recommended Videos"
+                                "youtube" -> "Up Next"
+                                "movie", "tv" -> if (episodes.isNotEmpty()) "Episodes" else "Related Movies"
+                                else -> "Now Playing"
+                            }
+                            Text(headerText, color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 16.sp)
+                            val currentIdx = if (episodes.isNotEmpty()) {
+                                episodes.indexOfFirst { it.data == currentVideoId }.coerceAtLeast(0)
+                            } else 0
+                            
+                            val subText = if (episodes.isNotEmpty()) {
+                                "${currentIdx + 1} / ${episodes.size}"
+                            } else if (relatedVideos.isNotEmpty()) {
+                                "1 / ${relatedVideos.size + 1}"
+                            } else "1 / 1"
+                            Text(subText, color = Color.Gray, fontSize = 13.sp)
                         }
-                        Text(headerText, color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 16.sp)
-                        val subText = if (episodes.isNotEmpty()) {
-                            val currentIdx = episodes.indexOfFirst { it.data == currentVideoId }
-                            "${currentIdx + 1} / ${episodes.size}"
-                        } else if (relatedVideos.isNotEmpty()) {
-                            "1 / ${relatedVideos.size + 1}"
-                        } else "1 / 1"
-                        Text(subText, color = Color.Gray, fontSize = 13.sp)
-                    }
-                    
-                    IconButton(onClick = { 
-                        if (state == PlaylistState.FULL) onStateChange(PlaylistState.COLLAPSED)
-                        else onStateChange(PlaylistState.FULL)
-                    }) {
-                        Icon(
-                            if (state != PlaylistState.COLLAPSED) Icons.Default.KeyboardArrowDown else Icons.Default.KeyboardArrowUp,
-                            null,
-                            tint = Color.White,
-                            modifier = Modifier.size(28.dp)
-                        )
+                        
+                        IconButton(onClick = { 
+                            if (state == PlaylistState.FULL) onStateChange(PlaylistState.COLLAPSED)
+                            else onStateChange(PlaylistState.FULL)
+                        }) {
+                            Icon(
+                                if (state != PlaylistState.COLLAPSED) Icons.Default.KeyboardArrowDown else Icons.Default.KeyboardArrowUp,
+                                null,
+                                tint = Color.White,
+                                modifier = Modifier.size(28.dp)
+                            )
+                        }
                     }
                 }
             }

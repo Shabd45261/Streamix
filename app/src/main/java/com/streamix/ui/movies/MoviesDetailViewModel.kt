@@ -145,9 +145,9 @@ class MoviesDetailViewModel @Inject constructor(
         _currentMovie.value?.let { loadTrailer(it, season) }
     }
 
-    fun selectEpisode(episode: Episode) {
+    fun selectEpisode(episode: Episode, position: Long = 0L) {
         _selectedEpisode.value = episode
-        loadLinks(episode.data, _apiName, episode.name ?: "Episode", _fallbackUrl)
+        loadLinks(episode.data, _apiName, episode.name ?: "Episode", _fallbackUrl, position)
     }
 
     fun clearLinks() {
@@ -203,7 +203,11 @@ class MoviesDetailViewModel @Inject constructor(
         }
     }
 
-    fun loadLinks(data: String, apiName: String, title: String, fallbackUrl: String? = null) {
+    private var _startPosition: Long = 0L
+    val startPosition: Long get() = _startPosition
+
+    fun loadLinks(data: String, apiName: String, title: String, fallbackUrl: String? = null, position: Long = 0L) {
+        _startPosition = position
         viewModelScope.launch {
             _videoLinks.value = emptyList()
             val links = repo.getVideoLinks(data, apiName, title)

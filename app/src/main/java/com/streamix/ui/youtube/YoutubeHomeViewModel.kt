@@ -164,6 +164,13 @@ class YoutubeHomeViewModel @Inject constructor(
             _searchResults.value = emptyList()
             return 
         }
+
+        // Strict ban check
+        if (YouTubeScraper.isBanned(q)) {
+            _searchResults.value = emptyList()
+            return
+        }
+
         searchJob = viewModelScope.launch {
             delay(500)
             search(q)

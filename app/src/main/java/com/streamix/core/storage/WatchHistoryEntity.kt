@@ -14,5 +14,11 @@ data class WatchHistoryEntity(
     val rating: String = "",
     val lastWatchedAt: Long = System.currentTimeMillis(),
     val progress: Long = 0,
-    val totalDuration: Long = 0
+    val totalDuration: Long = 0,
+    
+    // For Series
+    val lastEpisodeData: String? = null,
+    val lastEpisodeName: String? = null,
+    val lastEpisodeSeason: Int? = null,
+    val lastEpisodeNumber: Int? = null
 )

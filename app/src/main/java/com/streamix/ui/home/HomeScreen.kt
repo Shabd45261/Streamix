@@ -52,6 +52,10 @@ import com.streamix.ui.components.UpdateDialog
 import java.net.URLEncoder
 import kotlinx.coroutines.delay
 
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
+
+@OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun HomeScreen(
     navController: NavController,
@@ -69,40 +73,26 @@ fun HomeScreen(
         UpdateDialog(info = it, onDismiss = { updateViewModel.dismissUpdate() })
     }
 
-    when (profileState.value) {
-        Profile.MOVIES -> {
-            com.streamix.ui.movies.MoviesHomeScreen(navController, profileState)
-        }
-        Profile.SONGS -> {
-            SongsHomeContent(navController, profileState)
-        }
-        Profile.YOUTUBE -> {
-            SwipeableProfileHost(
-                mainContent = {
-                    YoutubeHomeScreen(navController, profileState)
-                },
-                shortsContent = { isActive ->
-                    ShortsScreen(
-                        context = ShortsContext.YOUTUBE,
-                        onClose = { /* handled by pager */ },
-                        isScreenActive = isActive
-                    )
-                }
-            )
-        }
-        Profile.ADULT -> {
-            SwipeableProfileHost(
-                mainContent = {
-                    com.streamix.ui.adult.AdultHomeScreen(navController, profileState)
-                },
-                shortsContent = { isActive ->
-                    ShortsScreen(
-                        context = ShortsContext.ADULT,
-                        onClose = { /* handled by pager */ },
-                        isScreenActive = isActive
-                    )
-                }
-            )
+    AnimatedContent(
+        targetState = profileState.value,
+        transitionSpec = {
+            fadeIn(animationSpec = tween(400)) with fadeOut(animationSpec = tween(400))
+        },
+        label = "profileTransition"
+    ) { targetProfile ->
+        when (targetProfile) {
+            Profile.MOVIES -> {
+                com.streamix.ui.movies.MoviesHomeScreen(navController, profileState)
+            }
+            Profile.SONGS -> {
+                SongsHomeContent(navController, profileState)
+            }
+            Profile.YOUTUBE -> {
+                YoutubeHomeScreen(navController, profileState)
+            }
+            Profile.ADULT -> {
+                com.streamix.ui.adult.AdultHomeScreen(navController, profileState)
+            }
         }
     }
 }
@@ -141,29 +131,33 @@ fun MoviesHomeContent(
             .fillMaxSize()
             .background(Color.Black)
     ) {
-        StreamixHeader(
-            currentProfile = profileState.value,
-            onSettingsTap = { navController.navigate(Screen.Settings.route) },
-            onProfileSelect = { profile -> profileState.value = profile },
-            onProfileTripleTap = { navController.navigate(Screen.Passcode.route) }
-        )
-
-        StreamixSearchBar(
-            query = searchQuery,
-            onQueryChange = viewModel::onSearchQueryChange,
-            onSearch = { 
-                if (searchQuery.isNotBlank()) {
-                    navController.navigate("search?query=${URLEncoder.encode(searchQuery, "UTF-8")}")
-                }
-            },
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-        )
-        
         Box(Modifier.fillMaxSize().nestedScroll(pullToRefreshState.nestedScrollConnection)) {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(bottom = 100.dp)
             ) {
+                item {
+                    StreamixHeader(
+                        currentProfile = profileState.value,
+                        onSettingsTap = { navController.navigate(Screen.Settings.route) },
+                        onProfileSelect = { profile -> profileState.value = profile },
+                        onProfileTripleTap = { navController.navigate(Screen.Passcode.route) }
+                    )
+                }
+
+                item {
+                    StreamixSearchBar(
+                        query = searchQuery,
+                        onQueryChange = viewModel::onSearchQueryChange,
+                        onSearch = { 
+                            if (searchQuery.isNotBlank()) {
+                                navController.navigate("search?query=${URLEncoder.encode(searchQuery, "UTF-8")}")
+                            }
+                        },
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                    )
+                }
+
                 // Refresh Banner
                 if (showRefreshBanner) {
                     item {

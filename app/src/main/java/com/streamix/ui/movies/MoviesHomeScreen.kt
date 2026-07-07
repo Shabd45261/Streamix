@@ -1,6 +1,7 @@
 package com.streamix.ui.movies
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -58,6 +59,8 @@ fun MoviesHomeScreen(
 ) {
     val homeRows by viewModel.homeRows.collectAsState()
     val history by viewModel.history.collectAsState()
+    val availableProviders by viewModel.availableProviders.collectAsState()
+    val selectedProvider by viewModel.selectedProvider.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val isRefreshing by viewModel.isRefreshing.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
@@ -89,27 +92,58 @@ fun MoviesHomeScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(colors.primary)
-            .statusBarsPadding()
     ) {
-        StreamixHeader(
-            currentProfile = profileState.value,
-            onSettingsTap = { navController.navigate(Screen.Settings.route) },
-            onProfileSelect = { profile -> profileState.value = profile },
-            onProfileTripleTap = { navController.navigate(Screen.Passcode.route) }
-        )
-
-        StreamixSearchBar(
-            query = searchQuery,
-            onQueryChange = viewModel::onQueryChange,
-            onSearch = { viewModel.search(searchQuery) },
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-        )
-
         Box(modifier = Modifier.fillMaxSize().nestedScroll(pullToRefreshState.nestedScrollConnection)) {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(bottom = 100.dp)
             ) {
+                item {
+                    StreamixHeader(
+                        currentProfile = profileState.value,
+                        onSettingsTap = { navController.navigate(Screen.Settings.route) },
+                        onProfileSelect = { profile -> profileState.value = profile },
+                        onProfileTripleTap = { navController.navigate(Screen.Passcode.route) }
+                    )
+                }
+
+                item {
+                    StreamixSearchBar(
+                        query = searchQuery,
+                        onQueryChange = viewModel::onQueryChange,
+                        onSearch = { viewModel.search(searchQuery) },
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                    )
+                }
+
+                // Provider Selector
+                if (availableProviders.size > 1) {
+                    item {
+                        LazyRow(
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp),
+                            contentPadding = PaddingValues(horizontal = 16.dp)
+                        ) {
+                            items(availableProviders) { provider ->
+                                val isSelected = selectedProvider == provider
+                                Surface(
+                                    onClick = { viewModel.selectProvider(provider) },
+                                    color = if (isSelected) Color.Red else Color.White.copy(0.1f),
+                                    shape = RoundedCornerShape(20.dp)
+                                ) {
+                                    Text(
+                                        text = provider,
+                                        color = Color.White,
+                                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                                        fontSize = 13.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+
                 if (searchQuery.isBlank()) {
                     // Refresh Banner
                     if (showRefreshBanner) {

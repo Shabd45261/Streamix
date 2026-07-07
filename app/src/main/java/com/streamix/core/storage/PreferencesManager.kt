@@ -34,6 +34,14 @@ class PreferencesManager @Inject constructor(
         val USER_INTERESTS      = stringPreferencesKey("user_interests")
         val SHORTS_SEARCH_HISTORY = stringPreferencesKey("shorts_search_history")
         val AUTO_SCROLL_SHORTS  = booleanPreferencesKey("auto_scroll_shorts")
+        val FLOATING_DOCK_ENABLED = booleanPreferencesKey("floating_dock_enabled")
+    }
+
+    val floatingDockEnabled: Flow<Boolean> = context.dataStore.data
+        .map { it[FLOATING_DOCK_ENABLED] ?: false }
+
+    suspend fun setFloatingDockEnabled(enabled: Boolean) {
+        context.dataStore.edit { it[FLOATING_DOCK_ENABLED] = enabled }
     }
 
     val autoScrollShorts: Flow<Boolean> = context.dataStore.data
