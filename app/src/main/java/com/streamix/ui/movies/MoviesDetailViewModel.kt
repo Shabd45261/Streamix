@@ -156,8 +156,6 @@ class MoviesDetailViewModel @Inject constructor(
 
     private fun loadTrailer(detail: LoadResponse, season: Int? = null) {
         viewModelScope.launch {
-            _trailerLinks.value = emptyList()
-            
             // Try to find season specific trailer first if season is provided
             val query = if (season != null && detail.type == TvType.TvSeries) {
                 "${detail.name} season $season official trailer"
@@ -169,7 +167,7 @@ class MoviesDetailViewModel @Inject constructor(
                 season == null || it.extractorUrl.contains("season $season", ignoreCase = true) 
             } ?: detail.trailers.firstOrNull()
 
-            if (trailer != null && season == null) { // Only use pre-loaded if no specific season requested or we found a match
+            if (trailer != null && season == null) { 
                 val ytId = if (trailer.extractorUrl.contains("v=")) {
                     trailer.extractorUrl.substringAfter("v=").substringBefore("&")
                 } else if (trailer.extractorUrl.contains("youtu.be/")) {
@@ -191,11 +189,14 @@ class MoviesDetailViewModel @Inject constructor(
             // Fallback or Season specific search
             try {
                 val ytScraper = com.streamix.scraper.youtube.YouTubeScraper()
+                // Fast search with limit to reduce loading time
                 val searchResults = ytScraper.search(query)
                 val firstResult = searchResults.firstOrNull()
                 if (firstResult != null) {
                     val links = ytScraper.getVideoLinks(firstResult.id, "youtube")
-                    _trailerLinks.value = links
+                    if (links.isNotEmpty()) {
+                        _trailerLinks.value = links
+                    }
                 }
             } catch (e: Exception) {
                 Log.e("MoviesDetailVM", "Failed to search for trailer: $query", e)

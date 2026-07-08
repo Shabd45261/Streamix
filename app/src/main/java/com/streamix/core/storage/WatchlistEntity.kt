@@ -14,5 +14,6 @@ data class WatchlistEntity(
     val rating: String = "",
     val status: String = "Plan to Watch", // Watching, Completed, Plan to Watch, Liked, Subscribed
     val isShort: Boolean = false,
+    val studio: String = "",
     val addedAt: Long = System.currentTimeMillis()
 )

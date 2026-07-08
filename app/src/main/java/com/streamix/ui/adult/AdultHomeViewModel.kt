@@ -79,7 +79,7 @@ class AdultHomeViewModel @Inject constructor(
             historyDao.getAllHistory()
                 .catch { _history.value = emptyList() }
                 .collectLatest { entities ->
-                    _history.value = entities.filter { it.mediaType == "adult" }.map {
+                    _history.value = entities.filter { it.mediaType == "adult" && !it.isShort }.map {
                         SearchResult(
                             id = it.id,
                             title = it.title,
@@ -89,7 +89,10 @@ class AdultHomeViewModel @Inject constructor(
                             views = it.views,
                             rating = it.rating,
                             progress = it.progress,
-                            totalDuration = it.totalDuration
+                            totalDuration = it.totalDuration,
+                            isShort = it.isShort,
+                            studio = it.studio,
+                            year = it.year
                         )
                     }
                 }
@@ -163,6 +166,10 @@ class AdultHomeViewModel @Inject constructor(
 
     fun addToLibrary(item: SearchResult, status: String = "Plan to Watch", isShort: Boolean = false) {
         viewModelScope.launch {
+            if (status == "Remove from History") {
+                historyDao.deleteHistory(item.id)
+                return@launch
+            }
             try {
                 watchlistDao.insert(
                     WatchlistEntity(

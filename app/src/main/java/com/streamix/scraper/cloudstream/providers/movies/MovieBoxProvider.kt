@@ -370,8 +370,8 @@ class MovieBoxProvider : MainAPI() {
     override suspend fun loadLinks(data: String, isCasting: Boolean, subtitleCallback: (SubtitleFile) -> Unit, callback: (ExtractorLink) -> Unit): Boolean {
         val parts = data.split("|")
         val sid = parts[0]
-        val se = parts.getOrNull(1) ?: "1"
-        val ep = parts.getOrNull(2) ?: "1"
+        val se = parts.getOrNull(1) ?: "0"
+        val ep = parts.getOrNull(2) ?: "0"
         
         val token = getCachedToken()
         val url = "$mainUrl/wefeed-mobile-bff/subject-api/play-info?subjectId=$sid&se=$se&ep=$ep"

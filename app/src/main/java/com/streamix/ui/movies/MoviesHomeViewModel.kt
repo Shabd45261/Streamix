@@ -155,6 +155,10 @@ class MoviesHomeViewModel @Inject constructor(
 
     fun addToLibrary(item: SearchResult, status: String) {
         viewModelScope.launch {
+            if (status == "Remove from History") {
+                historyDao.deleteHistory(item.id)
+                return@launch
+            }
             watchlistDao.insert(
                 WatchlistEntity(
                     id = item.id,

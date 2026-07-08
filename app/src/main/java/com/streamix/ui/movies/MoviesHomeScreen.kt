@@ -55,12 +55,11 @@ import java.net.URLEncoder
 fun MoviesHomeScreen(
     navController: NavController,
     profileState: MutableState<Profile>,
+    onProfileChange: (Profile) -> Unit = {},
     viewModel: MoviesHomeViewModel = hiltViewModel()
 ) {
     val homeRows by viewModel.homeRows.collectAsState()
     val history by viewModel.history.collectAsState()
-    val availableProviders by viewModel.availableProviders.collectAsState()
-    val selectedProvider by viewModel.selectedProvider.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val isRefreshing by viewModel.isRefreshing.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
@@ -102,7 +101,7 @@ fun MoviesHomeScreen(
                     StreamixHeader(
                         currentProfile = profileState.value,
                         onSettingsTap = { navController.navigate(Screen.Settings.route) },
-                        onProfileSelect = { profile -> profileState.value = profile },
+                        onProfileSelect = onProfileChange,
                         onProfileTripleTap = { navController.navigate(Screen.Passcode.route) }
                     )
                 }
@@ -114,34 +113,6 @@ fun MoviesHomeScreen(
                         onSearch = { viewModel.search(searchQuery) },
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                     )
-                }
-
-                // Provider Selector
-                if (availableProviders.size > 1) {
-                    item {
-                        LazyRow(
-                            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                            horizontalArrangement = Arrangement.spacedBy(10.dp),
-                            contentPadding = PaddingValues(horizontal = 16.dp)
-                        ) {
-                            items(availableProviders) { provider ->
-                                val isSelected = selectedProvider == provider
-                                Surface(
-                                    onClick = { viewModel.selectProvider(provider) },
-                                    color = if (isSelected) Color.Red else Color.White.copy(0.1f),
-                                    shape = RoundedCornerShape(20.dp)
-                                ) {
-                                    Text(
-                                        text = provider,
-                                        color = Color.White,
-                                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                                        fontSize = 13.sp,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                }
-                            }
-                        }
-                    }
                 }
 
                 if (searchQuery.isBlank()) {

@@ -15,6 +15,7 @@ data class SearchResult(
     val description: String = "",
     val progress: Long = 0L,
     val totalDuration: Long = 0L,
+    val isShort: Boolean = false,
     val fallbackUrl: String? = null,
     val fallbackStudio: String? = null
 )

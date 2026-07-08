@@ -29,9 +29,10 @@ object PlayerManager {
         related: List<SearchResult> = emptyList(),
         eps: List<Episode> = emptyList(),
         startPosition: Long = 0L,
-        episode: Episode? = null
+        episode: Episode? = null,
+        isShort: Boolean = false
     ) {
-        currentVideo.value = video
+        currentVideo.value = video.copy(isShort = isShort)
         currentEpisode.value = episode
         videoLinks.value = links
         relatedVideos.value = related

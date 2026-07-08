@@ -372,7 +372,8 @@ class YouTubeScraper @Inject constructor() : BaseScraper() {
             mediaType = "youtube",
             duration = formattedDuration,
             views = viewCount.toString(),
-            studio = uploaderName
+            studio = uploaderName,
+            isShort = url.contains("/shorts/")
         )
     }
 

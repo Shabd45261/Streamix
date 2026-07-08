@@ -58,6 +58,7 @@ import java.net.URLEncoder
 fun AdultHomeScreen(
     navController: NavController,
     profileState: MutableState<Profile>,
+    onProfileChange: (Profile) -> Unit = {},
     viewModel: AdultHomeViewModel = hiltViewModel(),
     themeViewModel: ThemeViewModel = hiltViewModel()
 ) {
@@ -137,7 +138,7 @@ fun AdultHomeScreen(
                     StreamixHeader(
                         currentProfile = profileState.value,
                         onSettingsTap = { navController.navigate(Screen.Settings.route) },
-                        onProfileSelect = { profile -> profileState.value = profile },
+                        onProfileSelect = onProfileChange,
                         onProfileTripleTap = { navController.navigate(Screen.Passcode.route) }
                     )
                 }

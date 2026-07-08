@@ -52,6 +52,7 @@ import java.net.URLEncoder
 fun YoutubeHomeScreen(
     navController: NavController,
     profileState: MutableState<Profile>,
+    onProfileChange: (Profile) -> Unit = {},
     viewModel: YoutubeHomeViewModel = hiltViewModel()
 ) {
     val trending    by viewModel.trending.collectAsState()
@@ -102,7 +103,7 @@ fun YoutubeHomeScreen(
                         StreamixHeader(
                             currentProfile = profileState.value,
                             onSettingsTap = { navController.navigate(Screen.Settings.route) },
-                            onProfileSelect = { profile -> profileState.value = profile },
+                            onProfileSelect = onProfileChange,
                             onProfileTripleTap = { navController.navigate(Screen.Passcode.route) }
                         )
                     }

@@ -39,6 +39,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Brush
@@ -465,7 +466,7 @@ fun EmbeddedPlayer(
     LaunchedEffect(showControls, isPlaying, isLocked) { if (showControls && isPlaying && !isLocked) { delay(5000); showControls = false } }
 
     val animatedOffset by animateFloatAsState(
-        targetValue = if (isMinimized) 0f else offsetY,
+        targetValue = if (isMinimized) 2000f else offsetY,
         animationSpec = spring(
             dampingRatio = Spring.DampingRatioLowBouncy,
             stiffness = Spring.StiffnessLow
@@ -495,7 +496,15 @@ fun EmbeddedPlayer(
         }
     }
 
-    Box(modifier = modifier.fillMaxSize().then(if (isMinimized || isLandscape) Modifier else Modifier.offset { IntOffset(0, animatedOffset.roundToInt()) })) {
+    val playerAlpha by animateFloatAsState(targetValue = if (isMinimized) 0f else 1f, label = "alpha")
+
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .then(if (isLandscape) Modifier else Modifier.offset { IntOffset(0, animatedOffset.roundToInt()) })
+            .alpha(playerAlpha)
+            .then(if (isMinimized) Modifier.size(0.dp) else Modifier.fillMaxSize())
+    ) {
         if (!isMinimized) {
             Box(
                 modifier = Modifier

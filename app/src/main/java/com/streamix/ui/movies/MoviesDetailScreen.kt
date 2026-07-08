@@ -61,10 +61,13 @@ fun MoviesDetailScreen(
     
     val colors = LocalCustomColors.current
 
+    val isPlayerVisible by PlayerManager.isVisible
+    val isPlayerMinimized by PlayerManager.isMinimized
+    
     val context = LocalContext.current
     val exoPlayer = remember {
         ExoPlayer.Builder(context).build().apply {
-            repeatMode = Player.REPEAT_MODE_ONE
+            repeatMode = Player.REPEAT_MODE_ALL
             volume = 1f
             playWhenReady = true
         }
@@ -74,11 +77,24 @@ fun MoviesDetailScreen(
         onDispose { exoPlayer.release() }
     }
 
+    LaunchedEffect(isPlayerVisible, isPlayerMinimized) {
+        if (isPlayerVisible && !isPlayerMinimized) {
+            exoPlayer.volume = 0f
+        } else {
+            exoPlayer.volume = 1f
+        }
+    }
+
     LaunchedEffect(trailerLinks) {
-        val link = trailerLinks.firstOrNull()?.url ?: return@LaunchedEffect
-        exoPlayer.setMediaItem(MediaItem.fromUri(link))
-        exoPlayer.prepare()
-        exoPlayer.play()
+        val link = trailerLinks.firstOrNull()?.url
+        if (link != null) {
+            exoPlayer.setMediaItem(MediaItem.fromUri(link))
+            exoPlayer.prepare()
+            exoPlayer.play()
+        } else {
+            exoPlayer.stop()
+            exoPlayer.clearMediaItems()
+        }
     }
 
     LaunchedEffect(movieId, apiName, fallbackUrl) {
@@ -93,6 +109,9 @@ fun MoviesDetailScreen(
             } else {
                 current.name
             }
+            
+            exoPlayer.stop()
+            exoPlayer.clearMediaItems()
             
             PlayerManager.play(
                 video = SearchResult(
@@ -248,27 +267,26 @@ fun DetailTopBar(navController: NavController) {
 @androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
 @Composable
 fun DetailHeroSection(data: com.streamix.scraper.cloudstream.LoadResponse, trailerLinks: List<VideoLink>, exoPlayer: ExoPlayer) {
-    val isPlayerVisible by PlayerManager.isVisible
-    
     Box(modifier = Modifier.fillMaxWidth().height(300.dp)) {
-        if (trailerLinks.isNotEmpty() && !isPlayerVisible) {
+        // Poster as background layer
+        AsyncImage(
+            model = data.backgroundUrl ?: data.posterUrl,
+            contentDescription = null,
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop
+        )
+
+        if (trailerLinks.isNotEmpty()) {
             AndroidView(
                 factory = {
                     PlayerView(it).apply {
                         player = exoPlayer
                         useController = false
                         resizeMode = AspectRatioFrameLayout.RESIZE_MODE_ZOOM
-                        setBackgroundColor(android.graphics.Color.BLACK)
+                        setBackgroundColor(android.graphics.Color.TRANSPARENT)
                     }
                 },
                 modifier = Modifier.fillMaxSize()
-            )
-        } else {
-            AsyncImage(
-                model = data.backgroundUrl ?: data.posterUrl,
-                contentDescription = null,
-                modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Crop
             )
         }
         

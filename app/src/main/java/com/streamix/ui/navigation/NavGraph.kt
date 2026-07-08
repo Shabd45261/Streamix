@@ -42,6 +42,10 @@ import com.streamix.ui.player.HistoryViewModel
 import androidx.hilt.navigation.compose.hiltViewModel
 
 import androidx.activity.compose.BackHandler
+import android.widget.Toast
+import androidx.compose.runtime.snapshots.SnapshotStateList
+import androidx.activity.ComponentActivity
+import kotlinx.coroutines.delay
 
 val LocalBottomDockVisible = compositionLocalOf { mutableStateOf(true) }
 
@@ -52,6 +56,9 @@ fun StreamixNavGraph() {
     val colors = LocalCustomColors.current
     val bottomDockVisible = rememberSaveable { mutableStateOf(true) }
     
+    val profileStack = remember { mutableStateListOf<Profile>() }
+    var backPressedOnce by remember { mutableStateOf(false) }
+
     val historyViewModel: HistoryViewModel = hiltViewModel()
     
     val context = LocalContext.current
@@ -61,6 +68,14 @@ fun StreamixNavGraph() {
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
+
+    // Update bottom dock visibility based on current route
+    LaunchedEffect(currentRoute) {
+        bottomDockVisible.value = when (currentRoute) {
+            Screen.Shorts.route, Screen.Passcode.route -> false
+            else -> true
+        }
+    }
     
     val playerVisible by PlayerManager.isVisible
     val playerMinimized by PlayerManager.isMinimized
@@ -78,11 +93,40 @@ fun StreamixNavGraph() {
                       currentRoute == Screen.Library.route || 
                       currentRoute == Screen.Settings.route
 
-    val isDetail = currentRoute?.contains("detail") == true
+    // Intercept profile changes to update stack
+    val switchProfile: (Profile) -> Unit = remember {
+        { newProfile ->
+            if (profileState.value != newProfile) {
+                profileStack.add(profileState.value)
+                profileState.value = newProfile
+            }
+        }
+    }
 
     CompositionLocalProvider(LocalBottomDockVisible provides bottomDockVisible) {
-        BackHandler(enabled = playerVisible && !playerMinimized && !isHidden) {
-            PlayerManager.isMinimized.value = true
+        BackHandler {
+            if (playerVisible && !playerMinimized && !isHidden) {
+                PlayerManager.isMinimized.value = true
+            } else if (navController.previousBackStackEntry != null) {
+                navController.popBackStack()
+            } else if (profileStack.isNotEmpty()) {
+                val lastProfile = profileStack.removeAt(profileStack.size - 1)
+                profileState.value = lastProfile
+            } else {
+                if (backPressedOnce) {
+                    (context as? ComponentActivity)?.finish()
+                } else {
+                    backPressedOnce = true
+                    Toast.makeText(context, "Double tap back to exit", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+
+        LaunchedEffect(backPressedOnce) {
+            if (backPressedOnce) {
+                delay(2000)
+                backPressedOnce = false
+            }
         }
 
         Scaffold(
@@ -132,8 +176,8 @@ fun StreamixNavGraph() {
                     startDestination = Screen.Home.route,
                     modifier         = Modifier.fillMaxSize()
                 ) {
-                    composable(Screen.Home.route) { MainScreen(navController, profileState) }
-                    composable(Screen.Shorts.route) { MainScreen(navController, profileState) }
+                    composable(Screen.Home.route) { MainScreen(navController, profileState, switchProfile) }
+                    composable(Screen.Shorts.route) { MainScreen(navController, profileState, switchProfile) }
                     composable(
                         route = Screen.Search.route,
                         arguments = listOf(
@@ -143,9 +187,9 @@ fun StreamixNavGraph() {
                                 defaultValue = null
                             }
                         )
-                    ) { MainScreen(navController, profileState) }
-                    composable(Screen.Library.route) { MainScreen(navController, profileState) }
-                    composable(Screen.Settings.route) { MainScreen(navController, profileState) }
+                    ) { MainScreen(navController, profileState, switchProfile) }
+                    composable(Screen.Library.route) { MainScreen(navController, profileState, switchProfile) }
+                    composable(Screen.Settings.route) { MainScreen(navController, profileState, switchProfile) }
                     
                     composable(
                         route = Screen.Detail.route,
@@ -237,6 +281,7 @@ fun StreamixNavGraph() {
                             historyViewModel.updateProgress(currentVideo!!, pos, total, PlayerManager.currentEpisode.value)
                         },
                         onVideoSelect = { video ->
+                            PlayerManager.isMinimized.value = false
                             val encoded = java.net.URLEncoder.encode(video.id, "UTF-8")
                             val apiEncoded = java.net.URLEncoder.encode(video.studio, "UTF-8")
                             if (video.mediaType == "youtube") {

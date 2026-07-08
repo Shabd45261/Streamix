@@ -50,6 +50,14 @@ fun VideoOptionsPopup(
             },
             leadingIcon = { Icon(Icons.Default.Schedule, null, tint = colors.secondary) }
         )
+        DropdownMenuItem(
+            text = { Text("Remove from History", color = colors.secondary) },
+            onClick = { 
+                onSelect("Remove from History")
+                onDismiss() 
+            },
+            leadingIcon = { Icon(Icons.Default.Delete, null, tint = colors.secondary) }
+        )
     }
 
     if (showAddToListSubMenu) {

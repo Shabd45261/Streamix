@@ -75,11 +75,6 @@ fun ShortsScreen(
     val prefs = remember { com.streamix.core.storage.PreferencesManager(androidContext) }
     val autoScrollEnabled by prefs.autoScrollShorts.collectAsState(initial = false)
 
-    // Hide bottom dock when shorts are active
-    LaunchedEffect(isScreenActive) {
-        bottomDockVisible.value = !isScreenActive
-    }
-    
     val exoPlayer = remember {
         val httpDataSourceFactory = DefaultHttpDataSource.Factory()
             .setUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36")
@@ -183,6 +178,7 @@ fun ShortsScreen(
 
                 // Resolve current AND buffer next items
                 viewModel.resolveStreamUrl(item.id)
+                viewModel.saveToHistory(item.id, context)
 
                 if (item.streamUrl.isNotEmpty() && currentUri != item.streamUrl) {
                     currentUri = item.streamUrl

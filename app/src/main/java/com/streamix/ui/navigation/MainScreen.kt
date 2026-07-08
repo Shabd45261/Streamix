@@ -31,7 +31,8 @@ import com.streamix.ui.player.PlayerManager
 @Composable
 fun MainScreen(
     navController: NavController,
-    profileState: MutableState<Profile>
+    profileState: MutableState<Profile>,
+    onProfileChange: (Profile) -> Unit = {}
 ) {
     val profile = profileState.value
     val scope = rememberCoroutineScope()
@@ -54,8 +55,37 @@ fun MainScreen(
         }
     }
 
-    val pagerState = rememberPagerState(pageCount = { screens.size })
+    // Determine initial page based on current destination
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
     
+    val initialPage = remember(profile) {
+        val baseRoute = currentRoute?.split("?")?.get(0)?.split("/")?.get(0)
+        val index = screens.indexOfFirst { it.route.startsWith(baseRoute ?: "") }
+        if (index != -1) index else 0
+    }
+
+    val pagerState = rememberPagerState(
+        initialPage = initialPage,
+        pageCount = { screens.size }
+    )
+    
+    // Sync Pager -> NavController (only on settled page to avoid flickering)
+    LaunchedEffect(pagerState.settledPage) {
+        val screen = screens.getOrNull(pagerState.settledPage) ?: return@LaunchedEffect
+        val targetRoute = screen.route
+        val currentBase = currentRoute?.split("?")?.get(0)?.split("/")?.get(0)
+        val targetBase = targetRoute.split("?")[0].split("/")[0]
+
+        if (currentBase != targetBase) {
+            navController.navigate(targetRoute) {
+                popUpTo(Screen.Home.route) { saveState = true }
+                launchSingleTop = true
+                restoreState = true
+            }
+        }
+    }
+
     // History for back button
     val pageHistory = rememberSaveable(
         saver = listSaver<SnapshotStateList<Int>, Int>(
@@ -63,7 +93,7 @@ fun MainScreen(
             restore = { it.toMutableStateList() }
         )
     ) { 
-        mutableStateListOf(0) 
+        mutableStateListOf(initialPage) 
     }
 
     // Update history when page changes
@@ -87,17 +117,6 @@ fun MainScreen(
         }
     }
 
-    // Handle external navigation by updating pager
-    val navBackStackEntry by navController.currentBackStackEntryAsState()
-    LaunchedEffect(navBackStackEntry) {
-        val route = navBackStackEntry?.destination?.route ?: return@LaunchedEffect
-        val baseRoute = route.split("?")[0].split("/")[0]
-        val index = screens.indexOfFirst { it.route.startsWith(baseRoute) }
-        if (index != -1 && index != pagerState.currentPage) {
-            pagerState.scrollToPage(index)
-        }
-    }
-
     HorizontalPager(
         state = pagerState,
         modifier = Modifier.fillMaxSize(),
@@ -112,7 +131,7 @@ fun MainScreen(
         val screen = screens.getOrNull(page) ?: return@HorizontalPager
         Box(Modifier.fillMaxSize()) {
             when (screen) {
-                is Screen.Home -> HomeScreen(navController, profileState)
+                is Screen.Home -> HomeScreen(navController, profileState, onProfileChange)
                 is Screen.Shorts -> {
                     val context = if (profile == Profile.ADULT) ShortsContext.ADULT else ShortsContext.YOUTUBE
                     ShortsScreen(
@@ -127,7 +146,7 @@ fun MainScreen(
                     val query = navBackStackEntry?.arguments?.getString("query")
                     SearchScreen(navController, query)
                 }
-                is Screen.Library -> LibraryScreen(navController, profileState)
+                is Screen.Library -> LibraryScreen(navController, profileState, onProfileChange)
                 is Screen.Settings -> SettingsScreen(navController)
                 else -> {}
             }

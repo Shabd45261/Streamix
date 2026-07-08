@@ -68,6 +68,13 @@ class YoutubeHomeViewModel @Inject constructor(
             _isLoading.value = true
             try {
                 val localSubs = prefs.subscribedChannels.first()
+                val historyItems = historyDao.getAllHistory().first().filter { it.mediaType == "youtube" && !it.isShort }
+                val frequentlyWatchedChannels = historyItems.groupBy { it.studio }.toList()
+                    .sortedByDescending { it.second.size }
+                    .map { it.first }
+                    .filter { it.isNotEmpty() }
+                    .take(10)
+
                 coroutineScope {
                     val homeJob = async { 
                         try { youtubeScraper.getHomeFeed() } catch (e: Exception) { emptyList() }
@@ -82,8 +89,9 @@ class YoutubeHomeViewModel @Inject constructor(
                         try { youtubeScraper.getRecommended() } catch (e: Exception) { emptyList() }
                     }
                     
-                    // Inject local subscriptions if any
-                    val localSubsJobs = localSubs.take(5).map { channelName ->
+                    // Inject local subscriptions and frequently watched channels
+                    val prioritizedChannels = (localSubs.toList() + frequentlyWatchedChannels).distinct().take(15)
+                    val channelJobs = prioritizedChannels.map { channelName ->
                         async {
                             try { youtubeScraper.search(channelName).take(6) } catch (e: Exception) { emptyList() }
                         }
@@ -93,19 +101,19 @@ class YoutubeHomeViewModel @Inject constructor(
                     val trendFeed = trendingJob.await()
                     val subsFeed = subsJob.await()
                     val recFeed = recJob.await()
-                    val localSubsVideos = localSubsJobs.awaitAll().flatten()
+                    val channelVideos = channelJobs.awaitAll().flatten()
 
-                    val combined = (homeFeed + trendFeed + localSubsVideos).distinctBy { it.id }
+                    val combined = (channelVideos + homeFeed + trendFeed).distinctBy { it.id }
                     if (combined.isNotEmpty()) {
-                        _trending.value = combined.shuffled()
+                        _trending.value = combined // Prioritize channel videos
                     } else {
                         _trending.value = youtubeScraper.search("trending")
                     }
 
-                    val finalSubs = (subsFeed + localSubsVideos).distinctBy { it.id }
+                    val finalSubs = (subsFeed + channelVideos).distinctBy { it.id }
                     _subscribed.value = if (finalSubs.isNotEmpty()) finalSubs else youtubeScraper.search("popular channels")
                     
-                    val finalRec = (recFeed + localSubsVideos.shuffled()).distinctBy { it.id }
+                    val finalRec = (recFeed + channelVideos.shuffled()).distinctBy { it.id }
                     _recommended.value = if (finalRec.isNotEmpty()) finalRec else youtubeScraper.search("suggested videos")
                 }
             } catch (e: Exception) {
@@ -120,7 +128,7 @@ class YoutubeHomeViewModel @Inject constructor(
         viewModelScope.launch {
             historyDao.getAllHistory()
                 .map { entities -> 
-                    entities.filter { it.mediaType == "youtube" }
+                    entities.filter { it.mediaType == "youtube" && !it.isShort }
                         .map { it.toSearchResult() } 
                 }
                 .collect { _history.value = it }
@@ -201,6 +209,10 @@ class YoutubeHomeViewModel @Inject constructor(
 
     fun addToLibrary(item: SearchResult, status: String) {
         viewModelScope.launch {
+            if (status == "Remove from History") {
+                historyDao.deleteHistory(item.id)
+                return@launch
+            }
             watchlistDao.insert(
                 WatchlistEntity(
                     id = item.id,
@@ -222,6 +234,9 @@ class YoutubeHomeViewModel @Inject constructor(
         views = views,
         rating = rating,
         progress = progress,
-        totalDuration = totalDuration
+        totalDuration = totalDuration,
+        isShort = isShort,
+        studio = studio,
+        year = year
     )
 }

@@ -60,6 +60,7 @@ import androidx.compose.animation.core.*
 fun HomeScreen(
     navController: NavController,
     profileState: MutableState<Profile>,
+    onProfileChange: (Profile) -> Unit = {},
     homeViewModel: HomeViewModel = hiltViewModel(),
     updateViewModel: UpdateViewModel = hiltViewModel()
 ) {
@@ -82,16 +83,16 @@ fun HomeScreen(
     ) { targetProfile ->
         when (targetProfile) {
             Profile.MOVIES -> {
-                com.streamix.ui.movies.MoviesHomeScreen(navController, profileState)
+                com.streamix.ui.movies.MoviesHomeScreen(navController, profileState, onProfileChange = onProfileChange)
             }
             Profile.SONGS -> {
-                SongsHomeContent(navController, profileState)
+                SongsHomeContent(navController, profileState, onProfileChange = onProfileChange)
             }
             Profile.YOUTUBE -> {
-                YoutubeHomeScreen(navController, profileState)
+                YoutubeHomeScreen(navController, profileState, onProfileChange = onProfileChange)
             }
             Profile.ADULT -> {
-                com.streamix.ui.adult.AdultHomeScreen(navController, profileState)
+                com.streamix.ui.adult.AdultHomeScreen(navController, profileState, onProfileChange = onProfileChange)
             }
         }
     }
@@ -102,7 +103,8 @@ fun HomeScreen(
 fun MoviesHomeContent(
     navController: NavController,
     profileState: MutableState<Profile>,
-    viewModel: HomeViewModel
+    viewModel: HomeViewModel,
+    onProfileChange: (Profile) -> Unit = {}
 ) {
     val trending by viewModel.trending.collectAsState()
     val topRated by viewModel.topRated.collectAsState()
@@ -140,7 +142,7 @@ fun MoviesHomeContent(
                     StreamixHeader(
                         currentProfile = profileState.value,
                         onSettingsTap = { navController.navigate(Screen.Settings.route) },
-                        onProfileSelect = { profile -> profileState.value = profile },
+                        onProfileSelect = onProfileChange,
                         onProfileTripleTap = { navController.navigate(Screen.Passcode.route) }
                     )
                 }
@@ -412,14 +414,15 @@ fun MovieVerticalListCard(item: SearchResult, onOptionSelect: (SearchResult, Str
 @Composable
 fun SongsHomeContent(
     navController: NavController,
-    profileState: MutableState<Profile>
+    profileState: MutableState<Profile>,
+    onProfileChange: (Profile) -> Unit = {}
 ) {
     val pullToRefreshState = rememberPullToRefreshState()
     if (pullToRefreshState.isRefreshing) {
         LaunchedEffect(true) { delay(1500); pullToRefreshState.endRefresh() }
     }
     Column(modifier = Modifier.fillMaxSize().background(Color.Black)) {
-        StreamixHeader(currentProfile = profileState.value, onSettingsTap = { navController.navigate(Screen.Settings.route) }, onProfileSelect = { profile -> profileState.value = profile }, onProfileTripleTap = { navController.navigate(Screen.Passcode.route) })
+        StreamixHeader(currentProfile = profileState.value, onSettingsTap = { navController.navigate(Screen.Settings.route) }, onProfileSelect = onProfileChange, onProfileTripleTap = { navController.navigate(Screen.Passcode.route) })
         Box(Modifier.fillMaxSize().nestedScroll(pullToRefreshState.nestedScrollConnection), Alignment.Center) {
             Text("Music profile coming soon", color = Color.White.copy(alpha = 0.4f), fontSize = 16.sp)
             PullToRefreshContainer(state = pullToRefreshState, modifier = Modifier.align(Alignment.TopCenter), containerColor = Color.Black, contentColor = Color.White)
