@@ -1,12 +1,12 @@
 {
-  "latestVersion": 232,
-  "versionName": "1.232",
-  "apkUrl": "https://media.githubusercontent.com/media/Shabd45261/Streamix/master/apk/Streamix_20260711_Saturday_0508pm_232nd(232).apk",
+  "latestVersion": 233,
+  "versionName": "1.233",
+  "apkUrl": "https://media.githubusercontent.com/media/Shabd45261/Streamix/master/apk/Streamix_20260711_Saturday_0807pm_233rd(233).apk",
   "mandatory": false,
   "releaseNotes": [
-    "Added release date to YouTube videos",
-    "Improved variety on home screen",
-    "Fixed update download loop",
-    "Fixed APK parsing error during update"
+    "Removed Music profile",
+    "Drag profile button up/down to switch between YouTube and Movies",
+    "Adult profile now enabled by 7-clicks (password removed)",
+    "Improved variety on home screen"
   ]
 }
