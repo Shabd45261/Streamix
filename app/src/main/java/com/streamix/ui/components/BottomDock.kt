@@ -72,7 +72,7 @@ fun StreamixBottomDock(navController: NavController, profileOverride: Profile? =
                 .height(70.dp),
             shape = RoundedCornerShape(35.dp),
             color = Color.Black.copy(alpha = 0.95f),
-            border = BorderStroke(1.dp, Color.Red), // Red outline as requested
+            border = BorderStroke(1.dp, Color.White.copy(alpha = 0.15f)), // Removed red, back to B&W tone
             shadowElevation = 12.dp
         ) {
             Row(

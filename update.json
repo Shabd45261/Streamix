@@ -1,0 +1,11 @@
+{
+  "latestVersion": 231,
+  "versionName": "1.231",
+  "apkUrl": "https://raw.githubusercontent.com/Shabd45261/Streamix/master/apk/Streamix_20260711_Saturday_0357pm_231st(231).apk",
+  "mandatory": false,
+  "releaseNotes": [
+    "Strict Black & White theme applied",
+    "Removed red outline from navigation bar",
+    "Performance improvements"
+  ]
+}
