@@ -41,10 +41,4 @@ object AppModule {
     fun providePreferencesManager(@ApplicationContext context: Context): PreferencesManager {
         return PreferencesManager(context)
     }
-
-    @Provides
-    @Singleton
-    fun provideUpdateApiService(retrofit: retrofit2.Retrofit): com.streamix.core.network.UpdateApiService {
-        return retrofit.create(com.streamix.core.network.UpdateApiService::class.java)
-    }
 }

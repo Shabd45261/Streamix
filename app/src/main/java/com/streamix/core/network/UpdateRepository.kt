@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import dagger.hilt.android.qualifiers.ApplicationContext
+import java.io.File
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -35,11 +36,17 @@ class UpdateRepository @Inject constructor(
     }
 
     fun downloadApk(url: String, versionName: String): Long {
+        val fileName = "Streamix_v$versionName.apk"
+        // Ensure old file is deleted before starting new download to avoid (1), (2) suffixes
+        val file = File(context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), fileName)
+        if (file.exists()) file.delete()
+
         val request = DownloadManager.Request(Uri.parse(url))
             .setTitle("Downloading Streamix Update v$versionName")
             .setDescription("Please wait while the update is downloading...")
             .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
-            .setDestinationInExternalFilesDir(context, Environment.DIRECTORY_DOWNLOADS, "Streamix_v$versionName.apk")
+            .setDestinationInExternalFilesDir(context, Environment.DIRECTORY_DOWNLOADS, fileName)
+            .setMimeType("application/vnd.android.package-archive")
             .setAllowedOverMetered(true)
             .setAllowedOverRoaming(true)
 

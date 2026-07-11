@@ -67,7 +67,10 @@ class UpdateViewModel @Inject constructor(
     }
 
     fun downloadUpdate(info: UpdateInfo) {
+        if (_uiState.value is UpdateUIState.Downloading) return
+        
         viewModelScope.launch {
+            _uiState.value = UpdateUIState.Downloading(0)
             val downloadId = repository.downloadApk(info.apkUrl, info.versionName)
             repository.getDownloadProgress(downloadId).collect { progress ->
                 if (progress < 100) {

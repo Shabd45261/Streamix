@@ -1,6 +1,7 @@
 package com.streamix.di
 
 import com.streamix.core.network.TmdbApiService
+import com.streamix.core.network.UpdateApiService
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -45,5 +46,11 @@ object NetworkModule {
     @Singleton
     fun provideTmdbApiService(retrofit: Retrofit): TmdbApiService {
         return retrofit.create(TmdbApiService::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideUpdateApiService(retrofit: Retrofit): UpdateApiService {
+        return retrofit.create(UpdateApiService::class.java)
     }
 }
