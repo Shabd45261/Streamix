@@ -93,8 +93,8 @@ fun AdultHomeScreen(
                         showAgePrompt = false
                         scope.launch { themeViewModel.setAdultVerified(true) }
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
-                ) { Text("I am 18+") }
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.White)
+                ) { Text("I am 18+", color = Color.Black) }
             },
             dismissButton = {
                 TextButton(onClick = { navController.popBackStack() }) {
@@ -163,12 +163,12 @@ fun AdultHomeScreen(
                                     viewModel.dismissRefreshBanner()
                                 },
                                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
-                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2196F3)),
+                                colors = ButtonDefaults.buttonColors(containerColor = Color.White),
                                 shape = RoundedCornerShape(8.dp)
                             ) {
-                                Icon(Icons.Default.Refresh, null, tint = Color.White)
+                                Icon(Icons.Default.Refresh, null, tint = Color.Black)
                                 Spacer(Modifier.width(8.dp))
-                                Text("Latest videos", color = Color.White, fontWeight = FontWeight.Bold)
+                                Text("Latest videos", color = Color.Black, fontWeight = FontWeight.Bold)
                             }
                         }
                     }
@@ -311,13 +311,13 @@ fun AdultHomeScreen(
             
             if (isLoading && trending.isEmpty()) {
                 Box(Modifier.fillMaxSize(), Alignment.Center) {
-                    CircularProgressIndicator(color = Color.Red)
+                    CircularProgressIndicator(color = Color.White)
                 }
             }
             
             if (isLoading && searchQuery.isNotBlank() && searchResults.isEmpty()) {
                 Box(Modifier.fillMaxSize(), Alignment.Center) {
-                    CircularProgressIndicator(color = Color.Red)
+                    CircularProgressIndicator(color = Color.White)
                 }
             }
         }
@@ -401,7 +401,7 @@ fun AdultHeroSection(item: SearchResult, onOptionSelect: (SearchResult, String) 
                 Spacer(Modifier.width(12.dp))
                 Box(Modifier.size(4.dp).background(Color.White.copy(0.4f), CircleShape))
                 Spacer(Modifier.width(12.dp))
-                Text(item.rating, color = Color(0xFF4CAF50), fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                Text(item.rating, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold)
             }
             Spacer(Modifier.height(28.dp))
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -465,7 +465,7 @@ fun AdultHorizontalCard(item: SearchResult, width: Dp = 180.dp, onOptionSelect: 
         Spacer(Modifier.height(8.dp))
         Text(item.title, color = colors.secondary, fontSize = 13.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
         if (item.studio.isNotEmpty()) {
-            Text(item.studio, color = Color.Red.copy(0.7f), fontSize = 10.sp, fontWeight = FontWeight.Bold)
+            Text(item.studio, color = Color.White.copy(0.7f), fontSize = 10.sp, fontWeight = FontWeight.Bold)
         }
     }
 }
@@ -515,7 +515,7 @@ fun AdultVideoListCard(item: SearchResult, onOptionSelect: (SearchResult, String
             Column(modifier = Modifier.weight(1f)) {
                 Text(item.title, color = colors.secondary, fontSize = 15.sp, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 if (item.studio.isNotEmpty()) {
-                    Text(item.studio, color = Color.Red, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    Text(item.studio, color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                 }
                 Spacer(Modifier.height(4.dp))
                 Text("Video Description: This is a preview of the content...", color = colors.secondary.copy(0.5f), fontSize = 12.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)

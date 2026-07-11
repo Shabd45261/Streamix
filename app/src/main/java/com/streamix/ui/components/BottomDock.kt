@@ -72,7 +72,7 @@ fun StreamixBottomDock(navController: NavController, profileOverride: Profile? =
                 .height(70.dp),
             shape = RoundedCornerShape(35.dp),
             color = Color.Black.copy(alpha = 0.95f),
-            border = BorderStroke(0.5.dp, Color.White.copy(alpha = 0.12f)),
+            border = BorderStroke(1.dp, Color.Red), // Red outline as requested
             shadowElevation = 12.dp
         ) {
             Row(
@@ -144,20 +144,20 @@ fun DockButton(item: DockItem, selected: Boolean, onClick: () -> Unit) {
                 .height(30.dp)
                 .width(50.dp)
                 .clip(RoundedCornerShape(15.dp))
-                .background(if (selected) Color.Red.copy(alpha = 0.15f) else Color.Transparent),
+                .background(if (selected) Color.White.copy(alpha = 0.15f) else Color.Transparent),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 imageVector = if (selected) item.selectedIcon else item.icon,
                 contentDescription = item.label,
-                tint = if (selected) Color.Red else Color.White.copy(0.6f),
+                tint = if (selected) Color.White else Color.White.copy(0.4f),
                 modifier = Modifier.size(22.dp)
             )
         }
         Spacer(Modifier.height(2.dp))
         Text(
             text = item.label,
-            color = if (selected) Color.Red else Color.White.copy(0.6f),
+            color = if (selected) Color.White else Color.White.copy(0.4f),
             fontSize = 10.sp,
             fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium
         )

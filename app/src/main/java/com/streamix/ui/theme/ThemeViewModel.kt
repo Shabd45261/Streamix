@@ -22,7 +22,7 @@ class ThemeViewModel @Inject constructor(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), Color.White)
 
     val tertiaryColor = prefs.tertiaryColor.map { Color(android.graphics.Color.parseColor(it)) }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), Color.Red)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), Color.White)
         
     val isAdultVerified = prefs.isAdultVerified
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)

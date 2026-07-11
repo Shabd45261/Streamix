@@ -257,7 +257,7 @@ fun ShortsScreen(
                                 Spacer(Modifier.width(16.dp))
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(item.title, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                                    Text(item.channelName, color = Color.Red, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                    Text(item.channelName, color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                                     Text(item.views + " views", color = Color.White.copy(0.4f), fontSize = 11.sp)
                                 }
                             }
@@ -267,7 +267,7 @@ fun ShortsScreen(
                     if (isLoading) {
                         LinearProgressIndicator(
                             modifier = Modifier.fillMaxWidth().height(2.dp).align(Alignment.TopCenter),
-                            color = Color.Red,
+                            color = Color.White,
                             trackColor = Color.Transparent
                         )
                     }
@@ -319,7 +319,7 @@ fun ShortsScreen(
                                 unfocusedContainerColor = Color.Black.copy(0.4f),
                                 focusedTextColor = Color.White,
                                 unfocusedTextColor = Color.White,
-                                cursorColor = Color.Red,
+                                cursorColor = Color.White,
                                 focusedIndicatorColor = Color.Transparent,
                                 unfocusedIndicatorColor = Color.Transparent
                             ),
@@ -500,7 +500,7 @@ fun ShortVideoItem(
             if (!isPlayerReady && playbackError == null) {
                 SubcomposeAsyncImage(model = item.thumbnailUrl, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
                 Box(Modifier.fillMaxSize(), Alignment.Center) {
-                    CircularProgressIndicator(color = Color.Red.copy(0.5f))
+                    CircularProgressIndicator(color = Color.White.copy(0.5f))
                 }
             }
             
@@ -644,8 +644,8 @@ fun ShortVideoItem(
                         },
                         modifier = Modifier.fillMaxWidth().height(20.dp),
                         colors = SliderDefaults.colors(
-                            thumbColor = Color.Red,
-                            activeTrackColor = Color.Red,
+                            thumbColor = Color.White,
+                            activeTrackColor = Color.White,
                             inactiveTrackColor = Color.White.copy(alpha = 0.2f)
                         )
                     )

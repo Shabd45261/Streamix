@@ -155,7 +155,7 @@ fun YoutubeChannelScreen(
     ) { padding ->
         if (isLoading && channelInfo == null) {
             Box(Modifier.fillMaxSize(), Alignment.Center) {
-                CircularProgressIndicator(color = Color.Red)
+                CircularProgressIndicator(color = Color.White)
             }
         } else {
             HorizontalPager(

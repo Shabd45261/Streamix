@@ -81,7 +81,7 @@ fun UpdateDialog(
                 }
             } else {
                 TextButton(onClick = onExit) {
-                    Text("Exit App", color = Color.Red.copy(0.7f))
+                    Text("Exit App", color = colors.secondary.copy(0.6f))
                 }
             }
         },

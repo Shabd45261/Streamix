@@ -264,7 +264,7 @@ fun HistoryShortCard(item: com.streamix.core.storage.WatchHistoryEntity, onClick
                         .align(Alignment.BottomStart)
                         .fillMaxWidth(progress)
                         .height(3.dp)
-                        .background(Color.Red)
+                        .background(Color.White)
                 )
             }
         }
@@ -321,7 +321,7 @@ fun LibraryItemCard(item: WatchlistEntity, onClick: () -> Unit) {
                 if (item.studio.isNotEmpty()) {
                     Text(
                         item.studio,
-                        color = Color.Red.copy(0.85f),
+                        color = Color.White.copy(0.85f),
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Medium
                     )

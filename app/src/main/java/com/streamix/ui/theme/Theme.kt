@@ -23,7 +23,7 @@ fun StreamixTheme(
     val isLight = primaryColor.luminance() > 0.5f
     val backgroundColor = if (isLight) Color.White else Color.Black
     val textColor = if (isLight) Color.Black else Color.White
-    val accentColor = Color.Red // For progress bars as requested
+    val accentColor = textColor // Strictly Black & White as per request
     
     val customColors = remember(backgroundColor, textColor) {
         CustomThemeColors(

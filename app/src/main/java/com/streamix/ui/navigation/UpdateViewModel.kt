@@ -43,17 +43,6 @@ class UpdateViewModel @Inject constructor(
 
     fun checkForUpdates(isAuto: Boolean = false) {
         viewModelScope.launch {
-            if (isAuto) {
-                val lastCheck = prefs.lastUpdateCheck.first()
-                val now = System.currentTimeMillis()
-                if (now - lastCheck < 24 * 60 * 60 * 1000) {
-                    // Check every launch is requested, but maybe we should still skip if checked very recently?
-                    // User said "Every app launch" AND "Every 24 hours while active".
-                    // I will prioritize "Every launch" for now but maybe add a small cooldown (e.g. 1 hour) to avoid spam.
-                    if (now - lastCheck < 60 * 60 * 1000) return@launch
-                }
-            }
-
             _uiState.value = UpdateUIState.Checking
             repository.getUpdateInfo().onSuccess { info ->
                 prefs.setLastUpdateCheck(System.currentTimeMillis())

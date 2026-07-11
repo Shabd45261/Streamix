@@ -19,7 +19,7 @@ class UpdateRepository @Inject constructor(
     private val updateApiService: UpdateApiService,
     @ApplicationContext private val context: Context
 ) {
-    private val updateMetadataUrl = "https://raw.githubusercontent.com/username/Streamix/main/update.json" // Update with real URL
+    private val updateMetadataUrl = "https://raw.githubusercontent.com/Shabd45261/Streamix/master/update.json"
 
     suspend fun getUpdateInfo(): Result<UpdateInfo> {
         var lastError: Exception? = null

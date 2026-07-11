@@ -34,7 +34,7 @@ fun StreamixSearchBar(
     var isFocused by remember { mutableStateOf(false) }
     
     val borderColor by animateColorAsState(
-        targetValue = if (isFocused) Color.Red else Color.White.copy(0.15f),
+        targetValue = if (isFocused) Color.White else Color.White.copy(0.15f),
         label = "borderColor"
     )
     val borderWidth by animateDpAsState(
@@ -70,7 +70,7 @@ fun StreamixSearchBar(
                     Icon(
                         Icons.Default.Search, 
                         null,
-                        tint = if (isFocused) Color.Red else Color.White.copy(0.6f), 
+                        tint = if (isFocused) Color.White else Color.White.copy(0.6f),
                         modifier = Modifier.size(20.dp)
                     )
                     Spacer(Modifier.width(12.dp))

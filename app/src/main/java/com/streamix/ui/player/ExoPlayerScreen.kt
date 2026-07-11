@@ -271,7 +271,7 @@ fun ExoPlayerScreen(
                         LinearProgressIndicator(
                             progress = { if (totalDuration > 0) currentPosition.toFloat() / totalDuration.toFloat() else 0f },
                             modifier = Modifier.fillMaxWidth().height(sliderHeight).clip(CircleShape),
-                            color = Color.Red.copy(0.3f),
+                            color = Color.White.copy(0.3f),
                             trackColor = Color.White.copy(0.1f)
                         )
                         Slider(
@@ -283,8 +283,8 @@ fun ExoPlayerScreen(
                             valueRange = 0f..totalDuration.toFloat().coerceAtLeast(1f),
                             interactionSource = interactionSource,
                             colors = SliderDefaults.colors(
-                                thumbColor = Color.Red,
-                                activeTrackColor = Color.Red,
+                                thumbColor = Color.White,
+                                activeTrackColor = Color.White,
                                 inactiveTrackColor = Color.Transparent
                             ),
                             modifier = Modifier.fillMaxWidth().height(24.dp)

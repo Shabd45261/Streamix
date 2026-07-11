@@ -107,7 +107,7 @@ class PreferencesManager @Inject constructor(
         .map { it[SECONDARY_COLOR] ?: "#FFFFFF" } // Default white
 
     val tertiaryColor: Flow<String> = context.dataStore.data
-        .map { it[TERTIARY_COLOR] ?: "#FF0000" } // Default red
+        .map { it[TERTIARY_COLOR] ?: "#FFFFFF" } // Default white
 
     val youtubeCookies: Flow<String?> = context.dataStore.data
         .map { it[YOUTUBE_COOKIES] }

@@ -292,7 +292,7 @@ fun EmbeddedPlayer(
         if (isLiked) baseLikeCount + 1 else baseLikeCount
     }
 
-    val tealColor = Color(0xFF00BCD4)
+    val tealColor = Color.White
     var offsetY by remember { mutableFloatStateOf(0f) }
 
     BackHandler(enabled = !isMinimized) {
@@ -1075,7 +1075,7 @@ fun EpisodeItem(episode: Episode, isPlaying: Boolean, number: Int, onClick: () -
             AsyncImage(model = episode.posterUrl, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
             if (isPlaying) {
                 Box(Modifier.fillMaxSize().background(Color.Black.copy(0.6f)), contentAlignment = Alignment.Center) {
-                    Icon(Icons.Default.PlayArrow, null, tint = Color(0xFF00BCD4), modifier = Modifier.size(24.dp))
+                    Icon(Icons.Default.PlayArrow, null, tint = Color.White, modifier = Modifier.size(24.dp))
                 }
             }
         }
@@ -1085,7 +1085,7 @@ fun EpisodeItem(episode: Episode, isPlaying: Boolean, number: Int, onClick: () -
         Column(Modifier.weight(1f)) {
             Text(
                 text = "${episode.episode ?: number}. ${episode.name ?: "Episode ${episode.episode ?: number}"}", 
-                color = if (isPlaying) Color(0xFF00BCD4) else Color.White, 
+                color = if (isPlaying) Color.White else Color.White,
                 fontSize = 14.sp, 
                 fontWeight = if (isPlaying) FontWeight.Bold else FontWeight.Medium, 
                 maxLines = 1, 
@@ -1232,7 +1232,7 @@ fun ResolutionSelectionDialog(
                     }
                 }
                 TextButton(onClick = onDismiss, modifier = Modifier.align(Alignment.End)) {
-                    Text("CANCEL", color = Color(0xFF00BCD4))
+                    Text("CANCEL", color = Color.White)
                 }
             }
         }
@@ -1262,7 +1262,7 @@ fun TrackSelectionDialog(title: String, tracks: List<Pair<Int, Int>>, exoPlayer:
                                 exoPlayer.currentTracks.groups.forEach { if (it.type == type) builder.clearOverride(it.mediaTrackGroup) }
                                 exoPlayer.trackSelectionParameters = builder.build()
                                 onDismiss() 
-                            }, colors = RadioButtonDefaults.colors(selectedColor = Color(0xFF00BCD4)))
+                            }, colors = RadioButtonDefaults.colors(selectedColor = Color.White))
                             Spacer(Modifier.width(8.dp)); Text(if (type == C.TRACK_TYPE_TEXT) "Off" else "Auto", color = Color.White)
                         }
                     }
@@ -1290,7 +1290,7 @@ fun TrackSelectionDialog(title: String, tracks: List<Pair<Int, Int>>, exoPlayer:
                                     .setOverrideForType(TrackSelectionOverride(group.mediaTrackGroup, trackIndex))
                                     .build()
                                 onDismiss() 
-                            }, colors = RadioButtonDefaults.colors(selectedColor = Color(0xFF00BCD4)))
+                            }, colors = RadioButtonDefaults.colors(selectedColor = Color.White))
                             Spacer(Modifier.width(8.dp)); Text(label, color = Color.White)
                         }
                     }
@@ -1329,7 +1329,7 @@ fun PlayerControlsOverlay(isLandscape: Boolean, showControls: Boolean, isLocked:
     AnimatedVisibility(visible = showControls, enter = fadeIn(), exit = fadeOut()) {
         Box(Modifier.fillMaxSize().background(Color.Black.copy(if (isLocked) 0f else 0.4f))) {
             if (isLocked) {
-                IconButton(onClick = onLock, modifier = Modifier.align(Alignment.CenterStart).padding(16.dp).background(Color.Black.copy(0.5f), CircleShape)) { Icon(if (isLocked) Icons.Default.Lock else Icons.Default.LockOpen, null, tint = tealColor) }
+                IconButton(onClick = onLock, modifier = Modifier.align(Alignment.CenterStart).padding(16.dp).background(Color.Black.copy(0.5f), CircleShape)) { Icon(if (isLocked) Icons.Default.Lock else Icons.Default.LockOpen, null, tint = Color.White) }
             } else {
                 Row(Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
                     IconButton(onClick = onBack) { Icon(Icons.Default.KeyboardArrowDown, null, tint = Color.White, modifier = Modifier.size(32.dp)) }

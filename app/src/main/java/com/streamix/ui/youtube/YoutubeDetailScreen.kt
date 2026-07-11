@@ -50,7 +50,7 @@ fun YoutubeDetailScreen(
 
     Box(Modifier.fillMaxSize().background(Color.Black)) {
         if (isLoading) {
-            CircularProgressIndicator(modifier = Modifier.align(Alignment.Center), color = Color.Red)
+            CircularProgressIndicator(modifier = Modifier.align(Alignment.Center), color = Color.White)
         }
     }
 }

@@ -157,12 +157,12 @@ fun MoviesHomeContent(
                                 viewModel.dismissRefreshBanner()
                             },
                             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2196F3)),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color.White),
                             shape = RoundedCornerShape(8.dp)
                         ) {
-                            Icon(Icons.Default.Refresh, null, tint = Color.White)
+                            Icon(Icons.Default.Refresh, null, tint = Color.Black)
                             Spacer(Modifier.width(8.dp))
-                            Text("Latest videos", color = Color.White, fontWeight = FontWeight.Bold)
+                            Text("Latest videos", color = Color.Black, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -393,7 +393,7 @@ fun MovieVerticalListCard(item: SearchResult, onOptionSelect: (SearchResult, Str
                 Spacer(Modifier.height(6.dp))
                 Text("Movie Description: A gripping tale of adventure and mystery. Explore the unknown in this latest release.", color = Color.White.copy(0.5f), fontSize = 12.sp, maxLines = 3, overflow = TextOverflow.Ellipsis)
                 Spacer(Modifier.height(8.dp))
-                Text("${item.year} • ${item.mediaType.uppercase()}", color = Color.Red, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                Text("${item.year} • ${item.mediaType.uppercase()}", color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
             }
         }
     }
