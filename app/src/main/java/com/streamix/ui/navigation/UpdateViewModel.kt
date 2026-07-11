@@ -42,6 +42,8 @@ class UpdateViewModel @Inject constructor(
     val uiState: StateFlow<UpdateUIState> = _uiState
 
     fun checkForUpdates(isAuto: Boolean = false) {
+        if (_uiState.value is UpdateUIState.Downloading || _uiState.value is UpdateUIState.DownloadCompleted) return
+
         viewModelScope.launch {
             _uiState.value = UpdateUIState.Checking
             repository.getUpdateInfo().onSuccess { info ->

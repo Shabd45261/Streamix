@@ -121,12 +121,22 @@ fun MovieCard(
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
-            Spacer(modifier = Modifier.height(2.dp))
-            Text(
-                text = item.year ?: "",
-                color = Color.White.copy(alpha = 0.5f),
-                fontSize = 10.sp
-            )
+            if (item.views.isNotBlank()) {
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = item.views,
+                    color = Color.White.copy(alpha = 0.5f),
+                    fontSize = 10.sp
+                )
+            }
+            if (item.year.isNotBlank()) {
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = item.year,
+                    color = Color.White.copy(alpha = 0.4f),
+                    fontSize = 9.sp
+                )
+            }
         }
     }
 }

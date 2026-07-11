@@ -107,19 +107,30 @@ class YoutubeHomeViewModel @Inject constructor(
                     val trendFeed = trendingJob.await()
                     val subsFeed = subsJob.await()
                     val recFeed = recJob.await()
-                    val channelVideos = channelJobs.awaitAll().flatten()
+                    val channelVideosList = channelJobs.awaitAll()
+                    
+                    // Interleave channel videos to avoid dominance by one channel
+                    val interleavedChannelVideos = mutableListOf<SearchResult>()
+                    val maxVideosPerChannel = channelVideosList.maxOfOrNull { it.size } ?: 0
+                    for (i in 0 until maxVideosPerChannel) {
+                        for (channelVideos in channelVideosList) {
+                            if (i < channelVideos.size) {
+                                interleavedChannelVideos.add(channelVideos[i])
+                            }
+                        }
+                    }
 
-                    val combined = (channelVideos + homeFeed + trendFeed).distinctBy { it.id }
+                    val combined = (interleavedChannelVideos + homeFeed + trendFeed).distinctBy { it.id }
                     if (combined.isNotEmpty()) {
-                        _trending.value = combined // Prioritize channel videos
+                        _trending.value = combined // Prioritize interleaved channel videos
                     } else {
                         _trending.value = youtubeScraper.search("trending")
                     }
 
-                    val finalSubs = (subsFeed + channelVideos).distinctBy { it.id }
+                    val finalSubs = (subsFeed + interleavedChannelVideos).distinctBy { it.id }
                     _subscribed.value = if (finalSubs.isNotEmpty()) finalSubs else youtubeScraper.search("popular channels")
                     
-                    val finalRec = (recFeed + channelVideos.shuffled()).distinctBy { it.id }
+                    val finalRec = (recFeed + interleavedChannelVideos.shuffled()).distinctBy { it.id }
                     _recommended.value = if (finalRec.isNotEmpty()) finalRec else youtubeScraper.search("suggested videos")
                 }
             } catch (e: Exception) {

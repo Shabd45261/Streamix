@@ -373,6 +373,7 @@ class YouTubeScraper @Inject constructor() : BaseScraper() {
             mediaType = "youtube",
             duration = formattedDuration,
             views = FormatUtils.formatViews(viewCount),
+            year = textualUploadDate ?: "", // Use year field for textual date
             studio = uploaderName,
             isShort = url.contains("/shorts/")
         )

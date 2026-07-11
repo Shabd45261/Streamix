@@ -403,6 +403,9 @@ fun YoutubeHeroSection(item: SearchResult, onOptionSelect: (SearchResult, String
                 Box(Modifier.size(4.dp).background(Color.White.copy(0.4f), CircleShape))
                 Spacer(Modifier.width(12.dp))
                 Text(item.views + " views", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                if (item.year.isNotBlank()) {
+                    Text(item.year, color = Color.White.copy(0.6f), fontSize = 12.sp)
+                }
             }
             Spacer(Modifier.height(28.dp))
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -535,6 +538,13 @@ fun YoutubeVideoListCard(item: SearchResult, onOptionSelect: (SearchResult, Stri
                     color = Color.White.copy(0.5f), 
                     fontSize = 11.sp
                 )
+                if (item.year.isNotBlank()) {
+                    Text(
+                        text = item.year, 
+                        color = Color.White.copy(0.4f), 
+                        fontSize = 10.sp
+                    )
+                }
             }
         }
     }
