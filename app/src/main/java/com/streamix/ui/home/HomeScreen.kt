@@ -47,7 +47,7 @@ import com.streamix.ui.navigation.Screen
 import com.streamix.ui.youtube.YoutubeHomeScreen
 import com.streamix.ui.shorts.ShortsScreen
 import com.streamix.ui.shorts.ShortsContext
-import com.streamix.ui.home.UpdateViewModel
+import com.streamix.ui.navigation.UpdateViewModel
 import com.streamix.ui.components.UpdateDialog
 import java.net.URLEncoder
 import kotlinx.coroutines.delay
@@ -61,19 +61,8 @@ fun HomeScreen(
     navController: NavController,
     profileState: MutableState<Profile>,
     onProfileChange: (Profile) -> Unit = {},
-    homeViewModel: HomeViewModel = hiltViewModel(),
-    updateViewModel: UpdateViewModel = hiltViewModel()
+    homeViewModel: HomeViewModel = hiltViewModel()
 ) {
-    val updateInfo by updateViewModel.updateInfo.collectAsState()
-
-    LaunchedEffect(Unit) {
-        updateViewModel.checkUpdate()
-    }
-
-    updateInfo?.let {
-        UpdateDialog(info = it, onDismiss = { updateViewModel.dismissUpdate() })
-    }
-
     AnimatedContent(
         targetState = profileState.value,
         transitionSpec = {

@@ -7,6 +7,7 @@ import com.streamix.core.model.VideoLink
 import com.streamix.core.storage.WatchlistDao
 import com.streamix.core.storage.WatchlistEntity
 import com.streamix.scraper.youtube.YouTubeScraper
+import com.streamix.core.utils.FormatUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -144,12 +145,7 @@ class YoutubeDetailViewModel @Inject constructor(
     }
 
     private fun formatViews(views: Long): String {
-        return when {
-            views >= 1_000_000_000 -> "%.1fB".format(views / 1_000_000_000.0)
-            views >= 1_000_000 -> "%.1fM".format(views / 1_000_000.0)
-            views >= 1_000 -> "%.1fK".format(views / 1_000.0)
-            else -> views.toString()
-        }
+        return FormatUtils.formatViews(views)
     }
 
     fun toggleSubscription() {

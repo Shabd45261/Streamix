@@ -91,9 +91,15 @@ class YoutubeHomeViewModel @Inject constructor(
                     
                     // Inject local subscriptions and frequently watched channels
                     val prioritizedChannels = (localSubs.toList() + frequentlyWatchedChannels).distinct().take(15)
-                    val channelJobs = prioritizedChannels.map { channelName ->
+                    val channelJobs = prioritizedChannels.map { item ->
                         async {
-                            try { youtubeScraper.search(channelName).take(6) } catch (e: Exception) { emptyList() }
+                            try {
+                                if (item.startsWith("http") || item.contains("channel/") || item.contains("/@")) {
+                                    youtubeScraper.getChannelVideos(item).take(8)
+                                } else {
+                                    youtubeScraper.search(item).take(5)
+                                }
+                            } catch (e: Exception) { emptyList() }
                         }
                     }
 

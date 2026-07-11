@@ -15,6 +15,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.*
 import android.util.Log
+import com.streamix.core.utils.FormatUtils
 
 @Singleton
 class YouTubeScraper @Inject constructor() : BaseScraper() {
@@ -371,20 +372,24 @@ class YouTubeScraper @Inject constructor() : BaseScraper() {
             posterPath = thumbnails?.lastOrNull()?.getUrl() ?: thumbnails?.firstOrNull()?.getUrl(),
             mediaType = "youtube",
             duration = formattedDuration,
-            views = viewCount.toString(),
+            views = FormatUtils.formatViews(viewCount),
             studio = uploaderName,
             isShort = url.contains("/shorts/")
         )
     }
 
     fun ChannelInfoItem.toSearchResult(): SearchResult {
+        val subs = if (subscriberCount >= 0) "${FormatUtils.formatViews(subscriberCount)} subscribers" else ""
+        val videos = if (streamCount >= 0) "$streamCount videos" else ""
+        val viewText = listOf(subs, videos).filter { it.isNotBlank() }.joinToString(" • ")
+        
         return SearchResult(
             id = url, // Use URL for channel navigation
             title = name,
             posterPath = thumbnails?.lastOrNull()?.getUrl() ?: thumbnails?.firstOrNull()?.getUrl(),
             mediaType = "youtube_channel",
             duration = "",
-            views = "$subscriberCount subscribers • $streamCount videos",
+            views = viewText,
             studio = ""
         )
     }

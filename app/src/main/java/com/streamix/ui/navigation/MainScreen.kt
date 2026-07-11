@@ -55,35 +55,41 @@ fun MainScreen(
         }
     }
 
-    // Determine initial page based on current destination
+    // Navigation state sync
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
-    
-    val initialPage = remember(profile) {
+
+    // Calculate index based on route
+    val routeIndex = remember(currentRoute, screens) {
         val baseRoute = currentRoute?.split("?")?.get(0)?.split("/")?.get(0)
         val index = screens.indexOfFirst { it.route.startsWith(baseRoute ?: "") }
         if (index != -1) index else 0
     }
 
     val pagerState = rememberPagerState(
-        initialPage = initialPage,
+        initialPage = routeIndex,
         pageCount = { screens.size }
     )
     
-    // Sync Pager -> NavController (only on settled page to avoid flickering)
-    LaunchedEffect(pagerState.settledPage) {
-        val screen = screens.getOrNull(pagerState.settledPage) ?: return@LaunchedEffect
-        val targetRoute = screen.route
-        val currentBase = currentRoute?.split("?")?.get(0)?.split("/")?.get(0)
-        val targetBase = targetRoute.split("?")[0].split("/")[0]
-
-        if (currentBase != targetBase) {
-            navController.navigate(targetRoute) {
-                popUpTo(Screen.Home.route) { saveState = true }
-                launchSingleTop = true
-                restoreState = true
-            }
+    // SYNC NavController -> Pager (When user clicks dock icon or navigates externally)
+    LaunchedEffect(routeIndex) {
+        if (pagerState.currentPage != routeIndex && !pagerState.isScrollInProgress) {
+            pagerState.scrollToPage(routeIndex)
         }
+    }
+
+    // Global UI state sync
+    val bottomDockVisible = LocalBottomDockVisible.current
+    val pagerIndexOverride = LocalMainPagerIndex.current
+    
+    LaunchedEffect(pagerState.currentPage) {
+        val screen = screens.getOrNull(pagerState.currentPage)
+        bottomDockVisible.value = screen !is Screen.Shorts
+        pagerIndexOverride.value = pagerState.currentPage
+    }
+
+    DisposableEffect(Unit) {
+        onDispose { pagerIndexOverride.value = -1 }
     }
 
     // History for back button
@@ -93,10 +99,9 @@ fun MainScreen(
             restore = { it.toMutableStateList() }
         )
     ) { 
-        mutableStateListOf(initialPage) 
+        mutableStateListOf(routeIndex)
     }
 
-    // Update history when page changes
     LaunchedEffect(pagerState.currentPage) {
         if (pageHistory.isEmpty() || pageHistory.last() != pagerState.currentPage) {
             pageHistory.add(pagerState.currentPage)
@@ -104,7 +109,6 @@ fun MainScreen(
         }
     }
 
-    // Back handler: only enabled if we have history AND player is not in full-screen mode
     val playerMinimized = PlayerManager.isMinimized.value
     val playerVisible = PlayerManager.isVisible.value
     val isPlayerFullScreen = playerVisible && !playerMinimized

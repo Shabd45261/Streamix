@@ -153,7 +153,7 @@ fun LibraryScreen(
                                 ) {
                                     items(shorts) { short ->
                                         HistoryShortCard(short) {
-                                            val route = if (short.mediaType == "youtube") "youtube_detail/${short.id}" else "adult_detail/${URLEncoder.encode(short.id, "UTF-8")}"
+                                            val route = if (short.mediaType == "youtube") "youtube_detail?videoId=${short.id}" else "adult_detail/${URLEncoder.encode(short.id, "UTF-8")}"
                                             navController.navigate(route)
                                         }
                                     }
@@ -176,8 +176,16 @@ fun LibraryScreen(
                             ) {
                                 val route = when (video.mediaType) {
                                     "adult" -> "adult_detail/${URLEncoder.encode(video.id, "UTF-8")}"
-                                    "youtube" -> "youtube_detail/${video.id}"
-                                    else -> "detail/${video.id}/${video.mediaType}"
+                                    "youtube" -> "youtube_detail?videoId=${video.id}"
+                                    else -> {
+                                        val encodedId = URLEncoder.encode(video.id, "UTF-8")
+                                        if (profileState.value == Profile.MOVIES) {
+                                            val apiEncoded = URLEncoder.encode(video.studio, "UTF-8")
+                                            "movies_detail?movieId=$encodedId&apiName=$apiEncoded"
+                                        } else {
+                                            "detail/$encodedId/${video.mediaType}"
+                                        }
+                                    }
                                 }
                                 navController.navigate(route)
                             }
@@ -203,12 +211,20 @@ fun LibraryScreen(
                                     val encoded = URLEncoder.encode(item.id, "UTF-8")
                                     "adult_detail/$encoded"
                                 }
-                                "youtube" -> "youtube_detail/${item.id}"
+                                "youtube" -> "youtube_detail?videoId=${item.id}"
                                 "youtube_channel" -> {
                                     val encoded = URLEncoder.encode(item.id, "UTF-8")
                                     "youtube_channel?channelUrl=$encoded"
                                 }
-                                else -> "detail/${item.id}/${item.mediaType}"
+                                else -> {
+                                    val encodedId = URLEncoder.encode(item.id, "UTF-8")
+                                    if (profileState.value == Profile.MOVIES) {
+                                        val apiEncoded = URLEncoder.encode(item.studio, "UTF-8")
+                                        "movies_detail?movieId=$encodedId&apiName=$apiEncoded"
+                                    } else {
+                                        "detail/$encodedId/${item.mediaType}"
+                                    }
+                                }
                             }
                             navController.navigate(route)
                         }

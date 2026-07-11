@@ -1,8 +1,9 @@
 package com.streamix.ui.components
 
-import android.content.Intent
-import android.net.Uri
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.SystemUpdate
@@ -11,70 +12,134 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.streamix.core.network.UpdateInfo
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import com.streamix.core.model.UpdateInfo
 import com.streamix.ui.theme.LocalCustomColors
 
 @Composable
 fun UpdateDialog(
     info: UpdateInfo,
-    onDismiss: () -> Unit
+    onDownload: () -> Unit,
+    onIgnore: () -> Unit,
+    onExit: () -> Unit
 ) {
-    val context = LocalContext.current
     val colors = LocalCustomColors.current
     
     AlertDialog(
-        onDismissRequest = { if (!info.isMandatory) onDismiss() },
+        onDismissRequest = { if (!info.mandatory) onIgnore() },
         containerColor = colors.primary,
         shape = RoundedCornerShape(24.dp),
         icon = { Icon(Icons.Default.SystemUpdate, null, tint = colors.tertiary, modifier = Modifier.size(48.dp)) },
         title = {
             Text(
-                "Update Available", 
+                "New Update Available", 
                 color = colors.secondary, 
-                fontSize = 22.sp, 
-                fontWeight = FontWeight.Black
+                fontSize = 20.sp, 
+                fontWeight = FontWeight.Bold
             )
         },
         text = {
-            Column {
+            Column(modifier = Modifier.fillMaxWidth()) {
                 Text(
-                    "A new version (${info.latestVersionName}) is ready.", 
-                    color = colors.secondary.copy(0.7f),
-                    fontSize = 15.sp
+                    "Version: ${info.versionName}", 
+                    color = colors.secondary.copy(0.8f),
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Medium
                 )
-                Spacer(Modifier.height(16.dp))
+                Spacer(Modifier.height(12.dp))
                 
-                Text("What's New:", fontWeight = FontWeight.Bold, color = colors.secondary)
-                Text(info.changelog, color = colors.secondary.copy(0.6f), fontSize = 14.sp)
+                Text("What's New:", fontWeight = FontWeight.Bold, color = colors.secondary, fontSize = 15.sp)
+                Spacer(Modifier.height(4.dp))
                 
-                info.instructions?.let { 
-                    Spacer(Modifier.height(16.dp))
-                    Text("Instructions:", fontWeight = FontWeight.Bold, color = colors.secondary)
-                    Text(it, color = colors.secondary.copy(0.6f), fontSize = 14.sp)
+                LazyColumn(modifier = Modifier.heightIn(max = 200.dp)) {
+                    items(info.releaseNotes) { note ->
+                        Row(Modifier.padding(vertical = 2.dp)) {
+                            Text("• ", color = colors.tertiary)
+                            Text(note, color = colors.secondary.copy(0.7f), fontSize = 14.sp)
+                        }
+                    }
                 }
             }
         },
         confirmButton = {
             Button(
-                onClick = {
-                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(info.updateUrl))
-                    context.startActivity(intent)
-                },
-                colors = ButtonDefaults.buttonColors(containerColor = colors.tertiary)
+                onClick = onDownload,
+                colors = ButtonDefaults.buttonColors(containerColor = colors.tertiary),
+                shape = RoundedCornerShape(12.dp)
             ) {
-                Text("Update Now", color = colors.primary, fontWeight = FontWeight.Bold)
+                Text("Download", color = colors.primary, fontWeight = FontWeight.Bold)
             }
         },
         dismissButton = {
-            if (!info.isMandatory) {
-                TextButton(onClick = onDismiss) {
-                    Text("Maybe Later", color = colors.secondary.copy(0.5f))
+            if (!info.mandatory) {
+                TextButton(onClick = onIgnore) {
+                    Text("Ignore", color = colors.secondary.copy(0.6f))
+                }
+            } else {
+                TextButton(onClick = onExit) {
+                    Text("Exit App", color = Color.Red.copy(0.7f))
+                }
+            }
+        },
+        properties = DialogProperties(
+            dismissOnBackPress = !info.mandatory,
+            dismissOnClickOutside = !info.mandatory
+        )
+    )
+}
+
+@Composable
+fun DownloadProgressDialog(
+    progress: Int,
+    onCancel: () -> Unit
+) {
+    val colors = LocalCustomColors.current
+    
+    Dialog(onDismissRequest = { }) {
+        Surface(
+            shape = RoundedCornerShape(24.dp),
+            color = colors.primary,
+            modifier = Modifier.fillMaxWidth().padding(16.dp)
+        ) {
+            Column(
+                modifier = Modifier.padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    "Downloading Update...", 
+                    color = colors.secondary, 
+                    fontSize = 18.sp, 
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(Modifier.height(24.dp))
+                
+                LinearProgressIndicator(
+                    progress = progress / 100f,
+                    modifier = Modifier.fillMaxWidth().height(8.dp),
+                    color = colors.tertiary,
+                    trackColor = colors.tertiary.copy(0.2f),
+                    strokeCap = androidx.compose.ui.graphics.StrokeCap.Round
+                )
+                
+                Spacer(Modifier.height(12.dp))
+                
+                Text(
+                    "$progress%", 
+                    color = colors.secondary.copy(0.8f),
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium
+                )
+                
+                Spacer(Modifier.height(24.dp))
+                
+                TextButton(onClick = onCancel) {
+                    Text("Run in Background", color = colors.tertiary)
                 }
             }
         }
-    )
+    }
 }

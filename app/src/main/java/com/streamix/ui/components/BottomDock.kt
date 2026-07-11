@@ -40,36 +40,23 @@ data class DockItem(
 )
 
 @Composable
-fun StreamixBottomDock(navController: NavController, includePadding: Boolean = true) {
+fun StreamixBottomDock(navController: NavController, profileOverride: Profile? = null, includePadding: Boolean = true) {
     val context = LocalContext.current
     val prefs = remember { PreferencesManager(context) }
-    val profile by prefs.currentProfile.collectAsState(initial = Profile.MOVIES)
+    val profileFromPrefs by prefs.currentProfile.collectAsState(initial = Profile.MOVIES)
+    val profile = profileOverride ?: profileFromPrefs
     
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute   = backStackEntry?.destination?.route
+    val pagerIndex     = com.streamix.ui.navigation.LocalMainPagerIndex.current.value
 
-    val dockItems = remember(profile) {
-        when (profile) {
-            Profile.YOUTUBE, Profile.ADULT -> listOf(
-                DockItem(Screen.Home.route, Icons.Outlined.Home, Icons.Filled.Home, "Home"),
-                DockItem(Screen.Shorts.route, Icons.Outlined.PlayCircle, Icons.Filled.PlayCircle, "Shorts"),
-                DockItem(Screen.Search.route.replace("{query}", "null"), Icons.Outlined.Search, Icons.Filled.Search, "Search"),
-                DockItem(Screen.Library.route, Icons.Outlined.Folder, Icons.Filled.Folder, "Library"),
-                DockItem(Screen.Settings.route, Icons.Outlined.Settings, Icons.Filled.Settings, "Settings")
-            )
-            Profile.MOVIES -> listOf(
-                DockItem(Screen.Home.route, Icons.Outlined.Home, Icons.Filled.Home, "Home"),
-                DockItem(Screen.Search.route.replace("{query}", "null"), Icons.Outlined.Search, Icons.Filled.Search, "Search"),
-                DockItem(Screen.Library.route, Icons.Outlined.Folder, Icons.Filled.Folder, "Library"),
-                DockItem(Screen.Settings.route, Icons.Outlined.Settings, Icons.Filled.Settings, "Settings")
-            )
-            else -> listOf(
-                DockItem(Screen.Home.route, Icons.Outlined.Home, Icons.Filled.Home, "Home"),
-                DockItem(Screen.Search.route + "/null", Icons.Outlined.Search, Icons.Filled.Search, "Search"),
-                DockItem(Screen.Library.route, Icons.Outlined.Folder, Icons.Filled.Folder, "Library"),
-                DockItem(Screen.Settings.route, Icons.Outlined.Settings, Icons.Filled.Settings, "Settings")
-            )
-        }
+    val dockItems = remember {
+        listOf(
+            DockItem(Screen.Home.route, Icons.Outlined.Home, Icons.Filled.Home, "Home"),
+            DockItem(Screen.Search.route.replace("{query}", "null"), Icons.Outlined.Search, Icons.Filled.Search, "Search"),
+            DockItem(Screen.Library.route, Icons.Outlined.Folder, Icons.Filled.Folder, "Library"),
+            DockItem(Screen.Settings.route, Icons.Outlined.Settings, Icons.Filled.Settings, "Settings")
+        )
     }
 
     Box(
@@ -95,11 +82,27 @@ fun StreamixBottomDock(navController: NavController, includePadding: Boolean = t
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                dockItems.forEach { item ->
+                dockItems.forEachIndexed { index, item ->
                     val baseRoute = item.route.split("?")[0].split("/")[0]
                     val currentBase = currentRoute?.split("?")?.get(0)?.split("/")?.get(0)
-                    val selected = baseRoute == currentBase ||
-                                   (item.route == Screen.Home.route && currentRoute == null)
+                    
+                    val selected = if (pagerIndex != -1) {
+                        val mappedPagerIndex = if (profile == Profile.YOUTUBE || profile == Profile.ADULT) {
+                            when (pagerIndex) {
+                                0 -> 0 // Home
+                                1 -> -1 // Shorts (Nothing in dock)
+                                2 -> 1 // Search
+                                3 -> 2 // Library
+                                4 -> 3 // Settings
+                                else -> -1
+                            }
+                        } else {
+                            pagerIndex
+                        }
+                        index == mappedPagerIndex
+                    } else {
+                        baseRoute == currentBase || (item.route == Screen.Home.route && currentRoute == null)
+                    }
                     
                     DockButton(
                         item = item,

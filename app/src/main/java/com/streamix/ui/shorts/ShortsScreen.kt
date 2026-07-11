@@ -89,6 +89,7 @@ fun ShortsScreen(
 
     val pagerState = rememberPagerState(pageCount = { items.size })
     val scope = rememberCoroutineScope()
+    var userPaused by remember { mutableStateOf(false) }
 
     LaunchedEffect(exoPlayer, autoScrollEnabled) {
         val listener = object : Player.Listener {
@@ -102,6 +103,10 @@ fun ShortsScreen(
                     }
                 }
             }
+            override fun onIsPlayingChanged(playing: Boolean) {
+                // If it's playing, it's definitely not user paused anymore (e.g. user hit play)
+                if (playing) userPaused = false
+            }
         }
         exoPlayer.addListener(listener)
         exoPlayer.repeatMode = if (autoScrollEnabled) Player.REPEAT_MODE_OFF else Player.REPEAT_MODE_ONE
@@ -110,7 +115,7 @@ fun ShortsScreen(
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_PAUSE) exoPlayer.pause()
-            else if (event == Lifecycle.Event.ON_RESUME && isScreenActive) exoPlayer.play()
+            else if (event == Lifecycle.Event.ON_RESUME && isScreenActive && !userPaused) exoPlayer.play()
         }
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose {
@@ -122,7 +127,7 @@ fun ShortsScreen(
     }
 
     LaunchedEffect(isScreenActive) {
-        if (!isScreenActive) exoPlayer.pause() else exoPlayer.play()
+        if (!isScreenActive) exoPlayer.pause() else if (!userPaused) exoPlayer.play()
     }
 
     LaunchedEffect(context) { viewModel.load(context) }
@@ -226,7 +231,8 @@ fun ShortsScreen(
                     showControls = showControls && !isLocked,
                     onToggleControls = { if (!isLocked) showControls = !showControls },
                     isLocked = isLocked,
-                    onLockToggle = { isLocked = it }
+                    onLockToggle = { isLocked = it },
+                    onUserPaused = { userPaused = it }
                 )
             }
 
@@ -373,7 +379,8 @@ fun ShortVideoItem(
     showControls: Boolean,
     onToggleControls: () -> Unit,
     isLocked: Boolean,
-    onLockToggle: (Boolean) -> Unit
+    onLockToggle: (Boolean) -> Unit,
+    onUserPaused: (Boolean) -> Unit = {}
 ) {
     val colors = LocalCustomColors.current
     val androidContext = LocalContext.current
@@ -507,7 +514,15 @@ fun ShortVideoItem(
                         IconButton(onClick = { player.seekTo(player.currentPosition - 10000) }) {
                             Icon(Icons.Default.Replay10, null, tint = Color.White, modifier = Modifier.size(40.dp))
                         }
-                        IconButton(onClick = { if (isPlaying) player.pause() else player.play() }) {
+                        IconButton(onClick = { 
+                            if (isPlaying) {
+                                player.pause()
+                                onUserPaused(true)
+                            } else {
+                                player.play()
+                                onUserPaused(false)
+                            }
+                        }) {
                             Icon(
                                 if (isPlaying) Icons.Default.PauseCircleFilled else Icons.Default.PlayCircleFilled,
                                 null, tint = Color.White, modifier = Modifier.size(64.dp)

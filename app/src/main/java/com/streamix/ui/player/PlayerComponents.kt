@@ -18,6 +18,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
+import com.streamix.core.utils.FormatUtils
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -212,6 +213,8 @@ fun EmbeddedPlayer(
     val currentLink = links.getOrNull(currentLinkIndex)
     val videoUrl = currentLink?.url ?: ""
 
+    var currentQuality by remember(currentLink) { mutableStateOf(currentLink?.quality ?: "Auto") }
+    
     val activity = context as? Activity
     val isLandscape = activity?.requestedOrientation == ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
     
@@ -375,10 +378,12 @@ fun EmbeddedPlayer(
             exoPlayer.seekTo(seekPos)
             currentPosition = seekPos
             
-            if (isPlayingInitially || hasStarted) {
+            if ((isPlayingInitially || hasStarted) && !PlayerManager.shouldPause.value) {
                 exoPlayer.playWhenReady = true
                 exoPlayer.play()
                 isPlaying = true
+                hasStarted = true
+            } else {
                 hasStarted = true
             }
         } else if (links.isNotEmpty() && currentLink == null) {
@@ -401,7 +406,13 @@ fun EmbeddedPlayer(
     }
 
     val shouldPause by PlayerManager.shouldPause
-    LaunchedEffect(shouldPause) { if (shouldPause) exoPlayer.pause() else if (isPlaying && hasStarted) exoPlayer.play() }
+    LaunchedEffect(shouldPause) { 
+        if (shouldPause) {
+            exoPlayer.pause()
+        } else if (hasStarted) {
+            exoPlayer.play()
+        }
+    }
 
     DisposableEffect(exoPlayer) {
         val listener = object : Player.Listener {
@@ -421,8 +432,28 @@ fun EmbeddedPlayer(
                     .sortedByDescending { it.second.height.coerceAtLeast(0) * 10000 + it.second.bitrate.coerceAtLeast(0) }
                     .map { it.first }
                 availableAudioTracks = audioList; availableVideoTracks = sortedVideoTracks; availableSubtitleTracks = subList
+                
+                // Update current quality display from format
+                exoPlayer.videoFormat?.let { format ->
+                    if (format.height > 0) {
+                        val fr = if (format.frameRate > 45) format.frameRate.roundToInt().toString() else ""
+                        currentQuality = "${format.height}p$fr"
+                    }
+                }
             }
             override fun onIsPlayingChanged(playing: Boolean) { isPlaying = playing }
+            override fun onVideoSizeChanged(videoSize: androidx.media3.common.VideoSize) {
+                if (videoSize.height > 0) {
+                    val h = videoSize.height
+                    // We can't easily get framerate here without format, but height is most important
+                    exoPlayer.videoFormat?.let { format ->
+                        val fr = if (format.frameRate > 45) format.frameRate.roundToInt().toString() else ""
+                        currentQuality = "${h}p$fr"
+                    } ?: run {
+                        currentQuality = "${h}p"
+                    }
+                }
+            }
             override fun onPlayerError(error: androidx.media3.common.PlaybackException) { 
                 val link = links.getOrNull(currentLinkIndex)
                 if (link?.fallbackUrl != null) {
@@ -493,6 +524,14 @@ fun EmbeddedPlayer(
                 }
                 return Offset.Zero
             }
+
+            override suspend fun onPreFling(available: androidx.compose.ui.unit.Velocity): androidx.compose.ui.unit.Velocity {
+                if (offsetY > 300) {
+                    onMinimizedChange(true)
+                }
+                offsetY = 0f
+                return super.onPreFling(available)
+            }
         }
     }
 
@@ -538,7 +577,7 @@ fun EmbeddedPlayer(
                             Spacer(Modifier.weight(1f))
                             IconButton(onClick = { showDownloadDialog = true }) { Icon(Icons.Default.FileDownload, null, tint = Color.White) }
                             IconButton(onClick = { showSleepTimerDialog = true }) { Icon(Icons.Default.Timer, null, tint = Color.White) }
-                            Surface(onClick = { showSettings = true }, color = Color.Transparent, shape = RoundedCornerShape(4.dp)) { Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)) { Icon(Icons.Default.VideoCameraBack, null, tint = Color.White, modifier = Modifier.size(16.dp)); Spacer(Modifier.width(6.dp)); Text(currentLink?.quality ?: "Auto", color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold) } }
+                            Surface(onClick = { showSettings = true }, color = Color.Transparent, shape = RoundedCornerShape(4.dp)) { Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)) { Icon(Icons.Default.VideoCameraBack, null, tint = Color.White, modifier = Modifier.size(16.dp)); Spacer(Modifier.width(6.dp)); Text(currentQuality, color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold) } }
                             IconButton(onClick = { showMoreMenu = true }) { Icon(Icons.Default.MoreVert, null, tint = Color.White) }
                         }
                     }
@@ -584,23 +623,6 @@ fun EmbeddedPlayer(
                                                     offsetY = (offsetY + dragAmount).coerceAtLeast(0f)
                                                     change.consume()
                                                 }
-                                            } else if (dragAmount < 0 && offsetY > 0) {
-                                                offsetY = (offsetY + dragAmount).coerceAtLeast(0f)
-                                                change.consume()
-                                            }
-                                        },
-                                        onDragEnd = {
-                                            if (offsetY > 300) onMinimizedChange(true)
-                                            offsetY = 0f
-                                        }
-                                    )
-                                } else Modifier)
-                                .then(if (!isLocked) Modifier.pointerInput(Unit) {
-                                    detectVerticalDragGestures(
-                                        onVerticalDrag = { change, dragAmount ->
-                                            if (dragAmount > 0) {
-                                                offsetY = (offsetY + dragAmount).coerceAtLeast(0f)
-                                                change.consume()
                                             } else if (dragAmount < 0 && offsetY > 0) {
                                                 offsetY = (offsetY + dragAmount).coerceAtLeast(0f)
                                                 change.consume()
@@ -699,9 +721,9 @@ fun EmbeddedPlayer(
                         if (isLandscape) {
                             PlayerControlsOverlay(
                                 isLandscape = true, showControls = showControls, isLocked = isLocked, isPlaying = isPlaying, hasStarted = hasStarted,
-                                title = title, subtitle = subtitle, quality = currentLink?.quality ?: "Auto", currentPosition = currentPosition, duration = duration, bufferedPosition = bufferedPosition,
+                                title = title, subtitle = subtitle, quality = currentQuality, currentPosition = currentPosition, duration = duration, bufferedPosition = bufferedPosition,
                                 onBack = { activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT; onFullScreenToggle(false) },
-                                onPlayPause = { if (isPlaying) exoPlayer.pause() else exoPlayer.play() },
+                                onPlayPause = { if (isPlaying) PlayerManager.pause() else PlayerManager.resume() },
                                 onSeek = { exoPlayer.seekTo(it) }, 
                                 onRewind = { exoPlayer.seekTo((exoPlayer.currentPosition - 10000).coerceAtLeast(0)) }, 
                                 onForward = { exoPlayer.seekTo((exoPlayer.currentPosition + 10000).coerceAtMost(duration)) },
@@ -714,7 +736,7 @@ fun EmbeddedPlayer(
                             Box(Modifier.fillMaxSize().background(Color.Black.copy(0.3f))) {
                                 Row(Modifier.align(Alignment.Center).fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically) {
                                     IconButton(onClick = { exoPlayer.seekTo((exoPlayer.currentPosition - 10000).coerceAtLeast(0)) }) { Icon(Icons.Default.Replay10, null, tint = Color.White, modifier = Modifier.size(40.dp)) }
-                                    IconButton(onClick = { if (isPlaying) exoPlayer.pause() else exoPlayer.play() }, modifier = Modifier.size(64.dp)) { Icon(if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow, null, tint = Color.White, modifier = Modifier.size(64.dp)) }
+                                    IconButton(onClick = { if (isPlaying) PlayerManager.pause() else PlayerManager.resume() }, modifier = Modifier.size(64.dp)) { Icon(if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow, null, tint = Color.White, modifier = Modifier.size(64.dp)) }
                                     IconButton(onClick = { exoPlayer.seekTo((exoPlayer.currentPosition + 10000).coerceAtMost(duration)) }) { Icon(Icons.Default.Forward10, null, tint = Color.White, modifier = Modifier.size(40.dp)) }
                                 }
                                 IconButton(
@@ -783,7 +805,7 @@ fun EmbeddedPlayer(
                             
                             Row(modifier = Modifier.fillMaxWidth().padding(bottom = 40.dp), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically) {
                                 IconButton(onClick = { exoPlayer.seekTo((exoPlayer.currentPosition - 10000).coerceAtLeast(0)) }) { Icon(Icons.Default.Replay10, null, tint = Color.White, modifier = Modifier.size(36.dp)) }
-                                IconButton(onClick = { if (isPlaying) exoPlayer.pause() else exoPlayer.play() }, modifier = Modifier.size(80.dp).background(Color.White.copy(0.05f), CircleShape)) { Icon(if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow, null, tint = Color.White, modifier = Modifier.size(48.dp)) }
+                                IconButton(onClick = { if (isPlaying) PlayerManager.pause() else PlayerManager.resume() }, modifier = Modifier.size(80.dp).background(Color.White.copy(0.05f), CircleShape)) { Icon(if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow, null, tint = Color.White, modifier = Modifier.size(48.dp)) }
                                 IconButton(onClick = { exoPlayer.seekTo((exoPlayer.currentPosition + 10000).coerceAtMost(duration)) }) { Icon(Icons.Default.Forward10, null, tint = Color.White, modifier = Modifier.size(36.dp)) }
                             }
                         }
@@ -1298,7 +1320,8 @@ fun DownloadDialog(title: String, uploader: String, posterUrl: String?, onDownlo
 @Composable fun DownloadItem(format: String, quality: String, size: String, onClick: () -> Unit) { Row(Modifier.fillMaxWidth().clickable { onClick() }.padding(vertical = 12.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) { Text(format, color = Color.White.copy(0.6f), fontSize = 13.sp, modifier = Modifier.width(60.dp)); Text(quality, color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f), textAlign = TextAlign.Center); Text(size, color = Color.White.copy(0.6f), fontSize = 13.sp, modifier = Modifier.width(80.dp), textAlign = TextAlign.End) } }
 @Composable fun MoreMenuItem(text: String, icon: ImageVector, onClick: () -> Unit) { Row(Modifier.fillMaxWidth().clickable { onClick() }.padding(horizontal = 16.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) { Icon(icon, null, tint = Color.White, modifier = Modifier.size(20.dp)); Spacer(Modifier.width(16.dp)); Text(text, color = Color.White, fontSize = 14.sp) } }
 @Composable fun LoadingAnimation(color: Color) { val infiniteTransition = rememberInfiniteTransition(label = "loading"); val angle by infiniteTransition.animateFloat(initialValue = 0f, targetValue = 360f, animationSpec = infiniteRepeatable(tween(1000, easing = LinearEasing)), label = "angle"); Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Box(Modifier.size(60.dp).rotate(angle).border(3.dp, Brush.sweepGradient(listOf(Color.Transparent, color)), CircleShape)) } }
-private fun formatViews(views: Long): String { return when { views >= 1_000_000_000 -> "%.1fB".format(views / 1_000_000_000.0); views >= 1_000_000 -> "%.1fM".format(views / 1_000_000.0); views >= 1_000 -> "%.1fK".format(views / 1_000.0); else -> views.toString() } }
+
+private fun formatViews(views: Long): String { return FormatUtils.formatViews(views) }
 private fun formatTime(millis: Long): String { val totalSeconds = millis / 1000; val hours = totalSeconds / 3600; val minutes = (totalSeconds % 3600) / 60; val seconds = totalSeconds % 60; return if (hours > 0) "%d:%02d:%02d".format(hours, minutes, seconds) else "%02d:%02d".format(minutes, seconds) }
 
 @Composable

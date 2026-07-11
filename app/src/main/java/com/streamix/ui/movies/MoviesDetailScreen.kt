@@ -79,9 +79,11 @@ fun MoviesDetailScreen(
 
     LaunchedEffect(isPlayerVisible, isPlayerMinimized) {
         if (isPlayerVisible && !isPlayerMinimized) {
+            exoPlayer.pause()
             exoPlayer.volume = 0f
         } else {
             exoPlayer.volume = 1f
+            if (trailerLinks.isNotEmpty()) exoPlayer.play()
         }
     }
 
@@ -139,7 +141,7 @@ fun MoviesDetailScreen(
                 contentPadding = PaddingValues(bottom = 120.dp)
             ) {
                 item {
-                    DetailHeroSection(data, trailerLinks, exoPlayer)
+                    DetailHeroSection(data, trailerLinks, exoPlayer, isPlayerVisible, isPlayerMinimized)
                 }
 
                 item {
@@ -266,7 +268,13 @@ fun DetailTopBar(navController: NavController) {
 
 @androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
 @Composable
-fun DetailHeroSection(data: com.streamix.scraper.cloudstream.LoadResponse, trailerLinks: List<VideoLink>, exoPlayer: ExoPlayer) {
+fun DetailHeroSection(
+    data: com.streamix.scraper.cloudstream.LoadResponse,
+    trailerLinks: List<VideoLink>,
+    exoPlayer: ExoPlayer,
+    isPlayerVisible: Boolean,
+    isPlayerMinimized: Boolean
+) {
     Box(modifier = Modifier.fillMaxWidth().height(300.dp)) {
         // Poster as background layer
         AsyncImage(
@@ -276,7 +284,7 @@ fun DetailHeroSection(data: com.streamix.scraper.cloudstream.LoadResponse, trail
             contentScale = ContentScale.Crop
         )
 
-        if (trailerLinks.isNotEmpty()) {
+        if (trailerLinks.isNotEmpty() && (!isPlayerVisible || isPlayerMinimized)) {
             AndroidView(
                 factory = {
                     PlayerView(it).apply {

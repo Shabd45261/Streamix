@@ -27,15 +27,21 @@ import com.streamix.ui.theme.LocalCustomColors
 import com.streamix.ui.theme.ThemeViewModel
 import com.streamix.ui.theme.toHex
 import com.streamix.ui.navigation.Screen
+import com.streamix.ui.navigation.UpdateViewModel
+import com.streamix.ui.navigation.UpdateUIState
+import com.streamix.BuildConfig
 import kotlinx.coroutines.launch
 
 @Composable
 fun SettingsScreen(
     navController: NavController,
-    viewModel: ThemeViewModel = hiltViewModel()
+    viewModel: ThemeViewModel = hiltViewModel(),
+    updateViewModel: UpdateViewModel = hiltViewModel()
 ) {
     val colors = LocalCustomColors.current
     val scope = rememberCoroutineScope()
+    
+    val updateState by updateViewModel.uiState.collectAsState()
     
     val primaryColor by viewModel.primaryColor.collectAsState()
     val secondaryColor by viewModel.secondaryColor.collectAsState()
@@ -148,7 +154,21 @@ fun SettingsScreen(
             }
             
             item { SettingsSectionTitle("About") }
-            item { SettingsItem("Version", "1.0.0 (B7)", {}) }
+            item { 
+                SettingsItem(
+                    title = "Check for Updates", 
+                    subtitle = when (updateState) {
+                        is UpdateUIState.Checking -> "Checking..."
+                        is UpdateUIState.UpToDate -> "You're up to date"
+                        is UpdateUIState.UpdateAvailable -> "New version available"
+                        is UpdateUIState.Error -> (updateState as UpdateUIState.Error).message
+                        else -> "Current Version: ${BuildConfig.VERSION_NAME}"
+                    }, 
+                    onClick = { 
+                        updateViewModel.checkForUpdates(isAuto = false)
+                    }
+                )
+            }
         }
     }
 }

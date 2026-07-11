@@ -42,6 +42,7 @@ import com.streamix.core.model.Profile
 import com.streamix.core.model.SearchResult
 import com.streamix.ui.components.StreamixHeader
 import com.streamix.ui.components.StreamixSearchBar
+import com.streamix.ui.components.StreamixHeroSection
 import com.streamix.ui.components.VideoOptionsPopup
 import com.streamix.ui.navigation.Screen
 import com.streamix.ui.theme.LocalCustomColors
@@ -140,23 +141,14 @@ fun YoutubeHomeScreen(
                         // 0. Hero Section
                         if (trending.isNotEmpty()) {
                             item {
-                                val heroItems = trending.take(5)
-                                val pagerState = rememberPagerState(pageCount = { heroItems.size })
-                                
-                                HorizontalPager(
-                                    state = pagerState,
-                                    modifier = Modifier.fillMaxWidth().height(480.dp)
-                                ) { page ->
-                                    val video = heroItems[page]
-                                    YoutubeHeroSection(
-                                        item = video,
-                                        onOptionSelect = { item, status -> viewModel.addToLibrary(item, status) },
-                                        onClick = {
-                                            val encoded = URLEncoder.encode(video.id, "UTF-8")
-                                            navController.navigate("youtube_detail?videoId=$encoded")
-                                        }
-                                    )
-                                }
+                                StreamixHeroSection(
+                                    items = trending.take(5),
+                                    onOptionSelect = { item, status -> viewModel.addToLibrary(item, status) },
+                                    onClick = { video ->
+                                        val encoded = URLEncoder.encode(video.id, "UTF-8")
+                                        navController.navigate("youtube_detail?videoId=$encoded")
+                                    }
+                                )
                             }
                         }
 

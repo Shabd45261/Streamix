@@ -2,6 +2,8 @@ package com.streamix.core.storage
 
 import android.content.Context
 import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
@@ -35,6 +37,8 @@ class PreferencesManager @Inject constructor(
         val SHORTS_SEARCH_HISTORY = stringPreferencesKey("shorts_search_history")
         val AUTO_SCROLL_SHORTS  = booleanPreferencesKey("auto_scroll_shorts")
         val FLOATING_DOCK_ENABLED = booleanPreferencesKey("floating_dock_enabled")
+        val IGNORED_VERSION = intPreferencesKey("ignored_version")
+        val LAST_UPDATE_CHECK = longPreferencesKey("last_update_check")
     }
 
     val floatingDockEnabled: Flow<Boolean> = context.dataStore.data
@@ -141,6 +145,20 @@ class PreferencesManager @Inject constructor(
             val label = it[CURRENT_PROFILE] ?: Profile.MOVIES.name
             Profile.valueOf(label)
         }
+
+    val ignoredVersion: Flow<Int> = context.dataStore.data
+        .map { it[IGNORED_VERSION] ?: -1 }
+
+    val lastUpdateCheck: Flow<Long> = context.dataStore.data
+        .map { it[LAST_UPDATE_CHECK] ?: 0L }
+
+    suspend fun setIgnoredVersion(version: Int) {
+        context.dataStore.edit { it[IGNORED_VERSION] = version }
+    }
+
+    suspend fun setLastUpdateCheck(time: Long) {
+        context.dataStore.edit { it[LAST_UPDATE_CHECK] = time }
+    }
 
     suspend fun setAdultPasscode(passcode: String) {
         context.dataStore.edit {

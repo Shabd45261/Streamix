@@ -44,6 +44,7 @@ import com.streamix.core.model.Profile
 import com.streamix.core.model.SearchResult
 import com.streamix.core.utils.UrlUtils
 import com.streamix.ui.components.StreamixHeader
+import com.streamix.ui.components.StreamixHeroSection
 import com.streamix.ui.components.StreamixSearchBar
 import com.streamix.ui.components.VideoOptionsPopup
 import com.streamix.ui.navigation.Screen
@@ -141,22 +142,15 @@ fun MoviesHomeScreen(
                     
                     if (heroItems.isNotEmpty()) {
                         item {
-                            val pagerState = rememberPagerState(pageCount = { heroItems.size })
-                            HorizontalPager(
-                                state = pagerState,
-                                modifier = Modifier.fillMaxWidth().height(480.dp)
-                            ) { page ->
-                                val movie = heroItems[page]
-                                MoviesHeroSection(
-                                    item = movie,
-                                    onOptionSelect = { item, status -> viewModel.addToLibrary(item, status) },
-                                    onClick = {
-                                        val encoded = URLEncoder.encode(movie.id, "UTF-8")
-                                        val apiEncoded = URLEncoder.encode(movie.studio, "UTF-8")
-                                        navController.navigate("movies_detail?movieId=$encoded&apiName=$apiEncoded")
-                                    }
-                                )
-                            }
+                            StreamixHeroSection(
+                                items = heroItems,
+                                onOptionSelect = { item, status -> viewModel.addToLibrary(item, status) },
+                                onClick = { movie ->
+                                    val encoded = URLEncoder.encode(movie.id, "UTF-8")
+                                    val apiEncoded = URLEncoder.encode(movie.studio, "UTF-8")
+                                    navController.navigate("movies_detail?movieId=$encoded&apiName=$apiEncoded")
+                                }
+                            )
                         }
                     }
 

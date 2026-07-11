@@ -34,8 +34,13 @@ import com.streamix.ui.player.EmbeddedPlayer
 import com.streamix.core.utils.UrlUtils
 import androidx.compose.ui.Alignment
 
-import com.streamix.ui.navigation.MainScreen
+import com.streamix.ui.components.UpdateDialog
 import com.streamix.ui.components.StackedDock
+import androidx.compose.material3.*
+import com.streamix.ui.components.DownloadProgressDialog
+import com.streamix.ui.navigation.UpdateViewModel
+import com.streamix.ui.navigation.UpdateUIState
+import android.app.Activity
 import com.streamix.ui.components.DockFront
 import com.streamix.ui.player.MinimizedPlayerBar
 import com.streamix.ui.player.HistoryViewModel
@@ -48,6 +53,7 @@ import androidx.activity.ComponentActivity
 import kotlinx.coroutines.delay
 
 val LocalBottomDockVisible = compositionLocalOf { mutableStateOf(true) }
+val LocalMainPagerIndex = compositionLocalOf { mutableStateOf(-1) }
 
 @Composable
 fun StreamixNavGraph() {
@@ -55,11 +61,19 @@ fun StreamixNavGraph() {
     val profileState  = rememberSaveable { mutableStateOf(Profile.YOUTUBE) }
     val colors = LocalCustomColors.current
     val bottomDockVisible = rememberSaveable { mutableStateOf(true) }
+    val mainPagerIndex = remember { mutableStateOf(-1) }
     
     val profileStack = remember { mutableStateListOf<Profile>() }
     var backPressedOnce by remember { mutableStateOf(false) }
 
     val historyViewModel: HistoryViewModel = hiltViewModel()
+    val updateViewModel: UpdateViewModel = hiltViewModel()
+    
+    val updateState by updateViewModel.uiState.collectAsState()
+
+    LaunchedEffect(Unit) {
+        updateViewModel.checkForUpdates(isAuto = true)
+    }
     
     val context = LocalContext.current
     val prefs = remember { PreferencesManager(context) }
@@ -69,11 +83,10 @@ fun StreamixNavGraph() {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
-    // Update bottom dock visibility based on current route
+    // Global visibility logic
     LaunchedEffect(currentRoute) {
-        bottomDockVisible.value = when (currentRoute) {
-            Screen.Shorts.route, Screen.Passcode.route -> false
-            else -> true
+        if (currentRoute == Screen.Passcode.route) {
+            bottomDockVisible.value = false
         }
     }
     
@@ -85,14 +98,6 @@ fun StreamixNavGraph() {
     val playerEpisodes by PlayerManager.episodes
     val isHidden by PlayerManager.isHiddenTemporarily
 
-    // Check if current route is one of the main ones
-    val isMainScreen = currentRoute == null || 
-                      currentRoute == Screen.Home.route || 
-                      currentRoute == Screen.Shorts.route || 
-                      currentRoute.startsWith("search") || 
-                      currentRoute == Screen.Library.route || 
-                      currentRoute == Screen.Settings.route
-
     // Intercept profile changes to update stack
     val switchProfile: (Profile) -> Unit = remember {
         { newProfile ->
@@ -103,7 +108,10 @@ fun StreamixNavGraph() {
         }
     }
 
-    CompositionLocalProvider(LocalBottomDockVisible provides bottomDockVisible) {
+    CompositionLocalProvider(
+        LocalBottomDockVisible provides bottomDockVisible,
+        LocalMainPagerIndex provides mainPagerIndex
+    ) {
         BackHandler {
             if (playerVisible && !playerMinimized && !isHidden) {
                 PlayerManager.isMinimized.value = true
@@ -133,11 +141,14 @@ fun StreamixNavGraph() {
             containerColor = colors.primary,
             contentWindowInsets = WindowInsets(0, 0, 0, 0),
             bottomBar = { 
-                val showTraditionalDock = bottomDockVisible.value && 
-                                          !(!playerMinimized && playerVisible && !isHidden) &&
+                val isPlayerFullScreen = playerVisible && !playerMinimized && !isHidden
+                val showTraditionalDock = bottomDockVisible.value && !isPlayerFullScreen &&
                                           (!floatingDockEnabled || !playerVisible || !playerMinimized)
+                
+                // Ensure MinimizedPlayerBar shows up even if dock is hidden (e.g. on Shorts)
+                val showMinimizedBarOnly = !bottomDockVisible.value && playerVisible && playerMinimized && !isHidden && !floatingDockEnabled
 
-                if (showTraditionalDock) {
+                if (showTraditionalDock || showMinimizedBarOnly) {
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -165,11 +176,14 @@ fun StreamixNavGraph() {
                                 )
                             }
                         }
-                        StreamixBottomDock(navController, includePadding = false)
+                        if (showTraditionalDock) {
+                            StreamixBottomDock(navController, profileOverride = profileState.value, includePadding = false)
+                        }
                     }
                 }
             }
-        ) { padding ->
+        )
+{ padding ->
             Box(Modifier.fillMaxSize()) {
                 NavHost(
                     navController    = navController,
@@ -305,14 +319,39 @@ fun StreamixNavGraph() {
                     )
                 }
 
-                if (floatingDockEnabled && playerVisible && playerMinimized && !isHidden && bottomDockVisible.value) {
+                if (floatingDockEnabled && playerVisible && playerMinimized && !isHidden) {
                     Box(modifier = Modifier.align(Alignment.BottomCenter)) {
-                        StackedDock(
-                            navBar = { StreamixBottomDock(navController) },
-                            playerBar = {
-                                val thumbUrl = remember(currentVideo?.posterPath, currentVideo?.mediaType, currentVideo?.id) {
-                                    UrlUtils.resolveImageUrl(currentVideo?.posterPath, currentVideo?.mediaType, currentVideo?.id ?: "")
-                                }
+                        if (bottomDockVisible.value) {
+                            StackedDock(
+                                navBar = { StreamixBottomDock(navController, profileOverride = profileState.value) },
+                                playerBar = {
+                                    val thumbUrl = remember(currentVideo?.posterPath, currentVideo?.mediaType, currentVideo?.id) {
+                                        UrlUtils.resolveImageUrl(currentVideo?.posterPath, currentVideo?.mediaType, currentVideo?.id ?: "")
+                                    }
+                                    MinimizedPlayerBar(
+                                        title = currentVideo?.title ?: "",
+                                        subtitle = currentVideo?.studio ?: "Streamix",
+                                        thumbUrl = thumbUrl,
+                                        isPlaying = PlayerManager.isPlayingState.value,
+                                        progress = PlayerManager.playbackProgress.value,
+                                        onTogglePlay = {
+                                            if (PlayerManager.isPlayingState.value) PlayerManager.pause()
+                                            else PlayerManager.resume()
+                                        },
+                                        onClick = { PlayerManager.isMinimized.value = false },
+                                        onClose = { PlayerManager.close() },
+                                        height = 70.dp
+                                    )
+                                },
+                                frontCard = frontCard,
+                                onFrontCardChange = { frontCard = it }
+                            )
+                        } else {
+                            // Show only minimized bar when dock is hidden (Shorts)
+                            val thumbUrl = remember(currentVideo?.posterPath, currentVideo?.mediaType, currentVideo?.id) {
+                                UrlUtils.resolveImageUrl(currentVideo?.posterPath, currentVideo?.mediaType, currentVideo?.id ?: "")
+                            }
+                            Box(Modifier.padding(bottom = 16.dp, start = 12.dp, end = 12.dp)) {
                                 MinimizedPlayerBar(
                                     title = currentVideo?.title ?: "",
                                     subtitle = currentVideo?.studio ?: "Streamix",
@@ -327,11 +366,41 @@ fun StreamixNavGraph() {
                                     onClose = { PlayerManager.close() },
                                     height = 70.dp
                                 )
-                            },
-                            frontCard = frontCard,
-                            onFrontCardChange = { frontCard = it }
+                            }
+                        }
+                    }
+                }
+
+                // Update UI
+                when (val state = updateState) {
+                    is UpdateUIState.UpdateAvailable -> {
+                        UpdateDialog(
+                            info = state.info,
+                            onDownload = { updateViewModel.downloadUpdate(state.info) },
+                            onIgnore = { updateViewModel.ignoreUpdate(state.info.latestVersion) },
+                            onExit = { (context as? Activity)?.finish() }
                         )
                     }
+                    is UpdateUIState.Downloading -> {
+                        DownloadProgressDialog(
+                            progress = state.progress,
+                            onCancel = { updateViewModel.resetState() }
+                        )
+                    }
+                    is UpdateUIState.DownloadCompleted -> {
+                        AlertDialog(
+                            onDismissRequest = { },
+                            title = { Text("Download Complete", color = colors.secondary) },
+                            text = { Text("The update has been downloaded. Tap to install.", color = colors.secondary.copy(0.7f)) },
+                            confirmButton = {
+                                Button(onClick = { updateViewModel.installUpdate(state.file) }) {
+                                    Text("Install")
+                                }
+                            },
+                            containerColor = colors.primary
+                        )
+                    }
+                    else -> {}
                 }
             }
         }

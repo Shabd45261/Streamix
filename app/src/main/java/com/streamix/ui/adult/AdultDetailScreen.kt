@@ -53,6 +53,9 @@ fun AdultDetailScreen(
     val colors = LocalCustomColors.current
     var shouldPlayAfterLoad by remember { mutableStateOf(false) }
 
+    val isPlayerVisible by PlayerManager.isVisible
+    val isPlayerMinimized by PlayerManager.isMinimized
+
     val context = LocalContext.current
     val exoPlayer = remember {
         ExoPlayer.Builder(context).build().apply {
@@ -64,6 +67,14 @@ fun AdultDetailScreen(
 
     DisposableEffect(exoPlayer) {
         onDispose { exoPlayer.release() }
+    }
+
+    LaunchedEffect(isPlayerVisible, isPlayerMinimized) {
+        if (isPlayerVisible && !isPlayerMinimized) {
+            exoPlayer.pause()
+        } else {
+            if (links.isNotEmpty()) exoPlayer.play()
+        }
     }
 
     LaunchedEffect(links) {
@@ -117,7 +128,7 @@ fun AdultDetailScreen(
                 contentPadding = PaddingValues(bottom = 120.dp)
             ) {
                 item {
-                    AdultDetailHeroSection(data, links.firstOrNull()?.url, exoPlayer)
+                    AdultDetailHeroSection(data, links.firstOrNull()?.url, exoPlayer, isPlayerVisible, isPlayerMinimized)
                 }
 
                 item {
@@ -193,9 +204,15 @@ fun AdultDetailScreen(
 
 @androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
 @Composable
-fun AdultDetailHeroSection(data: com.streamix.scraper.adult.AdultVideoDetail, streamUrl: String?, exoPlayer: ExoPlayer) {
+fun AdultDetailHeroSection(
+    data: com.streamix.scraper.adult.AdultVideoDetail,
+    streamUrl: String?,
+    exoPlayer: ExoPlayer,
+    isPlayerVisible: Boolean,
+    isPlayerMinimized: Boolean
+) {
     Box(modifier = Modifier.fillMaxWidth().height(260.dp)) {
-        if (streamUrl != null) {
+        if (streamUrl != null && (!isPlayerVisible || isPlayerMinimized)) {
             AndroidView(
                 factory = {
                     PlayerView(it).apply {
