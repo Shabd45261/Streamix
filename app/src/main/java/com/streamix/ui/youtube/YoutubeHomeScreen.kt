@@ -104,8 +104,7 @@ fun YoutubeHomeScreen(
                         StreamixHeader(
                             currentProfile = profileState.value,
                             onSettingsTap = { navController.navigate(Screen.Settings.route) },
-                            onProfileSelect = onProfileChange,
-                            onProfileTripleTap = { navController.navigate(Screen.Passcode.route) }
+                            onProfileSelect = onProfileChange
                         )
                     }
 

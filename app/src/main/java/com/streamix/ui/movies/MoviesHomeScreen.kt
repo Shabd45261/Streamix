@@ -102,8 +102,7 @@ fun MoviesHomeScreen(
                     StreamixHeader(
                         currentProfile = profileState.value,
                         onSettingsTap = { navController.navigate(Screen.Settings.route) },
-                        onProfileSelect = onProfileChange,
-                        onProfileTripleTap = { navController.navigate(Screen.Passcode.route) }
+                        onProfileSelect = onProfileChange
                     )
                 }
 
@@ -424,9 +423,6 @@ fun MoviesHorizontalCard(item: SearchResult, width: Dp = 180.dp, onOptionSelect:
         }
         Spacer(Modifier.height(8.dp))
         Text(item.title, color = colors.secondary, fontSize = 13.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-        if (item.studio.isNotEmpty()) {
-            Text(item.studio, color = colors.tertiary.copy(0.7f), fontSize = 10.sp, fontWeight = FontWeight.Bold)
-        }
     }
 }
 
@@ -475,9 +471,6 @@ fun MovieVerticalCard(item: SearchResult, onOptionSelect: (SearchResult, String)
             Spacer(Modifier.width(16.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(item.title, color = colors.secondary, fontSize = 15.sp, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                if (item.studio.isNotEmpty()) {
-                    Text(item.studio, color = colors.tertiary, fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                }
                 Spacer(Modifier.height(4.dp))
                 if (item.year.isNotBlank() || item.views.isNotBlank()) {
                     val info = listOf(item.views, item.year).filter { it.isNotBlank() }.joinToString(" • ")

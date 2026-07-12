@@ -13,7 +13,7 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.lazy.itemsIndexed as lazyItemsIndexed
-import androidx.compose.foundation.lazy.grid.itemsIndexed as gridItemsIndexed
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.ui.draw.clip
 import androidx.compose.material.icons.filled.*
@@ -67,6 +67,7 @@ fun ShortsScreen(
     val isLoading by viewModel.isLoading.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
     val searchResults by viewModel.searchResults.collectAsState()
+    val searchHistory by viewModel.searchHistory.collectAsState()
     
     val androidContext = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -236,29 +237,62 @@ fun ShortsScreen(
                 )
             }
 
-            if (isSearching && context == ShortsContext.YOUTUBE) {
+            if (isSearching) {
                 Box(Modifier.fillMaxSize().background(Color.Black.copy(0.95f)).statusBarsPadding().padding(top = 64.dp)) {
-                    androidx.compose.foundation.lazy.LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(bottom = 100.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        lazyItemsIndexed(searchResults, key = { _, item -> item.id }) { index, item ->
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 16.dp)
-                                    .clickable { viewModel.playSearchShort(index); isSearching = false },
-                                verticalAlignment = Alignment.Top
-                            ) {
-                                Box(modifier = Modifier.width(160.dp).aspectRatio(16f/9f).clip(RoundedCornerShape(8.dp)).background(Color.White.copy(0.1f))) {
-                                    SubcomposeAsyncImage(model = item.thumbnailUrl, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
+                    if (searchQuery.isBlank()) {
+                        androidx.compose.foundation.lazy.LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = PaddingValues(bottom = 100.dp)
+                        ) {
+                            items(searchHistory) { item ->
+                                Row(
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .clickable { 
+                                            viewModel.searchShorts(item)
+                                        }
+                                        .padding(horizontal = 16.dp, vertical = 14.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(Icons.Default.History, null, tint = Color.White.copy(0.4f), modifier = Modifier.size(18.dp))
+                                    Spacer(Modifier.width(16.dp))
+                                    Text(
+                                        text = item,
+                                        color = Color.White,
+                                        fontSize = 15.sp,
+                                        modifier = Modifier.weight(1f),
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                    IconButton(onClick = { viewModel.removeHistoryItem(item) }, modifier = Modifier.size(24.dp)) {
+                                        Icon(Icons.Default.Close, null, tint = Color.White.copy(0.4f), modifier = Modifier.size(16.dp))
+                                    }
                                 }
-                                Spacer(Modifier.width(16.dp))
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(item.title, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                                    Text(item.channelName, color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                                    Text(item.views + " views", color = Color.White.copy(0.4f), fontSize = 11.sp)
+                            }
+                        }
+                    } else {
+                        androidx.compose.foundation.lazy.LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = PaddingValues(bottom = 100.dp),
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            lazyItemsIndexed(searchResults, key = { _, item -> item.id }) { index, item ->
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 16.dp)
+                                        .clickable { viewModel.playSearchShort(index); isSearching = false },
+                                    verticalAlignment = Alignment.Top
+                                ) {
+                                    Box(modifier = Modifier.width(160.dp).aspectRatio(16f/9f).clip(RoundedCornerShape(8.dp)).background(Color.White.copy(0.1f))) {
+                                        SubcomposeAsyncImage(model = item.thumbnailUrl, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
+                                    }
+                                    Spacer(Modifier.width(16.dp))
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(item.title, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                                        Text(item.channelName, color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                        Text(item.views + " views", color = Color.White.copy(0.4f), fontSize = 11.sp)
+                                    }
                                 }
                             }
                         }
@@ -295,7 +329,7 @@ fun ShortsScreen(
                         }
                     }
                     
-                    if (isSearching && context == ShortsContext.YOUTUBE) {
+                    if (isSearching) {
                         TextField(
                             value = searchQuery,
                             onValueChange = { 
@@ -311,7 +345,9 @@ fun ShortsScreen(
                             ),
                             keyboardActions = androidx.compose.foundation.text.KeyboardActions(
                                 onSearch = { 
-                                    viewModel.searchShorts(searchQuery)
+                                    if (searchQuery.isNotBlank()) {
+                                        viewModel.searchShorts(searchQuery)
+                                    }
                                 }
                             ),
                             colors = TextFieldDefaults.colors(
@@ -338,11 +374,9 @@ fun ShortsScreen(
                         Text("Shorts", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 18.sp, modifier = Modifier.align(Alignment.Center))
 
                         Row(modifier = Modifier.align(Alignment.TopEnd)) {
-                            if (context == ShortsContext.YOUTUBE) {
-                                IconButton(onClick = { isSearching = true }) {
-                                    Box(Modifier.size(36.dp).background(Color.Black.copy(alpha = 0.5f), CircleShape), Alignment.Center) {
-                                        Icon(Icons.Default.Search, "Search", tint = Color.White, modifier = Modifier.size(22.dp))
-                                    }
+                            IconButton(onClick = { isSearching = true }) {
+                                Box(Modifier.size(36.dp).background(Color.Black.copy(alpha = 0.5f), CircleShape), Alignment.Center) {
+                                    Icon(Icons.Default.Search, "Search", tint = Color.White, modifier = Modifier.size(22.dp))
                                 }
                             }
                             IconButton(

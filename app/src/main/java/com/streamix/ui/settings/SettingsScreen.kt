@@ -30,6 +30,9 @@ import com.streamix.ui.navigation.Screen
 import com.streamix.ui.navigation.UpdateViewModel
 import com.streamix.ui.navigation.UpdateUIState
 import com.streamix.BuildConfig
+import android.content.Intent
+import android.widget.Toast
+import androidx.compose.ui.platform.LocalContext
 import kotlinx.coroutines.launch
 
 @Composable
@@ -50,6 +53,91 @@ fun SettingsScreen(
     val youtubeAccountName by viewModel.youtubeAccountName.collectAsState(initial = null)
     val autoScrollShorts by viewModel.autoScrollShorts.collectAsState()
     val floatingDockEnabled by viewModel.floatingDockEnabled.collectAsState()
+
+    var showFeedbackForm by remember { mutableStateOf(false) }
+    var selectedReportProfile by remember { mutableStateOf("") }
+    var showReportDialog by remember { mutableStateOf(false) }
+    var reportText by remember { mutableStateOf("") }
+    val context = LocalContext.current
+
+    if (showFeedbackForm) {
+        AlertDialog(
+            onDismissRequest = { showFeedbackForm = false },
+            title = { Text("Report an Issue", color = colors.secondary) },
+            text = {
+                Column {
+                    Text("Select profile:", color = colors.secondary.copy(0.6f))
+                    Spacer(Modifier.height(8.dp))
+                    listOf("YouTube Profile", "Movie Profile", "Adult Profile").forEach { profile ->
+                        Row(
+                            Modifier.fillMaxWidth().clickable { 
+                                selectedReportProfile = profile
+                                showFeedbackForm = false
+                                showReportDialog = true
+                            }.padding(vertical = 12.dp)
+                        ) {
+                            Text(profile, color = colors.secondary)
+                        }
+                    }
+                }
+            },
+            confirmButton = {},
+            dismissButton = {
+                TextButton(onClick = { showFeedbackForm = false }) { Text("Cancel", color = colors.secondary) }
+            },
+            containerColor = colors.primary,
+            shape = RoundedCornerShape(16.dp)
+        )
+    }
+
+    if (showReportDialog) {
+        AlertDialog(
+            onDismissRequest = { showReportDialog = false },
+            title = { Text("Describe the error", color = colors.secondary) },
+            text = {
+                OutlinedTextField(
+                    value = reportText,
+                    onValueChange = { reportText = it },
+                    modifier = Modifier.fillMaxWidth().height(150.dp),
+                    placeholder = { Text("Type here...", color = colors.secondary.copy(0.3f)) },
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = colors.secondary,
+                        unfocusedTextColor = colors.secondary,
+                        focusedBorderColor = colors.tertiary,
+                        unfocusedBorderColor = colors.secondary.copy(0.2f)
+                    )
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        val body = "IN $selectedReportProfile\n\n$reportText"
+                        val intent = Intent(Intent.ACTION_SEND).apply {
+                            type = "message/rfc822"
+                            putExtra(Intent.EXTRA_EMAIL, arrayOf("your_email@example.com")) // Replace with your email
+                            putExtra(Intent.EXTRA_SUBJECT, "Streamix Bug Report: $selectedReportProfile")
+                            putExtra(Intent.EXTRA_TEXT, body)
+                        }
+                        try {
+                            context.startActivity(Intent.createChooser(intent, "Send Report"))
+                        } catch (e: Exception) {
+                            Toast.makeText(context, "No email app found", Toast.LENGTH_SHORT).show()
+                        }
+                        showReportDialog = false
+                        reportText = ""
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = colors.tertiary)
+                ) {
+                    Text("Send", color = colors.primary, fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showReportDialog = false }) { Text("Cancel", color = colors.secondary) }
+            },
+            containerColor = colors.primary,
+            shape = RoundedCornerShape(16.dp)
+        )
+    }
 
     Column(
         modifier = Modifier
@@ -150,6 +238,15 @@ fun SettingsScreen(
                             viewModel.logoutYoutube()
                         }
                     }
+                )
+            }
+            
+            item { SettingsSectionTitle("Help & Feedback") }
+            item {
+                SettingsItem(
+                    title = "Feedback / Report Issue",
+                    subtitle = "Face any issue? Let us know.",
+                    onClick = { showFeedbackForm = true }
                 )
             }
             

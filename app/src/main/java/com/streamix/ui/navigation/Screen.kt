@@ -7,7 +7,6 @@ sealed class Screen(val route: String) {
     object Library        : Screen("library")
     object Settings       : Screen("settings")
     object Shorts         : Screen("shorts")
-    object Passcode       : Screen("passcode")
     object YoutubeDetail  : Screen("youtube_detail?videoId={videoId}")
     object YoutubeChannel : Screen("youtube_channel?channelUrl={channelUrl}")
     object YoutubeLogin   : Screen("youtube_login")

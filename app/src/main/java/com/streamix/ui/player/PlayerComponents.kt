@@ -253,6 +253,11 @@ fun EmbeddedPlayer(
     var showDescriptionSheet by remember { mutableStateOf(false) }
     var showPlaylistDialog by remember { mutableStateOf(false) }
 
+    var showSpeedDialog by remember { mutableStateOf(false) }
+    var showSyncSubsDialog by remember { mutableStateOf(false) }
+    var showTracksDialog by remember { mutableStateOf(false) }
+    var subtitleOffset by remember { mutableLongStateOf(0L) }
+
     var sleepTimerMinutes by remember { mutableIntStateOf(0) }
     
     var isVolumeBoosterEnabled by remember { mutableStateOf(false) }
@@ -340,6 +345,20 @@ fun EmbeddedPlayer(
 
     val exoPlayer = remember(id) {
         ExoPlayer.Builder(context).build().apply { repeatMode = Player.REPEAT_MODE_ONE }
+    }
+
+    LaunchedEffect(isMinimized, id) {
+        if (isMinimized || id.isNotEmpty()) {
+            currentSpeed = 1.0f
+            exoPlayer.setPlaybackSpeed(1.0f)
+        }
+    }
+
+    LaunchedEffect(isMinimized, id) {
+        if (isMinimized || id.isNotEmpty()) {
+            currentSpeed = 1.0f
+            exoPlayer.setPlaybackSpeed(1.0f)
+        }
     }
 
     LaunchedEffect(sleepTimerMinutes) { if (sleepTimerMinutes > 0) { delay(sleepTimerMinutes * 60 * 1000L); exoPlayer.pause(); sleepTimerMinutes = 0 } }
@@ -720,17 +739,59 @@ fun EmbeddedPlayer(
 
                         if (isLandscape) {
                             PlayerControlsOverlay(
-                                isLandscape = true, showControls = showControls, isLocked = isLocked, isPlaying = isPlaying, hasStarted = hasStarted,
-                                title = title, subtitle = subtitle, quality = currentQuality, currentPosition = currentPosition, duration = duration, bufferedPosition = bufferedPosition,
-                                onBack = { activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT; onFullScreenToggle(false) },
-                                onPlayPause = { if (isPlaying) PlayerManager.pause() else PlayerManager.resume() },
+                                isLandscape = isLandscape,
+                                showControls = showControls,
+                                isLocked = isLocked,
+                                isPlaying = isPlaying,
+                                hasStarted = hasStarted,
+                                title = title,
+                                subtitle = subtitle,
+                                quality = currentQuality,
+                                currentPosition = currentPosition,
+                                duration = duration,
+                                bufferedPosition = bufferedPosition,
+                                playbackSpeed = currentSpeed,
+                                resizeMode = resizeMode,
+                                onBack = {
+                                    if (isLandscape) activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+                                    onMinimizedChange(true)
+                                },
+                                onPlayPause = { if (isPlaying) exoPlayer.pause() else exoPlayer.play() },
                                 onSeek = { exoPlayer.seekTo(it) }, 
                                 onRewind = { exoPlayer.seekTo((exoPlayer.currentPosition - 10000).coerceAtLeast(0)) }, 
                                 onForward = { exoPlayer.seekTo((exoPlayer.currentPosition + 10000).coerceAtMost(duration)) },
-                                onPrevious = { }, onNext = { }, 
-                                onLock = { isLocked = !isLocked }, onSettings = { showSettings = true }, onCC = { showCCDialog = true },
-                                onResize = { resizeMode = if (resizeMode == AspectRatioFrameLayout.RESIZE_MODE_FIT) AspectRatioFrameLayout.RESIZE_MODE_ZOOM else AspectRatioFrameLayout.RESIZE_MODE_FIT },
-                                onRotate = { rotation = (rotation + 90f) % 360f }, onDownload = { showDownloadDialog = true }, onSleepTimer = { showSleepTimerDialog = true }, onMore = { showMoreMenu = true }, tealColor = tealColor
+                                onPrevious = { exoPlayer.seekToPreviousMediaItem() }, 
+                                onNext = { 
+                                    if (episodes.isNotEmpty() && PlayerManager.currentEpisode.value != null) {
+                                        val currentIndex = episodes.indexOfFirst { it.data == PlayerManager.currentEpisode.value?.data }
+                                        if (currentIndex != -1 && currentIndex < episodes.size - 1) {
+                                            onEpisodeSelect(episodes[currentIndex + 1])
+                                        }
+                                    } else {
+                                        exoPlayer.seekToNextMediaItem()
+                                    }
+                                }, 
+                                onLock = { isLocked = !isLocked; if (isLocked) showControls = false }, 
+                                onSettings = { showSettings = true }, 
+                                onCC = { showCCDialog = true },
+                                onResize = { 
+                                    resizeMode = when (resizeMode) {
+                                        AspectRatioFrameLayout.RESIZE_MODE_FIT -> AspectRatioFrameLayout.RESIZE_MODE_ZOOM
+                                        AspectRatioFrameLayout.RESIZE_MODE_ZOOM -> AspectRatioFrameLayout.RESIZE_MODE_FILL
+                                        else -> AspectRatioFrameLayout.RESIZE_MODE_FIT
+                                    }
+                                },
+                                onRotate = { 
+                                    activity?.requestedOrientation = if (isLandscape) ActivityInfo.SCREEN_ORIENTATION_PORTRAIT 
+                                                                     else ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+                                }, 
+                                onDownload = { showDownloadDialog = true }, 
+                                onSleepTimer = { showSleepTimerDialog = true }, 
+                                onMore = { showMoreMenu = true },
+                                onSpeedClick = { showSpeedDialog = true },
+                                onSyncSubsClick = { showSyncSubsDialog = true },
+                                onTracksClick = { showTracksDialog = true },
+                                tealColor = tealColor
                             )
                         } else if (showControls && !isLocked) {
                             Box(Modifier.fillMaxSize().background(Color.Black.copy(0.3f))) {
@@ -771,11 +832,13 @@ fun EmbeddedPlayer(
                                 }
                             }
 
-                            Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp).clickable { fullInfo?.uploaderUrl?.let { url -> onChannelClick(url) } }, verticalAlignment = Alignment.CenterVertically) {
-                                AsyncImage(model = fullInfo?.uploaderAvatars?.lastOrNull()?.getUrl(), contentDescription = null, modifier = Modifier.size(36.dp).clip(CircleShape).background(Color.White.copy(0.1f)), contentScale = ContentScale.Crop)
-                                Spacer(Modifier.width(12.dp))
-                                Text(text = fullInfo?.uploaderName ?: subtitle, color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
-                                Button(onClick = { fullInfo?.uploaderUrl?.let { url -> scope.launch { prefs.toggleSubscription(url) } } }, colors = ButtonDefaults.buttonColors(containerColor = if (subscribed) Color.White.copy(0.15f) else Color.Red), shape = RoundedCornerShape(20.dp), modifier = Modifier.height(36.dp)) { Text(if (subscribed) "Subscribed" else "Subscribe", fontWeight = FontWeight.Bold, fontSize = 14.sp) }
+                            if (mediaType == "youtube") {
+                                Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp).clickable { fullInfo?.uploaderUrl?.let { url -> onChannelClick(url) } }, verticalAlignment = Alignment.CenterVertically) {
+                                    AsyncImage(model = fullInfo?.uploaderAvatars?.lastOrNull()?.getUrl(), contentDescription = null, modifier = Modifier.size(36.dp).clip(CircleShape).background(Color.White.copy(0.1f)), contentScale = ContentScale.Crop)
+                                    Spacer(Modifier.width(12.dp))
+                                    Text(text = fullInfo?.uploaderName ?: subtitle, color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                                    Button(onClick = { fullInfo?.uploaderUrl?.let { url -> scope.launch { prefs.toggleSubscription(url) } } }, colors = ButtonDefaults.buttonColors(containerColor = if (subscribed) Color.White.copy(0.15f) else Color.Red), shape = RoundedCornerShape(20.dp), modifier = Modifier.height(36.dp)) { Text(if (subscribed) "Subscribed" else "Subscribe", fontWeight = FontWeight.Bold, fontSize = 14.sp) }
+                                }
                             }
 
                             Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -851,8 +914,10 @@ fun EmbeddedPlayer(
                             if (mediaType != "adult") {
                                 item { MoreMenuItem("Audio track", Icons.Default.Audiotrack) { showMoreMenu = false; showAudioDialog = true } }
                             }
-                            item { MoreMenuItem("Add to YouTube playlist", Icons.Default.PlaylistAdd) { showMoreMenu = false; showPlaylistDialog = true } }
-                            item { MoreMenuItem("Search lyrics on Google", Icons.Default.Search) { showMoreMenu = false; val query = java.net.URLEncoder.encode("$title lyrics", "UTF-8"); context.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse("https://www.google.com/search?q=$query"))) } }
+                            if (mediaType == "youtube") {
+                                item { MoreMenuItem("Add to YouTube playlist", Icons.Default.PlaylistAdd) { showMoreMenu = false; showPlaylistDialog = true } }
+                                item { MoreMenuItem("Search lyrics on Google", Icons.Default.Search) { showMoreMenu = false; val query = java.net.URLEncoder.encode("$title lyrics", "UTF-8"); context.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse("https://www.google.com/search?q=$query"))) } }
+                            }
                             item { MoreMenuItem("Share", Icons.Default.Share) { showMoreMenu = false; ShareUtils.shareLink(context, title, "https://www.youtube.com/watch?v=$id") } }
                             item { Divider(color = Color.White.copy(0.1f), modifier = Modifier.padding(vertical = 4.dp)) }
                             item { MoreMenuItem("Reload player", Icons.Default.Refresh) { showMoreMenu = false; exoPlayer.prepare(); exoPlayer.play() } }
@@ -864,6 +929,35 @@ fun EmbeddedPlayer(
             if (showDescriptionSheet) { DescriptionBottomSheet(title, fullInfo) { showDescriptionSheet = false } }
             if (showPlaylistDialog) { PlayerManager.currentVideo.value?.let { video -> AddToPlaylistDialog(video) { showPlaylistDialog = false } } }
             if (showAudioDialog) { TrackSelectionDialog("Audio Track", availableAudioTracks, exoPlayer, C.TRACK_TYPE_AUDIO) { showAudioDialog = false } }
+            
+            if (showSpeedDialog) {
+                PlaybackSpeedDialog(
+                    currentSpeed = currentSpeed,
+                    onSpeedChange = { 
+                        currentSpeed = it
+                        exoPlayer.setPlaybackSpeed(it)
+                    },
+                    onDismiss = { showSpeedDialog = false }
+                )
+            }
+
+            if (showSyncSubsDialog) {
+                SyncSubsDialog(
+                    offset = subtitleOffset,
+                    onOffsetChange = {
+                        subtitleOffset = it
+                        // Placeholder for subtitle sync logic
+                    },
+                    onDismiss = { showSyncSubsDialog = false }
+                )
+            }
+
+            if (showTracksDialog) {
+                TracksSelectionDialog(
+                    exoPlayer = exoPlayer,
+                    onDismiss = { showTracksDialog = false }
+                )
+            }
         }
 
         // Playlist Panel (Queue)
@@ -1322,44 +1416,258 @@ fun DownloadDialog(title: String, uploader: String, posterUrl: String?, onDownlo
 @Composable fun LoadingAnimation(color: Color) { val infiniteTransition = rememberInfiniteTransition(label = "loading"); val angle by infiniteTransition.animateFloat(initialValue = 0f, targetValue = 360f, animationSpec = infiniteRepeatable(tween(1000, easing = LinearEasing)), label = "angle"); Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Box(Modifier.size(60.dp).rotate(angle).border(3.dp, Brush.sweepGradient(listOf(Color.Transparent, color)), CircleShape)) } }
 
 private fun formatViews(views: Long): String { return FormatUtils.formatViews(views) }
-private fun formatTime(millis: Long): String { val totalSeconds = millis / 1000; val hours = totalSeconds / 3600; val minutes = (totalSeconds % 3600) / 60; val seconds = totalSeconds % 60; return if (hours > 0) "%d:%02d:%02d".format(hours, minutes, seconds) else "%02d:%02d".format(minutes, seconds) }
 
 @Composable
-fun PlayerControlsOverlay(isLandscape: Boolean, showControls: Boolean, isLocked: Boolean, isPlaying: Boolean, hasStarted: Boolean, title: String, subtitle: String, quality: String, currentPosition: Long, duration: Long, bufferedPosition: Long, onBack: () -> Unit, onPlayPause: () -> Unit, onSeek: (Long) -> Unit, onRewind: () -> Unit, onForward: () -> Unit, onPrevious: () -> Unit, onNext: () -> Unit, onLock: () -> Unit, onSettings: () -> Unit, onCC: () -> Unit, onResize: () -> Unit, onRotate: () -> Unit, onDownload: () -> Unit, onSleepTimer: () -> Unit, onMore: () -> Unit, tealColor: Color) {
-    AnimatedVisibility(visible = showControls, enter = fadeIn(), exit = fadeOut()) {
-        Box(Modifier.fillMaxSize().background(Color.Black.copy(if (isLocked) 0f else 0.4f))) {
-            if (isLocked) {
-                IconButton(onClick = onLock, modifier = Modifier.align(Alignment.CenterStart).padding(16.dp).background(Color.Black.copy(0.5f), CircleShape)) { Icon(if (isLocked) Icons.Default.Lock else Icons.Default.LockOpen, null, tint = Color.White) }
-            } else {
-                Row(Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                    IconButton(onClick = onBack) { Icon(Icons.Default.KeyboardArrowDown, null, tint = Color.White, modifier = Modifier.size(32.dp)) }
-                    Text(title, color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                        IconButton(onClick = onDownload) { Icon(Icons.Default.FileDownload, null, tint = Color.White) }
-                        IconButton(onClick = onSleepTimer) { Icon(Icons.Default.Timer, null, tint = Color.White) }
-                        Surface(onClick = onSettings, color = Color.Transparent, shape = RoundedCornerShape(4.dp)) { Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)) { Icon(Icons.Default.VideoCameraBack, null, tint = Color.White, modifier = Modifier.size(16.dp)); Spacer(Modifier.width(6.dp)); Text(quality, color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold) } }
-                        IconButton(onClick = onMore) { Icon(Icons.Default.MoreVert, null, tint = Color.White) }
-                    }
+fun PlaybackSpeedDialog(currentSpeed: Float, onSpeedChange: (Float) -> Unit, onDismiss: () -> Unit) {
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            colors = CardDefaults.cardColors(containerColor = Color(0xFF1C1C1C)),
+            shape = RoundedCornerShape(16.dp),
+            modifier = Modifier.width(320.dp)
+        ) {
+            Column(Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                Text("${"%.2fx".format(currentSpeed)}", color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Bold)
+                Spacer(Modifier.height(24.dp))
+                
+                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+                    IconButton(onClick = { onSpeedChange((currentSpeed - 0.25f).coerceAtLeast(0.25f)) }) { Icon(Icons.Default.Remove, null, tint = Color.White) }
+                    Slider(
+                        value = currentSpeed,
+                        onValueChange = { onSpeedChange(it) },
+                        valueRange = 0.25f..2.0f,
+                        steps = 6,
+                        modifier = Modifier.weight(1f),
+                        colors = SliderDefaults.colors(thumbColor = Color.White, activeTrackColor = Color.White)
+                    )
+                    IconButton(onClick = { onSpeedChange((currentSpeed + 0.25f).coerceAtMost(2.0f)) }) { Icon(Icons.Default.Add, null, tint = Color.White) }
                 }
-                Row(Modifier.align(Alignment.Center).fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically) {
-                    IconButton(onClick = onRewind) { Icon(Icons.Default.Replay10, null, tint = Color.White, modifier = Modifier.size(48.dp)) }
-                    IconButton(onClick = onPrevious) { Icon(Icons.Default.SkipPrevious, null, tint = Color.White, modifier = Modifier.size(52.dp)) }
-                    IconButton(onClick = onPlayPause, modifier = Modifier.size(80.dp)) { Icon(if (isPlaying && hasStarted) Icons.Default.Pause else Icons.Default.PlayArrow, null, tint = Color.White, modifier = Modifier.size(80.dp)) }
-                    IconButton(onClick = onNext) { Icon(Icons.Default.SkipNext, null, tint = Color.White, modifier = Modifier.size(52.dp)) }
-                    IconButton(onClick = onForward) { Icon(Icons.Default.Forward10, null, tint = Color.White, modifier = Modifier.size(48.dp)) }
-                }
-                Column(Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(horizontal = 16.dp, vertical = 24.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(formatTime(currentPosition), color = Color.White, fontSize = 13.sp)
-                        Slider(value = currentPosition.toFloat(), onValueChange = { onSeek(it.toLong()) }, valueRange = 0f..duration.toFloat().coerceAtLeast(1f), colors = SliderDefaults.colors(thumbColor = tealColor, activeTrackColor = tealColor, inactiveTrackColor = Color.White.copy(0.2f)), modifier = Modifier.weight(1f).padding(horizontal = 12.dp))
-                        Text(formatTime(duration), color = Color.White, fontSize = 13.sp)
-                        Spacer(Modifier.width(20.dp))
-                        IconButton(onClick = onCC, modifier = Modifier.size(32.dp)) { Icon(Icons.Default.ClosedCaption, null, tint = Color.White) }
-                        IconButton(onClick = onResize, modifier = Modifier.size(32.dp)) { Icon(Icons.Default.AspectRatio, null, tint = Color.White) }
-                        IconButton(onClick = onBack, modifier = Modifier.size(32.dp)) { Icon(Icons.Default.FullscreenExit, null, tint = Color.White) }
+                
+                Spacer(Modifier.height(16.dp))
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+                    listOf(0.25f, 1.0f, 1.25f, 1.5f, 2.0f).forEach { speed ->
+                        Surface(
+                            onClick = { onSpeedChange(speed) },
+                            color = if (currentSpeed == speed) Color.White else Color.White.copy(0.1f),
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Text(
+                                text = "${speed}x",
+                                color = if (currentSpeed == speed) Color.Black else Color.White,
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
                     }
                 }
             }
         }
+    }
+}
+
+@Composable
+fun SyncSubsDialog(offset: Long, onOffsetChange: (Long) -> Unit, onDismiss: () -> Unit) {
+    var currentOffset by remember { mutableLongStateOf(offset) }
+    Dialog(onDismissRequest = onDismiss) {
+        Card(colors = CardDefaults.cardColors(containerColor = Color(0xFF1C1C1C)), shape = RoundedCornerShape(16.dp)) {
+            Column(Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                Text("Subtitle delay", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                Text(if (currentOffset == 0L) "No subtitle delay" else "${currentOffset}ms", color = Color.Gray, fontSize = 14.sp)
+                
+                Spacer(Modifier.height(24.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(onClick = { currentOffset -= 100 }) { Icon(Icons.Default.Remove, null, tint = Color.White) }
+                    Slider(
+                        value = currentOffset.toFloat(),
+                        onValueChange = { currentOffset = it.toLong() },
+                        valueRange = -5000f..5000f,
+                        modifier = Modifier.width(200.dp),
+                        colors = SliderDefaults.colors(thumbColor = Color.White, activeTrackColor = Color.White)
+                    )
+                    IconButton(onClick = { currentOffset += 100 }) { Icon(Icons.Default.Add, null, tint = Color.White) }
+                }
+                
+                Spacer(Modifier.height(24.dp))
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                    TextButton(onClick = onDismiss) { Text("Cancel", color = Color.White) }
+                    TextButton(onClick = { currentOffset = 0L; onOffsetChange(0L); onDismiss() }) { Text("Reset", color = Color.White) }
+                    Button(onClick = { onOffsetChange(currentOffset); onDismiss() }, colors = ButtonDefaults.buttonColors(containerColor = Color.White)) {
+                        Text("Apply", color = Color.Black)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun TracksSelectionDialog(exoPlayer: ExoPlayer, onDismiss: () -> Unit) {
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            colors = CardDefaults.cardColors(containerColor = Color.Black),
+            shape = RoundedCornerShape(16.dp),
+            modifier = Modifier.fillMaxWidth(0.9f).fillMaxHeight(0.7f)
+        ) {
+            Column(Modifier.padding(16.dp)) {
+                Row(Modifier.fillMaxSize()) {
+                    // Video Tracks (Half screen)
+                    Column(Modifier.weight(1f)) {
+                        Text("Video tracks", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                        Spacer(Modifier.height(16.dp))
+                        LazyColumn {
+                            // Simplified track selection for now
+                            item { TrackItem("2160x1080", false) {} }
+                            item { TrackItem("1440x720", true) {} }
+                            item { TrackItem("960x480", false) {} }
+                        }
+                    }
+                    
+                    Divider(Modifier.fillMaxHeight().width(1.dp), color = Color.White.copy(0.1f))
+                    
+                    // Audio Tracks (Half screen)
+                    Column(Modifier.weight(1f).padding(start = 16.dp)) {
+                        Text("Audio tracks", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                        Spacer(Modifier.height(16.dp))
+                        LazyColumn {
+                            item { TrackItem("English", true) {} }
+                            item { TrackItem("Hindi", false) {} }
+                        }
+                    }
+                }
+                
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                    TextButton(onClick = onDismiss) { Text("Cancel", color = Color.White) }
+                    Button(onClick = onDismiss, colors = ButtonDefaults.buttonColors(containerColor = Color.White)) {
+                        Text("Apply", color = Color.Black)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun TrackItem(label: String, isSelected: Boolean, onClick: () -> Unit) {
+    Row(
+        Modifier.fillMaxWidth().clickable { onClick() }.padding(vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        if (isSelected) Icon(Icons.Default.Check, null, tint = Color.White, modifier = Modifier.size(16.dp))
+        else Spacer(Modifier.width(16.dp))
+        Spacer(Modifier.width(8.dp))
+        Text(label, color = if (isSelected) Color.White else Color.Gray, fontSize = 14.sp)
+    }
+}
+private fun formatTime(millis: Long): String { val totalSeconds = millis / 1000; val hours = totalSeconds / 3600; val minutes = (totalSeconds % 3600) / 60; val seconds = totalSeconds % 60; return if (hours > 0) "%d:%02d:%02d".format(hours, minutes, seconds) else "%02d:%02d".format(minutes, seconds) }
+
+@Composable
+fun PlayerControlsOverlay(
+    isLandscape: Boolean,
+    showControls: Boolean,
+    isLocked: Boolean,
+    isPlaying: Boolean,
+    hasStarted: Boolean,
+    title: String,
+    subtitle: String,
+    quality: String,
+    currentPosition: Long,
+    duration: Long,
+    bufferedPosition: Long,
+    playbackSpeed: Float,
+    resizeMode: Int,
+    onBack: () -> Unit,
+    onPlayPause: () -> Unit,
+    onSeek: (Long) -> Unit,
+    onRewind: () -> Unit,
+    onForward: () -> Unit,
+    onPrevious: () -> Unit,
+    onNext: () -> Unit,
+    onLock: () -> Unit,
+    onSettings: () -> Unit,
+    onCC: () -> Unit,
+    onResize: () -> Unit,
+    onRotate: () -> Unit,
+    onDownload: () -> Unit,
+    onSleepTimer: () -> Unit,
+    onMore: () -> Unit,
+    onSpeedClick: () -> Unit,
+    onSyncSubsClick: () -> Unit,
+    onTracksClick: () -> Unit,
+    tealColor: Color
+) {
+    AnimatedVisibility(visible = showControls || isLocked, enter = fadeIn(), exit = fadeOut()) {
+        Box(Modifier.fillMaxSize().background(Color.Black.copy(if (isLocked) 0f else 0.4f))) {
+            if (isLocked) {
+                IconButton(
+                    onClick = onLock, 
+                    modifier = Modifier.align(Alignment.BottomStart).padding(16.dp).background(Color.Black.copy(0.5f), CircleShape)
+                ) { Icon(Icons.Default.Lock, null, tint = Color.White) }
+            } else {
+                // Top Bar
+                Row(Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(onClick = onBack) { Icon(Icons.Default.ArrowBack, null, tint = Color.White) }
+                    Column(Modifier.weight(1f)) {
+                        Text(title, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        Text(subtitle, color = Color.White.copy(0.7f), fontSize = 11.sp, maxLines = 1)
+                    }
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                        IconButton(onClick = onDownload) { Icon(Icons.Default.FileDownload, null, tint = Color.White) }
+                        IconButton(onClick = onSleepTimer) { Icon(Icons.Default.Timer, null, tint = Color.White) }
+                        Surface(onClick = onSettings, color = Color.Transparent, shape = RoundedCornerShape(4.dp)) { Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)) { Icon(Icons.Default.Hd, null, tint = Color.White, modifier = Modifier.size(16.dp)); Spacer(Modifier.width(6.dp)); Text(quality, color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold) } }
+                        IconButton(onClick = onMore) { Icon(Icons.Default.MoreVert, null, tint = Color.White) }
+                    }
+                }
+
+                // Center Controls
+                Row(Modifier.align(Alignment.Center).fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(onClick = onRewind) { Icon(Icons.Default.Replay10, null, tint = Color.White, modifier = Modifier.size(48.dp)) }
+                    IconButton(onClick = onPlayPause, modifier = Modifier.size(80.dp)) { Icon(if (isPlaying && hasStarted) Icons.Default.Pause else Icons.Default.PlayArrow, null, tint = Color.White, modifier = Modifier.size(80.dp)) }
+                    IconButton(onClick = onForward) { Icon(Icons.Default.Forward10, null, tint = Color.White, modifier = Modifier.size(48.dp)) }
+                }
+
+                // Bottom Controls
+                Column(Modifier.align(Alignment.BottomCenter).fillMaxWidth()) {
+                    // Seek Bar
+                    Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Text(formatTime(currentPosition), color = Color.White, fontSize = 12.sp)
+                        Slider(
+                            value = currentPosition.toFloat(), 
+                            onValueChange = { onSeek(it.toLong()) }, 
+                            valueRange = 0f..duration.toFloat().coerceAtLeast(1f), 
+                            colors = SliderDefaults.colors(thumbColor = Color.White, activeTrackColor = Color.White, inactiveTrackColor = Color.White.copy(0.2f)), 
+                            modifier = Modifier.weight(1f).padding(horizontal = 12.dp)
+                        )
+                        Text("-" + formatTime(duration - currentPosition), color = Color.White, fontSize = 12.sp)
+                    }
+
+                    // Bottom Row Buttons (Image 2 layout)
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                        horizontalArrangement = Arrangement.SpaceEvenly,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        PlayerBottomButton(Icons.Default.LockOpen, "Lock", onLock)
+                        PlayerBottomButton(Icons.Default.ScreenRotation, "Rotate", onRotate)
+                        PlayerBottomButton(Icons.Default.AspectRatio, "Resize", onResize)
+                        PlayerBottomButton(Icons.Default.Speed, "Speed (${"%.2fx".format(playbackSpeed)})", onSpeedClick)
+                        PlayerBottomButton(Icons.Default.Subtitles, "Sync subs", onSyncSubsClick)
+                        PlayerBottomButton(Icons.Default.BarChart, "Tracks", onTracksClick)
+                        PlayerBottomButton(Icons.Default.SkipNext, "Next episode", onNext)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun PlayerBottomButton(icon: ImageVector, label: String, onClick: () -> Unit) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.clickable { onClick() }.padding(8.dp)
+    ) {
+        Icon(icon, null, tint = Color.White, modifier = Modifier.size(20.dp))
+        Spacer(Modifier.height(4.dp))
+        Text(label, color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Medium)
     }
 }

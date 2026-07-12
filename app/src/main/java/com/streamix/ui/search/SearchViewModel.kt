@@ -13,8 +13,7 @@ import com.streamix.data.scraper.MoviesScraperRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -25,7 +24,8 @@ class SearchViewModel @Inject constructor(
     private val pornhat: PornhatScraper,
     private val youtube: YouTubeScraper,
     private val moviesRepo: MoviesScraperRepository,
-    private val watchlistDao: WatchlistDao
+    private val watchlistDao: WatchlistDao,
+    private val prefs: com.streamix.core.storage.PreferencesManager
 ) : ViewModel() {
 
     private val _query = MutableStateFlow("")
@@ -37,8 +37,15 @@ class SearchViewModel @Inject constructor(
     private val _isLoading = MutableStateFlow(false)
     val isLoading = _isLoading.asStateFlow()
 
+    val searchHistory: StateFlow<List<String>> = prefs.globalSearchHistory
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
     fun onQueryChange(newQuery: String) {
         _query.value = newQuery
+    }
+
+    fun removeHistoryItem(q: String) {
+        viewModelScope.launch { prefs.removeGlobalSearch(q) }
     }
 
     fun search() {
@@ -46,6 +53,7 @@ class SearchViewModel @Inject constructor(
         if (q.isBlank()) return
         
         viewModelScope.launch {
+            prefs.addGlobalSearch(q)
             _isLoading.value = true
             try {
                 val tmdbResults = async { runCatching { tmdbRepo.search(q) }.getOrDefault(emptyList()) }

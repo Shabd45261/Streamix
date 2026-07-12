@@ -1,12 +1,12 @@
 {
-  "latestVersion": 234,
-  "versionName": "1.234",
-  "apkUrl": "https://media.githubusercontent.com/media/Shabd45261/Streamix.github.io/main/apk/Streamix_20260712_Sunday_0127pm_234th(234).apk",
+  "latestVersion": 235,
+  "versionName": "1.235",
+  "apkUrl": "https://media.githubusercontent.com/media/Shabd45261/Streamix.github.io/main/apk/Streamix_20260712_Sunday_0234pm_235th(235).apk",
   "mandatory": false,
   "releaseNotes": [
-    "Removed scraper names (MovieBoxPh, etc) from UI",
-    "Enhanced privacy: scraper sources hidden in detail and home pages",
-    "Further B&W theme polishing",
-    "Adult profile improvements"
+    "Functionalized Top Bar buttons (Cast, Reminder, Like, Share, Browser)",
+    "Added 'Liked' section to Library",
+    "Removed redundant search icon from video page",
+    "Enhanced Adult profile interactions"
   ]
 }

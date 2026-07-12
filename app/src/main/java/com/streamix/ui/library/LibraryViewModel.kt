@@ -37,7 +37,6 @@ class LibraryViewModel @Inject constructor(
                         Profile.YOUTUBE -> item.mediaType == "youtube"
                         Profile.ADULT   -> item.mediaType == "adult"
                         Profile.MOVIES  -> item.mediaType == "movie" || item.mediaType == "tv"
-                        Profile.SONGS   -> item.mediaType == "song"
                     }
                     val matchesQuery = query.isBlank() || item.title.contains(query, ignoreCase = true)
                     matchesProfile && matchesQuery
@@ -50,7 +49,6 @@ class LibraryViewModel @Inject constructor(
                         Profile.YOUTUBE -> item.mediaType == "youtube"
                         Profile.ADULT   -> item.mediaType == "adult"
                         Profile.MOVIES  -> item.mediaType == "movie" || item.mediaType == "tv"
-                        Profile.SONGS   -> item.mediaType == "song"
                     }
                     val matchesQuery = query.isBlank() || item.title.contains(query, ignoreCase = true)
                     matchesProfile && matchesQuery
@@ -69,13 +67,11 @@ class LibraryViewModel @Inject constructor(
                         Profile.YOUTUBE -> item.mediaType == "youtube"
                         Profile.ADULT   -> item.mediaType == "adult"
                         Profile.MOVIES  -> item.mediaType == "movie" || item.mediaType == "tv"
-                        Profile.SONGS   -> item.mediaType == "song"
                     }
                     val matchesQuery = query.isBlank() || item.title.contains(query, ignoreCase = true)
                     val matchesFilter = when (filter) {
                         "Videos" -> !item.isShort
                         "Shorts" -> item.isShort
-                        "Music"  -> item.mediaType == "song"
                         else -> true
                     }
                     matchesProfile && matchesQuery && matchesFilter

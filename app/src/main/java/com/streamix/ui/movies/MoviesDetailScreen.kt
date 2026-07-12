@@ -32,6 +32,10 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.streamix.core.model.SearchResult
 import com.streamix.core.model.VideoLink
+import com.streamix.core.utils.*
+import android.content.Intent
+import android.net.Uri
+import android.widget.Toast
 import com.streamix.scraper.cloudstream.Episode
 import com.streamix.scraper.cloudstream.TvType
 import com.streamix.ui.player.PlayerManager
@@ -224,7 +228,26 @@ fun MoviesDetailScreen(
         }
 
         // Fixed Top Bar
-        DetailTopBar(navController)
+        val isLiked by viewModel.isLiked(movieId).collectAsState(initial = false)
+        DetailTopBar(
+            navController = navController,
+            title = movie?.name ?: "",
+            url = movie?.dataUrl ?: "",
+            isLiked = isLiked,
+            onLikeToggle = {
+                movie?.let { data ->
+                    viewModel.toggleLike(
+                        SearchResult(
+                            id = movieId,
+                            title = data.name,
+                            posterPath = data.posterUrl,
+                            mediaType = if (data.type == TvType.TvSeries) "tv" else "movie",
+                            studio = data.apiName
+                        )
+                    )
+                }
+            }
+        )
 
         if (isLoading && movie == null) {
             CircularProgressIndicator(modifier = Modifier.align(Alignment.Center), color = colors.tertiary)
@@ -242,7 +265,14 @@ fun MoviesDetailScreen(
 }
 
 @Composable
-fun DetailTopBar(navController: NavController) {
+fun DetailTopBar(
+    navController: NavController,
+    title: String,
+    url: String,
+    isLiked: Boolean,
+    onLikeToggle: () -> Unit
+) {
+    val context = LocalContext.current
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -256,12 +286,32 @@ fun DetailTopBar(navController: NavController) {
         }
         
         Row {
-            IconButton(onClick = { /* Cast */ }) { Icon(Icons.Default.Cast, null, tint = Color.White) }
-            IconButton(onClick = { /* Notifications */ }) { Icon(Icons.Default.NotificationsNone, null, tint = Color.White) }
-            IconButton(onClick = { /* Heart */ }) { Icon(Icons.Default.FavoriteBorder, null, tint = Color.White) }
-            IconButton(onClick = { /* Share */ }) { Icon(Icons.Default.Share, null, tint = Color.White) }
-            IconButton(onClick = { /* Browser */ }) { Icon(Icons.Default.Language, null, tint = Color.White) }
-            IconButton(onClick = { /* Search */ }) { Icon(Icons.Default.Search, null, tint = Color.White) }
+            IconButton(onClick = { 
+                Toast.makeText(context, "Looking for casting devices...", Toast.LENGTH_SHORT).show()
+            }) { Icon(Icons.Default.Cast, null, tint = Color.White) }
+            
+            IconButton(onClick = { 
+                ReminderUtils.showReminderPicker(context, title)
+            }) { Icon(Icons.Default.NotificationsNone, null, tint = Color.White) }
+            
+            IconButton(onClick = onLikeToggle) { 
+                Icon(
+                    if (isLiked) Icons.Default.Favorite else Icons.Default.FavoriteBorder, 
+                    null, 
+                    tint = if (isLiked) Color.Red else Color.White
+                ) 
+            }
+            
+            IconButton(onClick = { 
+                ShareUtils.shareLink(context, title, url)
+            }) { Icon(Icons.Default.Share, null, tint = Color.White) }
+            
+            IconButton(onClick = { 
+                if (url.isNotBlank()) {
+                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                    context.startActivity(intent)
+                }
+            }) { Icon(Icons.Default.Language, null, tint = Color.White) }
         }
     }
 }
@@ -352,19 +402,6 @@ fun DetailInfoContent(
             modifier = Modifier.padding(bottom = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            Surface(
-                color = Color(0xFF1C1C1C),
-                shape = RoundedCornerShape(4.dp)
-            ) {
-                Text(
-                    text = data.apiName,
-                    color = Color.White,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                )
-            }
-            
             val metaInfo = mutableListOf<String>()
             metaInfo.add(if (data.type == TvType.TvSeries) "Series" else "Movie")
             data.year?.let { metaInfo.add(it.toString()) }

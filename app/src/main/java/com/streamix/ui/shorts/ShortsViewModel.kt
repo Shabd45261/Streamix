@@ -9,10 +9,8 @@ import com.streamix.scraper.adult.*
 import com.streamix.scraper.youtube.YouTubeScraper
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.*
 import com.streamix.core.storage.PreferencesManager
-import kotlinx.coroutines.flow.first
 import javax.inject.Inject
 import javax.inject.Provider
 import android.util.Log
@@ -48,6 +46,13 @@ class ShortsViewModel @Inject constructor(
 
     private val _searchResults = MutableStateFlow<List<ShortsItem>>(emptyList())
     val searchResults = _searchResults.asStateFlow()
+
+    val searchHistory: StateFlow<List<String>> = prefs.globalSearchHistory
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    fun removeHistoryItem(q: String) {
+        viewModelScope.launch { prefs.removeGlobalSearch(q) }
+    }
 
     private var currentSource = ShortsSource.FEED
 

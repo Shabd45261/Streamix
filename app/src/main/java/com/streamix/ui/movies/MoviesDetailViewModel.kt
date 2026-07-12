@@ -16,9 +16,7 @@ import com.streamix.scraper.cloudstream.TvType
 import com.streamix.scraper.cloudstream.utils.AppUtils.toJson
 import com.streamix.scraper.cloudstream.utils.AppUtils.tryParseJson
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -235,16 +233,34 @@ class MoviesDetailViewModel @Inject constructor(
             if (watchlistDao.existsSync(item.id)) {
                 watchlistDao.deleteById(item.id)
             } else {
-                watchlistDao.insert(
-                    WatchlistEntity(
-                        id = item.id,
-                        title = item.title,
-                        posterPath = item.posterPath,
-                        mediaType = "movie",
-                        status = "Watchlist"
-                    )
-                )
+                watchlistDao.insert(item.toWatchlistEntity("Plan to Watch"))
             }
         }
     }
+
+    fun isLiked(id: String): Flow<Boolean> = watchlistDao.isLiked(id)
+
+    fun toggleLike(item: SearchResult) {
+        viewModelScope.launch {
+            if (watchlistDao.isLiked(item.id).first()) {
+                watchlistDao.removeLike(item.id)
+            } else {
+                watchlistDao.insert(item.toWatchlistEntity("Liked"))
+            }
+        }
+    }
+
+    private fun SearchResult.toWatchlistEntity(status: String) = WatchlistEntity(
+        id = id,
+        title = title,
+        posterPath = posterPath,
+        mediaType = mediaType,
+        year = year,
+        views = views,
+        rating = rating,
+        status = status,
+        isShort = isShort,
+        studio = studio,
+        addedAt = System.currentTimeMillis()
+    )
 }

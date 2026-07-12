@@ -18,7 +18,6 @@ import com.streamix.ui.home.HomeScreen
 import com.streamix.ui.search.SearchScreen
 import com.streamix.ui.detail.DetailScreen
 import com.streamix.ui.adult.AdultDetailScreen
-import com.streamix.ui.profile.PasscodeScreen
 import com.streamix.ui.library.LibraryScreen
 import com.streamix.ui.youtube.YoutubeDetailScreen
 import com.streamix.ui.youtube.YoutubeChannelScreen
@@ -82,13 +81,6 @@ fun StreamixNavGraph() {
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
-
-    // Global visibility logic
-    LaunchedEffect(currentRoute) {
-        if (currentRoute == Screen.Passcode.route) {
-            bottomDockVisible.value = false
-        }
-    }
     
     val playerVisible by PlayerManager.isVisible
     val playerMinimized by PlayerManager.isMinimized
@@ -227,9 +219,6 @@ fun StreamixNavGraph() {
                         val context = LocalContext.current
                         val preferencesManager = remember { PreferencesManager(context) }
                         YouTubeLoginScreen(navController, preferencesManager)
-                    }
-                    composable(Screen.Passcode.route) {
-                        PasscodeScreen(navController, profileState)
                     }
                     composable(
                         route = Screen.YoutubeDetail.route,

@@ -41,7 +41,7 @@ fun LibraryScreen(
     viewModel: LibraryViewModel = hiltViewModel()
 ) {
     val colors = LocalCustomColors.current
-    val categories = listOf("Watching", "Completed", "Downloads", "Dropped", "Plan to Watch", "Favorites", "Subscribed")
+    val categories = listOf("Watching", "Liked", "Completed", "Downloads", "Dropped", "Plan to Watch", "Favorites", "Subscribed")
     var selectedTabIndex by remember { mutableIntStateOf(0) }
     
     val items by viewModel.items.collectAsState()
@@ -64,8 +64,7 @@ fun LibraryScreen(
         StreamixHeader(
             currentProfile = profileState.value,
             onSettingsTap = { navController.navigate(Screen.Settings.route) },
-            onProfileSelect = onProfileChange,
-            onProfileTripleTap = { navController.navigate(Screen.Passcode.route) }
+            onProfileSelect = onProfileChange
         )
 
         if (categories[selectedTabIndex] == "Watching") {

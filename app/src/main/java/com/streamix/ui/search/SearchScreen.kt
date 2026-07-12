@@ -21,7 +21,15 @@ import androidx.navigation.NavController
 import com.streamix.ui.components.MovieCard
 import com.streamix.ui.components.StreamixSearchBar
 import com.streamix.ui.theme.LocalCustomColors
+import com.streamix.ui.theme.CustomThemeColors
+import androidx.compose.foundation.clickable
 import java.net.URLEncoder
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.History
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.style.TextOverflow
 
 @Composable
 fun SearchScreen(
@@ -32,6 +40,7 @@ fun SearchScreen(
     val query by viewModel.query.collectAsState()
     val results by viewModel.results.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
+    val history by viewModel.searchHistory.collectAsState()
     val colors = LocalCustomColors.current
 
     LaunchedEffect(initialQuery) {
@@ -77,7 +86,24 @@ fun SearchScreen(
             modifier = Modifier.padding(horizontal = 16.dp)
         )
 
-        if (isLoading && results.isEmpty()) {
+        if (query.isBlank() && !isLoading) {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(bottom = 100.dp)
+            ) {
+                items(history) { item ->
+                    SearchHistoryItem(
+                        text = item,
+                        onClick = {
+                            viewModel.onQueryChange(item)
+                            viewModel.search()
+                        },
+                        onDelete = { viewModel.removeHistoryItem(item) },
+                        colors = colors
+                    )
+                }
+            }
+        } else if (isLoading && results.isEmpty()) {
             Box(Modifier.fillMaxSize(), Alignment.Center) {
                 CircularProgressIndicator(color = colors.tertiary)
             }
@@ -108,6 +134,29 @@ fun SearchScreen(
                     )
                 }
             }
+        }
+    }
+}
+
+@Composable
+fun SearchHistoryItem(text: String, onClick: () -> Unit, onDelete: () -> Unit, colors: CustomThemeColors) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .clickable { onClick() }
+            .padding(horizontal = 16.dp, vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = text,
+            color = colors.secondary,
+            fontSize = 16.sp,
+            modifier = Modifier.weight(1f),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+        IconButton(onClick = onDelete, modifier = Modifier.size(24.dp)) {
+            Icon(Icons.Default.Close, null, tint = colors.secondary.copy(0.4f), modifier = Modifier.size(18.dp))
         }
     }
 }

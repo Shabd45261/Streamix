@@ -149,7 +149,6 @@ fun DetailScreen(
                     Spacer(Modifier.height(12.dp))
                     
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        Badge(text = "ViStream", containerColor = Color.White.copy(0.15f))
                         Badge(text = "TV-MA", containerColor = Color.White.copy(0.1f))
                         Text("•", color = Color.White.copy(0.4f))
                         Text(status, color = Color.White.copy(0.6f), fontSize = 13.sp)

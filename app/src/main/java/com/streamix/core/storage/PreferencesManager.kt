@@ -35,6 +35,7 @@ class PreferencesManager @Inject constructor(
         val SUBSCRIBED_CHANNELS = stringPreferencesKey("subscribed_channels")
         val USER_INTERESTS      = stringPreferencesKey("user_interests")
         val SHORTS_SEARCH_HISTORY = stringPreferencesKey("shorts_search_history")
+        val GLOBAL_SEARCH_HISTORY = stringPreferencesKey("global_search_history")
         val AUTO_SCROLL_SHORTS  = booleanPreferencesKey("auto_scroll_shorts")
         val FLOATING_DOCK_ENABLED = booleanPreferencesKey("floating_dock_enabled")
         val IGNORED_VERSION = intPreferencesKey("ignored_version")
@@ -65,6 +66,27 @@ class PreferencesManager @Inject constructor(
             current.add(interest.lowercase())
             // Keep only last 20 interests to avoid bloating
             it[USER_INTERESTS] = current.toList().takeLast(20).joinToString(",")
+        }
+    }
+
+    val globalSearchHistory: Flow<List<String>> = context.dataStore.data
+        .map { it[GLOBAL_SEARCH_HISTORY]?.split("|")?.filter { it.isNotBlank() } ?: emptyList() }
+
+    suspend fun addGlobalSearch(query: String) {
+        if (query.isBlank()) return
+        context.dataStore.edit {
+            val current = it[GLOBAL_SEARCH_HISTORY]?.split("|")?.filter { it.isNotBlank() }?.toMutableList() ?: mutableListOf()
+            current.remove(query) // Remove if exists to bring to top
+            current.add(0, query)
+            it[GLOBAL_SEARCH_HISTORY] = current.take(20).joinToString("|")
+        }
+    }
+
+    suspend fun removeGlobalSearch(query: String) {
+        context.dataStore.edit {
+            val current = it[GLOBAL_SEARCH_HISTORY]?.split("|")?.filter { it.isNotBlank() }?.toMutableList() ?: mutableListOf()
+            current.remove(query)
+            it[GLOBAL_SEARCH_HISTORY] = current.joinToString("|")
         }
     }
 

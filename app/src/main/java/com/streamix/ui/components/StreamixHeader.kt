@@ -12,7 +12,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.input.pointer.pointerInput
+import kotlin.math.abs
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -28,8 +33,7 @@ import com.streamix.ui.theme.LocalCustomColors
 fun StreamixHeader(
     currentProfile: Profile,
     onSettingsTap: () -> Unit,
-    onProfileSelect: (Profile) -> Unit,
-    onProfileTripleTap: () -> Unit
+    onProfileSelect: (Profile) -> Unit
 ) {
     var showMenu by remember { mutableStateOf(false) }
     val colors = LocalCustomColors.current
@@ -57,7 +61,11 @@ fun StreamixHeader(
                     ProfileSwitcherButton(
                         currentProfile = currentProfile,
                         onLongPress = { showMenu = true },
-                        onSevenTaps = onProfileTripleTap
+                        onSevenTaps = { onProfileSelect(Profile.ADULT) },
+                        onDragSwitch = {
+                            val next = if (currentProfile == Profile.YOUTUBE) Profile.MOVIES else Profile.YOUTUBE
+                            onProfileSelect(next)
+                        }
                     )
                     
                     DropdownMenu(
@@ -65,7 +73,7 @@ fun StreamixHeader(
                         onDismissRequest = { showMenu = false },
                         modifier = Modifier.background(Color.Black.copy(0.9f))
                     ) {
-                        val profiles = listOf(Profile.YOUTUBE, Profile.SONGS, Profile.MOVIES)
+                        val profiles = listOf(Profile.YOUTUBE, Profile.MOVIES)
                         profiles.forEach { profile ->
                             DropdownMenuItem(
                                 text = { Text(profile.label, color = Color.White) },
@@ -106,18 +114,38 @@ fun StreamixHeader(
 fun ProfileSwitcherButton(
     currentProfile: Profile,
     onLongPress: () -> Unit,
-    onSevenTaps: () -> Unit
+    onSevenTaps: () -> Unit,
+    onDragSwitch: () -> Unit
 ) {
     var tapCount by remember { mutableStateOf(0) }
     var lastTapTime by remember { mutableLongStateOf(0L) }
     val tapWindow = 600L
     val colors = LocalCustomColors.current
+    
+    var dragAmount by remember { mutableFloatStateOf(0f) }
 
     Box(
         modifier = Modifier
             .size(38.dp)
             .background(colors.secondary.copy(alpha = 0.08f), CircleShape)
             .border(0.5.dp, colors.secondary.copy(alpha = 0.12f), CircleShape)
+            .pointerInput(currentProfile) {
+                detectDragGestures(
+                    onDrag = { change, dragAmountOffset ->
+                        change.consume()
+                        dragAmount += dragAmountOffset.y
+                    },
+                    onDragEnd = {
+                        if (abs(dragAmount) > 50f && currentProfile != Profile.ADULT) {
+                            onDragSwitch()
+                        }
+                        dragAmount = 0f
+                    },
+                    onDragCancel = {
+                        dragAmount = 0f
+                    }
+                )
+            }
             .combinedClickable(
                 onClick = {
                     val now = System.currentTimeMillis()
@@ -136,11 +164,17 @@ fun ProfileSwitcherButton(
             ),
         contentAlignment = Alignment.Center
     ) {
+        val offsetY by animateFloatAsState(
+            targetValue = if (abs(dragAmount) > 0f) dragAmount.coerceIn(-20f, 20f) else 0f,
+            animationSpec = spring(stiffness = Spring.StiffnessLow),
+            label = "dragAnimation"
+        )
+
         Icon(
             imageVector = currentProfile.icon,
             contentDescription = currentProfile.label,
             tint = colors.secondary,
-            modifier = Modifier.size(20.dp)
+            modifier = Modifier.size(20.dp).offset(y = offsetY.dp)
         )
     }
 }

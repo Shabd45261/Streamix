@@ -10,6 +10,5 @@ import androidx.compose.ui.graphics.vector.ImageVector
 enum class Profile(val label: String, val icon: ImageVector) {
     MOVIES("Movies",   Icons.Default.Movie),
     YOUTUBE("YouTube", Icons.Default.PlayCircle),
-    SONGS("Music",     Icons.Default.MusicNote),
     ADULT("Adult",     Icons.Default.Lock)
 }

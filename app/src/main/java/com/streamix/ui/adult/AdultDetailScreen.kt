@@ -29,6 +29,7 @@ import coil.compose.AsyncImage
 import com.streamix.ui.player.PlayerManager
 import com.streamix.ui.theme.LocalCustomColors
 import com.streamix.ui.movies.DetailTopBar
+import com.streamix.core.model.SearchResult
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
@@ -194,7 +195,26 @@ fun AdultDetailScreen(
         }
 
         // Fixed Top Bar
-        DetailTopBar(navController)
+        val isLiked by viewModel.isLiked(pageUrl).collectAsState(initial = false)
+        DetailTopBar(
+            navController = navController,
+            title = detail?.title ?: "",
+            url = pageUrl,
+            isLiked = isLiked,
+            onLikeToggle = {
+                detail?.let { data ->
+                    viewModel.toggleLike(
+                        SearchResult(
+                            id = pageUrl,
+                            title = data.title,
+                            posterPath = data.posterUrl,
+                            mediaType = "adult",
+                            studio = data.studio
+                        )
+                    )
+                }
+            }
+        )
 
         if (isLoading && detail == null) {
             CircularProgressIndicator(modifier = Modifier.align(Alignment.Center), color = colors.tertiary)
@@ -268,15 +288,6 @@ fun AdultDetailInfoContent(
             modifier = Modifier.padding(bottom = 20.dp),
             horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            Surface(color = Color(0xFF1C1C1C), shape = RoundedCornerShape(4.dp)) {
-                Text(
-                    text = data.studio,
-                    color = Color.White,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                )
-            }
             Text(text = data.views, color = Color.Gray, fontSize = 14.sp)
             if (data.rating.isNotBlank()) {
                 Text(text = data.rating, color = Color(0xFF4CAF50), fontSize = 14.sp, fontWeight = FontWeight.Bold)

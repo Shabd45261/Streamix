@@ -76,36 +76,6 @@ fun AdultHomeScreen(
     val pullToRefreshState = rememberPullToRefreshState()
     val scope = rememberCoroutineScope()
 
-    var showAgePrompt by remember { mutableStateOf(false) }
-    
-    LaunchedEffect(isAdultVerified) {
-        if (!isAdultVerified) showAgePrompt = true
-    }
-
-    if (showAgePrompt) {
-        AlertDialog(
-            onDismissRequest = { },
-            title = { Text("Age Verification", color = colors.secondary) },
-            text = { Text("Are you 18 years or older? This section contains adult content.", color = colors.secondary.copy(0.7f)) },
-            confirmButton = {
-                Button(
-                    onClick = { 
-                        showAgePrompt = false
-                        scope.launch { themeViewModel.setAdultVerified(true) }
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.White)
-                ) { Text("I am 18+", color = Color.Black) }
-            },
-            dismissButton = {
-                TextButton(onClick = { navController.popBackStack() }) {
-                    Text("Go Back", color = colors.secondary.copy(0.5f))
-                }
-            },
-            containerColor = colors.primary,
-            shape = RoundedCornerShape(16.dp)
-        )
-    }
-
     BackHandler {
         if (searchQuery.isNotBlank()) {
             viewModel.onQueryChange("")
@@ -139,8 +109,7 @@ fun AdultHomeScreen(
                     StreamixHeader(
                         currentProfile = profileState.value,
                         onSettingsTap = { navController.navigate(Screen.Settings.route) },
-                        onProfileSelect = onProfileChange,
-                        onProfileTripleTap = { navController.navigate(Screen.Passcode.route) }
+                        onProfileSelect = onProfileChange
                     )
                 }
 
@@ -464,9 +433,6 @@ fun AdultHorizontalCard(item: SearchResult, width: Dp = 180.dp, onOptionSelect: 
         }
         Spacer(Modifier.height(8.dp))
         Text(item.title, color = colors.secondary, fontSize = 13.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-        if (item.studio.isNotEmpty()) {
-            Text(item.studio, color = Color.White.copy(0.7f), fontSize = 10.sp, fontWeight = FontWeight.Bold)
-        }
     }
 }
 
@@ -514,9 +480,6 @@ fun AdultVideoListCard(item: SearchResult, onOptionSelect: (SearchResult, String
             Spacer(Modifier.width(16.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(item.title, color = colors.secondary, fontSize = 15.sp, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                if (item.studio.isNotEmpty()) {
-                    Text(item.studio, color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                }
                 Spacer(Modifier.height(4.dp))
                 Text("Video Description: This is a preview of the content...", color = colors.secondary.copy(0.5f), fontSize = 12.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 Spacer(Modifier.height(8.dp))

@@ -11,8 +11,7 @@ import com.streamix.core.storage.WatchlistEntity
 import com.streamix.data.scraper.AdultScraperRepository
 import com.streamix.scraper.adult.AdultVideoDetail
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -151,19 +150,34 @@ class AdultDetailViewModel @Inject constructor(
     fun addToLibrary(item: SearchResult, status: String) {
         viewModelScope.launch {
             try {
-                watchlistDao.insert(
-                    WatchlistEntity(
-                        id = item.id,
-                        title = item.title,
-                        posterPath = item.posterPath,
-                        mediaType = item.mediaType,
-                        year = item.year ?: "",
-                        views = item.views,
-                        rating = item.rating,
-                        status = status
-                    )
-                )
+                watchlistDao.insert(item.toWatchlistEntity(status))
             } catch (e: Exception) {}
         }
     }
+
+    fun isLiked(id: String): Flow<Boolean> = watchlistDao.isLiked(id)
+
+    fun toggleLike(item: SearchResult) {
+        viewModelScope.launch {
+            if (watchlistDao.isLiked(item.id).first()) {
+                watchlistDao.removeLike(item.id)
+            } else {
+                watchlistDao.insert(item.toWatchlistEntity("Liked"))
+            }
+        }
+    }
+
+    private fun SearchResult.toWatchlistEntity(status: String) = WatchlistEntity(
+        id = id,
+        title = title,
+        posterPath = posterPath,
+        mediaType = mediaType,
+        year = year,
+        views = views,
+        rating = rating,
+        status = status,
+        isShort = isShort,
+        studio = studio,
+        addedAt = System.currentTimeMillis()
+    )
 }

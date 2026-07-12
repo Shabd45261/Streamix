@@ -74,9 +74,6 @@ fun HomeScreen(
             Profile.MOVIES -> {
                 com.streamix.ui.movies.MoviesHomeScreen(navController, profileState, onProfileChange = onProfileChange)
             }
-            Profile.SONGS -> {
-                SongsHomeContent(navController, profileState, onProfileChange = onProfileChange)
-            }
             Profile.YOUTUBE -> {
                 YoutubeHomeScreen(navController, profileState, onProfileChange = onProfileChange)
             }
@@ -131,8 +128,7 @@ fun MoviesHomeContent(
                     StreamixHeader(
                         currentProfile = profileState.value,
                         onSettingsTap = { navController.navigate(Screen.Settings.route) },
-                        onProfileSelect = onProfileChange,
-                        onProfileTripleTap = { navController.navigate(Screen.Passcode.route) }
+                        onProfileSelect = onProfileChange
                     )
                 }
 
@@ -395,26 +391,6 @@ fun MovieVerticalListCard(item: SearchResult, onOptionSelect: (SearchResult, Str
                 Spacer(Modifier.height(8.dp))
                 Text("${item.year} • ${item.mediaType.uppercase()}", color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
             }
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun SongsHomeContent(
-    navController: NavController,
-    profileState: MutableState<Profile>,
-    onProfileChange: (Profile) -> Unit = {}
-) {
-    val pullToRefreshState = rememberPullToRefreshState()
-    if (pullToRefreshState.isRefreshing) {
-        LaunchedEffect(true) { delay(1500); pullToRefreshState.endRefresh() }
-    }
-    Column(modifier = Modifier.fillMaxSize().background(Color.Black)) {
-        StreamixHeader(currentProfile = profileState.value, onSettingsTap = { navController.navigate(Screen.Settings.route) }, onProfileSelect = onProfileChange, onProfileTripleTap = { navController.navigate(Screen.Passcode.route) })
-        Box(Modifier.fillMaxSize().nestedScroll(pullToRefreshState.nestedScrollConnection), Alignment.Center) {
-            Text("Music profile coming soon", color = Color.White.copy(alpha = 0.4f), fontSize = 16.sp)
-            PullToRefreshContainer(state = pullToRefreshState, modifier = Modifier.align(Alignment.TopCenter), containerColor = Color.Black, contentColor = Color.White)
         }
     }
 }
