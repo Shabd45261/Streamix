@@ -1,12 +1,12 @@
 {
-  "latestVersion": 233,
-  "versionName": "1.233",
-  "apkUrl": "https://media.githubusercontent.com/media/Shabd45261/Streamix/master/apk/Streamix_20260711_Saturday_0807pm_233rd(233).apk",
+  "latestVersion": 234,
+  "versionName": "1.234",
+  "apkUrl": "https://media.githubusercontent.com/media/Shabd45261/Streamix.github.io/main/apk/Streamix_20260712_Sunday_0127pm_234th(234).apk",
   "mandatory": false,
   "releaseNotes": [
-    "Removed Music profile",
-    "Drag profile button up/down to switch between YouTube and Movies",
-    "Adult profile now enabled by 7-clicks (password removed)",
-    "Improved variety on home screen"
+    "Removed scraper names (MovieBoxPh, etc) from UI",
+    "Enhanced privacy: scraper sources hidden in detail and home pages",
+    "Further B&W theme polishing",
+    "Adult profile improvements"
   ]
 }
