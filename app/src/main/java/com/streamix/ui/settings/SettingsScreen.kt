@@ -52,6 +52,7 @@ fun SettingsScreen(
     
     val youtubeAccountName by viewModel.youtubeAccountName.collectAsState(initial = null)
     val autoScrollShorts by viewModel.autoScrollShorts.collectAsState()
+    val backgroundPlaybackYoutube by viewModel.backgroundPlaybackYoutube.collectAsState()
     val floatingDockEnabled by viewModel.floatingDockEnabled.collectAsState()
 
     var showFeedbackForm by remember { mutableStateOf(false) }
@@ -238,6 +239,16 @@ fun SettingsScreen(
                             viewModel.logoutYoutube()
                         }
                     }
+                )
+            }
+            
+            item { SettingsSectionTitle("YouTube Profile Settings") }
+            item {
+                SettingsSwitchItem(
+                    title = "Background Playback",
+                    subtitle = "Keep playing YouTube videos when app is in background",
+                    checked = backgroundPlaybackYoutube,
+                    onCheckedChange = { viewModel.setBackgroundPlaybackYoutube(it) }
                 )
             }
             

@@ -37,6 +37,7 @@ class PreferencesManager @Inject constructor(
         val SHORTS_SEARCH_HISTORY = stringPreferencesKey("shorts_search_history")
         val GLOBAL_SEARCH_HISTORY = stringPreferencesKey("global_search_history")
         val AUTO_SCROLL_SHORTS  = booleanPreferencesKey("auto_scroll_shorts")
+        val BACKGROUND_PLAYBACK_YOUTUBE = booleanPreferencesKey("background_playback_youtube")
         val FLOATING_DOCK_ENABLED = booleanPreferencesKey("floating_dock_enabled")
         val IGNORED_VERSION = intPreferencesKey("ignored_version")
         val LAST_UPDATE_CHECK = longPreferencesKey("last_update_check")
@@ -54,6 +55,13 @@ class PreferencesManager @Inject constructor(
 
     suspend fun setAutoScrollShorts(enabled: Boolean) {
         context.dataStore.edit { it[AUTO_SCROLL_SHORTS] = enabled }
+    }
+
+    val backgroundPlaybackYoutube: Flow<Boolean> = context.dataStore.data
+        .map { it[BACKGROUND_PLAYBACK_YOUTUBE] ?: false }
+
+    suspend fun setBackgroundPlaybackYoutube(enabled: Boolean) {
+        context.dataStore.edit { it[BACKGROUND_PLAYBACK_YOUTUBE] = enabled }
     }
 
     val userInterests: Flow<Set<String>> = context.dataStore.data

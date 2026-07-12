@@ -33,12 +33,21 @@ class ThemeViewModel @Inject constructor(
     val autoScrollShorts = prefs.autoScrollShorts
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
+    val backgroundPlaybackYoutube = prefs.backgroundPlaybackYoutube
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
     val floatingDockEnabled = prefs.floatingDockEnabled
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
     fun setAutoScrollShorts(enabled: Boolean) {
         viewModelScope.launch {
             prefs.setAutoScrollShorts(enabled)
+        }
+    }
+
+    fun setBackgroundPlaybackYoutube(enabled: Boolean) {
+        viewModelScope.launch {
+            prefs.setBackgroundPlaybackYoutube(enabled)
         }
     }
 

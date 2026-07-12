@@ -78,6 +78,7 @@ import androidx.media3.common.PlaybackParameters
 import androidx.media3.common.Player
 import androidx.media3.common.TrackSelectionOverride
 import androidx.media3.common.Tracks
+import androidx.media3.session.MediaSession
 import androidx.media3.datasource.DefaultHttpDataSource
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
@@ -203,6 +204,7 @@ fun EmbeddedPlayer(
     val audioManager = remember { context.getSystemService(Context.AUDIO_SERVICE) as AudioManager }
     val prefs = remember { PreferencesManager(context) }
     val scope = rememberCoroutineScope()
+    val backgroundPlaybackEnabled by prefs.backgroundPlaybackYoutube.collectAsState(initial = false)
     
     var currentLinkIndex by remember(links) { 
         val dashIndex = links.indexOfFirst { it.quality.contains("DASH", ignoreCase = true) }
@@ -347,10 +349,13 @@ fun EmbeddedPlayer(
         ExoPlayer.Builder(context).build().apply { repeatMode = Player.REPEAT_MODE_ONE }
     }
 
-    LaunchedEffect(isMinimized, id) {
-        if (isMinimized || id.isNotEmpty()) {
-            currentSpeed = 1.0f
-            exoPlayer.setPlaybackSpeed(1.0f)
+    val mediaSession = remember(exoPlayer) {
+        MediaSession.Builder(context, exoPlayer).build()
+    }
+
+    DisposableEffect(mediaSession) {
+        onDispose {
+            mediaSession.release()
         }
     }
 
@@ -362,7 +367,7 @@ fun EmbeddedPlayer(
     }
 
     LaunchedEffect(sleepTimerMinutes) { if (sleepTimerMinutes > 0) { delay(sleepTimerMinutes * 60 * 1000L); exoPlayer.pause(); sleepTimerMinutes = 0 } }
-    DisposableEffect(exoPlayer) { onDispose { exoPlayer.release() } }
+
     val thumbUrl = remember(posterUrl, mediaType, videoUrl, id) {
         UrlUtils.resolveImageUrl(posterUrl, mediaType, videoUrl) 
     }
@@ -495,20 +500,43 @@ fun EmbeddedPlayer(
         onDispose { exoPlayer.removeListener(listener) }
     }
 
-    DisposableEffect(lifecycleOwner) {
+    DisposableEffect(lifecycleOwner, backgroundPlaybackEnabled) {
         val observer = LifecycleEventObserver { _, event ->
             when (event) {
-                Lifecycle.Event.ON_PAUSE -> if (!isMinimized) exoPlayer.pause()
-                Lifecycle.Event.ON_RESUME -> if (isPlaying) exoPlayer.play()
-                Lifecycle.Event.ON_STOP, Lifecycle.Event.ON_DESTROY -> exoPlayer.stop()
+                Lifecycle.Event.ON_PAUSE -> {
+                    if (!isMinimized) {
+                        val isYoutube = mediaType == "youtube"
+                        if (!(isYoutube && backgroundPlaybackEnabled)) {
+                            exoPlayer.pause()
+                        }
+                    }
+                }
+                Lifecycle.Event.ON_RESUME -> {
+                    if (isPlaying) exoPlayer.play()
+                }
+                Lifecycle.Event.ON_STOP -> {
+                    val isYoutube = mediaType == "youtube"
+                    if (!(isYoutube && backgroundPlaybackEnabled)) {
+                        exoPlayer.stop()
+                    }
+                }
+                Lifecycle.Event.ON_DESTROY -> {
+                    exoPlayer.stop()
+                    exoPlayer.release()
+                }
                 else -> {}
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose {
             lifecycleOwner.lifecycle.removeObserver(observer)
-            val act = context as? Activity; act?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
-            act?.window?.let { val controller = WindowCompat.getInsetsController(it, view); controller.show(WindowInsetsCompat.Type.systemBars()); it.attributes = it.attributes?.apply { screenBrightness = -1f } }
+            val act = context as? Activity
+            act?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+            act?.window?.let { 
+                val controller = WindowCompat.getInsetsController(it, view)
+                controller.show(WindowInsetsCompat.Type.systemBars()) 
+                it.attributes = it.attributes?.apply { screenBrightness = -1f }
+            }
             bottomDockVisible.value = true
         }
     }
