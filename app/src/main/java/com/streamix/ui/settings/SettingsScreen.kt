@@ -53,6 +53,7 @@ fun SettingsScreen(
     val youtubeAccountName by viewModel.youtubeAccountName.collectAsState(initial = null)
     val autoScrollShorts by viewModel.autoScrollShorts.collectAsState()
     val backgroundPlaybackYoutube by viewModel.backgroundPlaybackYoutube.collectAsState()
+    val sponsorBlockEnabled by viewModel.sponsorBlockEnabled.collectAsState()
     val floatingDockEnabled by viewModel.floatingDockEnabled.collectAsState()
 
     var showFeedbackForm by remember { mutableStateOf(false) }
@@ -168,7 +169,10 @@ fun SettingsScreen(
             )
         }
 
-        LazyColumn(Modifier.fillMaxSize()) {
+        LazyColumn(
+            Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(bottom = 150.dp)
+        ) {
             item { SettingsSectionTitle("Appearance") }
             
             item {
@@ -249,6 +253,14 @@ fun SettingsScreen(
                     subtitle = "Keep playing YouTube videos when app is in background",
                     checked = backgroundPlaybackYoutube,
                     onCheckedChange = { viewModel.setBackgroundPlaybackYoutube(it) }
+                )
+            }
+            item {
+                SettingsSwitchItem(
+                    title = "SponsorBlock",
+                    subtitle = "Automatically skip sponsors and ads in videos",
+                    checked = sponsorBlockEnabled,
+                    onCheckedChange = { viewModel.setSponsorBlockEnabled(it) }
                 )
             }
             

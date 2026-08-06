@@ -12,6 +12,7 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -21,6 +22,7 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import com.streamix.core.utils.FormatUtils
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -41,6 +43,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Brush
@@ -94,12 +97,18 @@ import com.streamix.core.storage.PreferencesManager
 import com.streamix.core.utils.DownloadUtils
 import com.streamix.core.utils.ShareUtils
 import com.streamix.core.utils.UrlUtils
+import org.schabi.newpipe.extractor.stream.StreamInfo
 import com.streamix.ui.navigation.LocalBottomDockVisible
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import org.schabi.newpipe.extractor.stream.StreamInfo
 import kotlin.math.roundToInt
 import dagger.hilt.android.EntryPointAccessors
+import android.app.PendingIntent
+import android.content.Intent
+import com.streamix.MainActivity
+import androidx.media3.common.MediaMetadata
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.streamix.core.model.SponsorSegment
 
 @dagger.hilt.EntryPoint
 @dagger.hilt.InstallIn(dagger.hilt.components.SingletonComponent::class)
@@ -120,57 +129,158 @@ fun MinimizedPlayerBar(
     onTogglePlay: () -> Unit,
     onClick: () -> Unit,
     onClose: () -> Unit,
-    height: androidx.compose.ui.unit.Dp = 64.dp
+    onNext: () -> Unit = {},
+    onPrevious: () -> Unit = {},
+    onAddToLibrary: () -> Unit = {},
+    onLike: () -> Unit = {},
+    isLiked: Boolean = false,
+    height: androidx.compose.ui.unit.Dp = 70.dp
 ) {
     var offsetY by remember { mutableFloatStateOf(0f) }
+    var offsetX by remember { mutableFloatStateOf(0f) }
     
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .height(height)
             .clip(RoundedCornerShape(height / 2))
-            .background(Brush.horizontalGradient(listOf(Color(0xFF00796B), Color(0xFF004D40))))
-            .clickable { onClick() }
-            .pointerInput(Unit) {
-                detectVerticalDragGestures(
-                    onVerticalDrag = { _, dragAmount -> offsetY = (offsetY + dragAmount).coerceAtLeast(0f) },
-                    onDragEnd = { if (offsetY > 100) onClose(); offsetY = 0f }
-                )
-            }
+            .background(Color.Black.copy(alpha = 0.95f))
+            .border(BorderStroke(0.5.dp, Color.White.copy(alpha = 0.15f)), RoundedCornerShape(height / 2))
             .offset { IntOffset(0, offsetY.roundToInt()) }
-            .padding(horizontal = 12.dp),
+            .padding(horizontal = 8.dp),
         contentAlignment = Alignment.CenterStart
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Box(modifier = Modifier.size(48.dp), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(
-                    progress = { progress },
-                    modifier = Modifier.fillMaxSize(),
-                    color = Color.White.copy(0.6f),
-                    strokeWidth = 2.dp,
-                    trackColor = Color.White.copy(0.1f)
-                )
-                AsyncImage(
-                    model = thumbUrl,
-                    contentDescription = null,
-                    modifier = Modifier.size(40.dp).clip(CircleShape).background(Color.Black.copy(0.3f)),
-                    contentScale = ContentScale.Crop
-                )
-                IconButton(onClick = onTogglePlay) {
+        Row(
+            modifier = Modifier.fillMaxSize(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Clickable & Swipeable Info Area (Thumbnail + Text)
+            Row(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+                    .pointerInput(Unit) {
+                        detectTapGestures(
+                            onTap = { onClick() },
+                            onDoubleTap = { onTogglePlay() }
+                        )
+                    }
+                    .pointerInput(Unit) {
+                        detectDragGestures(
+                            onDrag = { change, dragAmount ->
+                                change.consume()
+                                offsetX += dragAmount.x
+                                offsetY = (offsetY + dragAmount.y).coerceAtLeast(0f)
+                            },
+                            onDragEnd = {
+                                if (offsetY > 100) onClose()
+                                else if (offsetX > 150) onPrevious()
+                                else if (offsetX < -150) onNext()
+                                
+                                offsetX = 0f
+                                offsetY = 0f
+                            },
+                            onDragCancel = {
+                                offsetX = 0f
+                                offsetY = 0f
+                            }
+                        )
+                    },
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .padding(start = 4.dp)
+                        .size(54.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(
+                        progress = { progress },
+                        modifier = Modifier.fillMaxSize().scale(1.05f),
+                        color = Color.White.copy(0.8f),
+                        strokeWidth = 2.dp,
+                        trackColor = Color.White.copy(0.1f)
+                    )
+                    AsyncImage(
+                        model = thumbUrl,
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(46.dp)
+                            .clip(CircleShape)
+                            .background(Color.Black.copy(0.3f)),
+                        contentScale = ContentScale.Crop
+                    )
                     Icon(
-                        if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                        null,
+                        imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+                        contentDescription = null,
                         tint = Color.White,
-                        modifier = Modifier.size(16.dp)
+                        modifier = Modifier
+                            .size(18.dp)
+                            .background(Color.Black.copy(0.4f), CircleShape)
+                            .padding(2.dp)
+                    )
+                }
+                
+                Spacer(Modifier.width(12.dp))
+                
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = title,
+                        color = Color.White,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Text(
+                        text = subtitle,
+                        color = Color.White.copy(0.6f),
+                        fontSize = 11.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             }
-            Spacer(Modifier.width(12.dp))
-            Column(Modifier.weight(1f)) {
-                Text(title, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                Text(subtitle, color = Color.White.copy(0.7f), fontSize = 12.sp, maxLines = 1)
+            
+            // Action Buttons Area
+            Row(
+                modifier = Modifier.padding(end = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                CircularPlayerButton(Icons.Default.SkipPrevious, onPrevious)
+                CircularPlayerButton(Icons.Default.SkipNext, onNext)
+                CircularPlayerButton(Icons.Default.Add, onAddToLibrary)
+                CircularPlayerButton(
+                    icon = if (isLiked) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                    iconColor = if (isLiked) Color.Red else Color.White,
+                    onClick = onLike
+                )
             }
         }
+    }
+}
+
+@Composable
+fun CircularPlayerButton(
+    icon: ImageVector,
+    onClick: () -> Unit,
+    iconColor: Color = Color.White
+) {
+    Box(
+        modifier = Modifier
+            .size(36.dp)
+            .clip(CircleShape)
+            .border(0.5.dp, Color.White.copy(0.12f), CircleShape)
+            .clickable { onClick() },
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = iconColor,
+            modifier = Modifier.size(18.dp)
+        )
     }
 }
 
@@ -195,7 +305,8 @@ fun EmbeddedPlayer(
     onEpisodeSelect: (Episode) -> Unit = {},
     onChannelClick: (String) -> Unit = {},
     onClose: () -> Unit = {},
-    isStacked: Boolean = false
+    isStacked: Boolean = false,
+    playerViewModel: PlayerViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -337,20 +448,31 @@ fun EmbeddedPlayer(
 
     // Reset state for new video
     LaunchedEffect(id) {
-        currentPosition = initialPosition
-        bufferedPosition = 0L
-        duration = 0L
-        isBuffering = true
-        playbackError = null
-        hasStarted = false
+        if (id.isNotEmpty()) {
+            currentPosition = initialPosition
+            hasStarted = false
+            isBuffering = true
+            playbackError = null
+        }
     }
 
     val exoPlayer = remember(id) {
         ExoPlayer.Builder(context).build().apply { repeatMode = Player.REPEAT_MODE_ONE }
     }
 
+    DisposableEffect(exoPlayer) {
+        onDispose {
+            exoPlayer.stop()
+            exoPlayer.release()
+        }
+    }
+
     val mediaSession = remember(exoPlayer) {
-        MediaSession.Builder(context, exoPlayer).build()
+        val intent = Intent(context, MainActivity::class.java)
+        val pendingIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
+        MediaSession.Builder(context, exoPlayer)
+            .setSessionActivity(pendingIntent)
+            .build()
     }
 
     DisposableEffect(mediaSession) {
@@ -372,7 +494,7 @@ fun EmbeddedPlayer(
         UrlUtils.resolveImageUrl(posterUrl, mediaType, videoUrl) 
     }
 
-    LaunchedEffect(currentLink, id) {
+    LaunchedEffect(currentLink, id, fullInfo) {
         if (currentLink != null && currentLink!!.url.isNotBlank()) {
             val link = currentLink!!
             val url = link.url
@@ -391,14 +513,49 @@ fun EmbeddedPlayer(
                 .setDefaultRequestProperties(link.headers)
             
             val mediaSourceFactory = DefaultMediaSourceFactory(httpDataSourceFactory)
-            val mediaItem = MediaItem.Builder().setUri(url).setMimeType(mimeType).build()
+            
+            val mediaMetadata = MediaMetadata.Builder()
+                .setTitle(title)
+                .setArtist(subtitle)
+                .setArtworkUri(android.net.Uri.parse(thumbUrl))
+                .build()
+
+            val mediaItemBuilder = MediaItem.Builder()
+                .setUri(url)
+                .setMimeType(mimeType)
+                .setMediaMetadata(mediaMetadata)
+
+            if (mediaType == "youtube" && fullInfo != null) {
+                val subtitleConfigs = fullInfo!!.subtitles.map { sub ->
+                    MediaItem.SubtitleConfiguration.Builder(android.net.Uri.parse(sub.content))
+                        .setMimeType(sub.format?.mimeType ?: MimeTypes.TEXT_VTT)
+                        .setLanguage(sub.languageTag)
+                        .setLabel(sub.getDisplayLanguageName())
+                        .setSelectionFlags(if (sub.isAutoGenerated) 0 else C.SELECTION_FLAG_DEFAULT)
+                        .build()
+                }
+                mediaItemBuilder.setSubtitleConfigurations(subtitleConfigs)
+            }
+            
+            val mediaItem = mediaItemBuilder.build()
             val mediaSource = mediaSourceFactory.createMediaSource(mediaItem)
+            
+            val currentPosBeforePrepare = if (hasStarted) exoPlayer.currentPosition else -1L
             
             exoPlayer.setMediaSource(mediaSource)
             exoPlayer.prepare()
+
+            if (mediaType == "youtube") {
+                playerViewModel.loadSponsorSegments(id)
+            } else {
+                playerViewModel.clearSponsorSegments()
+            }
             
-            // Start fresh for new video unless explicit initialPosition is provided
-            val seekPos = if (initialPosition > 0) initialPosition else 0L
+            // Start fresh for new video unless explicit initialPosition is provided or we are resuming from a subtitle update
+            val seekPos = if (currentPosBeforePrepare >= 0) currentPosBeforePrepare 
+                          else if (initialPosition > 0) initialPosition 
+                          else 0L
+            
             exoPlayer.seekTo(seekPos)
             currentPosition = seekPos
             
@@ -421,6 +578,16 @@ fun EmbeddedPlayer(
         while (hasStarted && isPlaying) {
             val current = exoPlayer.currentPosition; val total = exoPlayer.duration
             currentPosition = current; bufferedPosition = exoPlayer.bufferedPosition
+            
+            // SponsorBlock Auto Skip
+            if (mediaType == "youtube") {
+                val segments = playerViewModel.sponsorSegments.value
+                segments.find { current in it.start..it.end }?.let { segment ->
+                    exoPlayer.seekTo(segment.end + 1)
+                    Toast.makeText(context, "Skipped ${segment.category}", Toast.LENGTH_SHORT).show()
+                }
+            }
+
             if (total > 0 && total != androidx.media3.common.C.TIME_UNSET) { 
                 duration = total; onProgressUpdate(current, total) 
                 PlayerManager.playbackProgress.value = current.toFloat() / total.toFloat()
@@ -512,6 +679,9 @@ fun EmbeddedPlayer(
                     }
                 }
                 Lifecycle.Event.ON_RESUME -> {
+                    if (exoPlayer.playbackState == Player.STATE_IDLE && hasStarted) {
+                        exoPlayer.prepare()
+                    }
                     if (isPlaying) exoPlayer.play()
                 }
                 Lifecycle.Event.ON_STOP -> {
@@ -536,8 +706,18 @@ fun EmbeddedPlayer(
                 val controller = WindowCompat.getInsetsController(it, view)
                 controller.show(WindowInsetsCompat.Type.systemBars()) 
                 it.attributes = it.attributes?.apply { screenBrightness = -1f }
+                it.clearFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
             }
             bottomDockVisible.value = true
+        }
+    }
+
+    LaunchedEffect(isPlaying) {
+        val act = context as? Activity
+        if (isPlaying) {
+            act?.window?.addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        } else {
+            act?.window?.clearFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         }
     }
 
@@ -549,25 +729,25 @@ fun EmbeddedPlayer(
             dampingRatio = Spring.DampingRatioLowBouncy,
             stiffness = Spring.StiffnessLow
         ),
-        label = "offset"
+        label = "minimizationOffset"
     )
 
     val minimizationNestedScroll = remember {
         object : NestedScrollConnection {
             override fun onPostScroll(consumed: Offset, available: Offset, source: NestedScrollSource): Offset {
-                val delta = available.y
-                if (delta > 0 && !isLandscape && playlistState == PlaylistState.COLLAPSED) {
-                    offsetY = (offsetY + delta).coerceAtLeast(0f)
-                    return available
+                if (available.y > 0 && !isLandscape) {
+                    offsetY = (offsetY + available.y).coerceAtLeast(0f)
+                    return Offset(0f, available.y)
                 }
                 return Offset.Zero
             }
 
             override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
-                if (offsetY > 0 && available.y < 0) {
-                    val consumed = available.y.coerceAtLeast(-offsetY)
-                    offsetY += consumed
-                    return Offset(0f, consumed)
+                if (available.y < 0 && offsetY > 0 && !isLandscape) {
+                    val delta = available.y
+                    val oldOffset = offsetY
+                    offsetY = (offsetY + delta).coerceAtLeast(0f)
+                    return Offset(0f, offsetY - oldOffset)
                 }
                 return Offset.Zero
             }
@@ -607,7 +787,17 @@ fun EmbeddedPlayer(
                                 .pointerInput(Unit) {
                                     detectVerticalDragGestures(
                                         onVerticalDrag = { change, dragAmount ->
+                                            if (showControls) return@detectVerticalDragGestures // Don't drag while controls are up
                                             if (dragAmount > 0) {
+                                                if (isLandscape) {
+                                                    activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+                                                    onFullScreenToggle(false)
+                                                    change.consume()
+                                                } else {
+                                                    offsetY = (offsetY + dragAmount).coerceAtLeast(0f)
+                                                    change.consume()
+                                                }
+                                            } else if (dragAmount < 0 && offsetY > 0) {
                                                 offsetY = (offsetY + dragAmount).coerceAtLeast(0f)
                                                 change.consume()
                                             }
@@ -624,6 +814,7 @@ fun EmbeddedPlayer(
                             Spacer(Modifier.weight(1f))
                             IconButton(onClick = { showDownloadDialog = true }) { Icon(Icons.Default.FileDownload, null, tint = Color.White) }
                             IconButton(onClick = { showSleepTimerDialog = true }) { Icon(Icons.Default.Timer, null, tint = Color.White) }
+                            IconButton(onClick = { showCCDialog = true }) { Icon(Icons.Default.ClosedCaption, null, tint = Color.White) }
                             Surface(onClick = { showSettings = true }, color = Color.Transparent, shape = RoundedCornerShape(4.dp)) { Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)) { Icon(Icons.Default.VideoCameraBack, null, tint = Color.White, modifier = Modifier.size(16.dp)); Spacer(Modifier.width(6.dp)); Text(currentQuality, color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold) } }
                             IconButton(onClick = { showMoreMenu = true }) { Icon(Icons.Default.MoreVert, null, tint = Color.White) }
                         }
@@ -635,9 +826,27 @@ fun EmbeddedPlayer(
                             .weight(if (isLandscape) 1f else 0.45f)
                     ) {
                         AndroidView(
-                            factory = { PlayerView(it).apply { player = exoPlayer; useController = false; setBackgroundColor(android.graphics.Color.BLACK); this.resizeMode = resizeMode; layoutParams = FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT, android.view.Gravity.CENTER) } },
+                            factory = { context -> 
+                                PlayerView(context).apply { 
+                                    player = exoPlayer
+                                    useController = false
+                                    setBackgroundColor(android.graphics.Color.BLACK)
+                                    this.resizeMode = resizeMode
+                                    layoutParams = FrameLayout.LayoutParams(
+                                        ViewGroup.LayoutParams.MATCH_PARENT, 
+                                        ViewGroup.LayoutParams.MATCH_PARENT, 
+                                        android.view.Gravity.CENTER
+                                    ) 
+                                } 
+                            },
                             modifier = Modifier.fillMaxSize().rotate(rotation),
-                            update = { view -> view.player = exoPlayer; view.resizeMode = resizeMode }
+                            update = { view -> 
+                                if (view.player != exoPlayer) view.player = exoPlayer
+                                if (view.resizeMode != resizeMode) {
+                                    view.resizeMode = resizeMode
+                                    view.requestLayout() // Force re-measure for resize mode
+                                }
+                            }
                         )
 
                         // Drag & Tap Overlay to avoid AndroidView consumption issues
@@ -661,6 +870,7 @@ fun EmbeddedPlayer(
                                 .then(if (!isLocked) Modifier.pointerInput(isLandscape) {
                                     detectVerticalDragGestures(
                                         onVerticalDrag = { change, dragAmount ->
+                                            if (showControls) return@detectVerticalDragGestures // Don't drag while controls are up
                                             if (dragAmount > 0) {
                                                 if (isLandscape) {
                                                     activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
@@ -784,7 +994,7 @@ fun EmbeddedPlayer(
                                     if (isLandscape) activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
                                     onMinimizedChange(true)
                                 },
-                                onPlayPause = { if (isPlaying) exoPlayer.pause() else exoPlayer.play() },
+                                onPlayPause = { if (isPlaying) PlayerManager.pause() else PlayerManager.resume() },
                                 onSeek = { exoPlayer.seekTo(it) }, 
                                 onRewind = { exoPlayer.seekTo((exoPlayer.currentPosition - 10000).coerceAtLeast(0)) }, 
                                 onForward = { exoPlayer.seekTo((exoPlayer.currentPosition + 10000).coerceAtMost(duration)) },
@@ -819,7 +1029,8 @@ fun EmbeddedPlayer(
                                 onSpeedClick = { showSpeedDialog = true },
                                 onSyncSubsClick = { showSyncSubsDialog = true },
                                 onTracksClick = { showTracksDialog = true },
-                                tealColor = tealColor
+                                tealColor = tealColor,
+                                playerViewModel = playerViewModel
                             )
                         } else if (showControls && !isLocked) {
                             Box(Modifier.fillMaxSize().background(Color.Black.copy(0.3f))) {
@@ -836,6 +1047,20 @@ fun EmbeddedPlayer(
                                     modifier = Modifier.align(Alignment.BottomEnd).padding(8.dp)
                                 ) {
                                     Icon(Icons.Default.Fullscreen, null, tint = Color.White)
+                                }
+                                
+                                // Added Resize button to portrait controls
+                                IconButton(
+                                    onClick = { 
+                                        resizeMode = when (resizeMode) {
+                                            AspectRatioFrameLayout.RESIZE_MODE_FIT -> AspectRatioFrameLayout.RESIZE_MODE_ZOOM
+                                            AspectRatioFrameLayout.RESIZE_MODE_ZOOM -> AspectRatioFrameLayout.RESIZE_MODE_FILL
+                                            else -> AspectRatioFrameLayout.RESIZE_MODE_FIT
+                                        }
+                                    },
+                                    modifier = Modifier.align(Alignment.BottomStart).padding(8.dp)
+                                ) {
+                                    Icon(Icons.Default.AspectRatio, null, tint = Color.White)
                                 }
                             }
                         }
@@ -924,14 +1149,21 @@ fun EmbeddedPlayer(
             }
             if (showDownloadDialog) {
                 PlayerManager.currentVideo.value?.let { video ->
-                    DownloadDialog(video.title, video.studio, video.posterPath, onDownloadStart = { _, _ ->
-                        DownloadUtils.downloadVideo(context, videoUrl, video.title)
-                        scope.launch {
-                            val entryPoint = EntryPointAccessors.fromApplication(context.applicationContext, PlayerEntryPoint::class.java)
-                            entryPoint.watchlistDao().insert(com.streamix.core.storage.WatchlistEntity(video.id, video.title, video.posterPath, video.mediaType, "Downloads", ""))
-                        }
-                        showDownloadDialog = false
-                    }, onDismiss = { showDownloadDialog = false })
+                    DownloadDialog(
+                        title = video.title,
+                        studio = video.studio,
+                        poster = video.posterPath,
+                        links = links,
+                        onDownloadStart = { url, quality ->
+                            DownloadUtils.downloadVideo(context, url, video.title)
+                            scope.launch {
+                                val entryPoint = EntryPointAccessors.fromApplication(context.applicationContext, PlayerEntryPoint::class.java)
+                                entryPoint.watchlistDao().insert(com.streamix.core.storage.WatchlistEntity(video.id, video.title, video.posterPath, video.mediaType, "Downloads", ""))
+                            }
+                            showDownloadDialog = false
+                        },
+                        onDismiss = { showDownloadDialog = false }
+                    )
                 }
             }
             if (showMoreMenu) {
@@ -955,6 +1187,13 @@ fun EmbeddedPlayer(
                 }
             }
             if (showDescriptionSheet) { DescriptionBottomSheet(title, fullInfo) { showDescriptionSheet = false } }
+            if (showSleepTimerDialog) {
+                SleepTimerDialog(
+                    currentMinutes = sleepTimerMinutes,
+                    onMinutesSelect = { sleepTimerMinutes = it },
+                    onDismiss = { showSleepTimerDialog = false }
+                )
+            }
             if (showPlaylistDialog) { PlayerManager.currentVideo.value?.let { video -> AddToPlaylistDialog(video) { showPlaylistDialog = false } } }
             if (showAudioDialog) { TrackSelectionDialog("Audio Track", availableAudioTracks, exoPlayer, C.TRACK_TYPE_AUDIO) { showAudioDialog = false } }
             
@@ -1022,155 +1261,111 @@ fun PlaylistPanel(
     onVideoSelect: (SearchResult) -> Unit,
     onEpisodeSelect: (Episode) -> Unit
 ) {
-    val configuration = androidx.compose.ui.platform.LocalConfiguration.current
+    val configuration = LocalConfiguration.current
     val screenHeight = configuration.screenHeightDp.dp
     
-    val targetHeight = when (state) {
-        PlaylistState.COLLAPSED -> 70.dp
-        PlaylistState.HALF -> screenHeight * 0.5f
-        PlaylistState.FULL -> screenHeight * 0.9f
-    }
-    
     val height by animateDpAsState(
-        targetValue = targetHeight,
-        animationSpec = spring(stiffness = Spring.StiffnessLow),
-        label = "playlist_height"
+        targetValue = when (state) {
+            PlaylistState.COLLAPSED -> 64.dp
+            PlaylistState.HALF -> screenHeight / 2
+            PlaylistState.FULL -> screenHeight - 64.dp
+        },
+        label = "playlistHeight"
     )
     
-    val nestedScrollConnection = remember(state) {
-        object : androidx.compose.ui.input.nestedscroll.NestedScrollConnection {
-            override fun onPreScroll(available: androidx.compose.ui.geometry.Offset, source: androidx.compose.ui.input.nestedscroll.NestedScrollSource): androidx.compose.ui.geometry.Offset {
+    val padding by animateDpAsState(
+        targetValue = if (state == PlaylistState.COLLAPSED) 12.dp else 0.dp,
+        label = "playlistPadding"
+    )
+
+    val nestedScrollConnection = remember {
+        object : NestedScrollConnection {
+            override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
                 val delta = available.y
                 if (delta < 0 && state == PlaylistState.COLLAPSED) {
                     onStateChange(PlaylistState.HALF)
-                    return available
+                    return Offset(0f, delta)
                 }
-                if (delta < 0 && state == PlaylistState.HALF) {
-                    onStateChange(PlaylistState.FULL)
-                    return available
-                }
-                return androidx.compose.ui.geometry.Offset.Zero
+                return Offset.Zero
             }
 
-            override fun onPostScroll(consumed: androidx.compose.ui.geometry.Offset, available: androidx.compose.ui.geometry.Offset, source: androidx.compose.ui.input.nestedscroll.NestedScrollSource): androidx.compose.ui.geometry.Offset {
+            override fun onPostScroll(consumed: Offset, available: Offset, source: NestedScrollSource): Offset {
                 val delta = available.y
-                if (delta > 0) { // Dragging down
-                    if (state == PlaylistState.FULL) {
-                        onStateChange(PlaylistState.HALF)
-                        return available
-                    } else if (state == PlaylistState.HALF) {
-                        onStateChange(PlaylistState.COLLAPSED)
-                        return available
-                    }
+                if (delta > 0 && state == PlaylistState.FULL) {
+                    onStateChange(PlaylistState.HALF)
+                    return Offset(0f, delta)
                 }
-                return androidx.compose.ui.geometry.Offset.Zero
+                return Offset.Zero
             }
         }
     }
 
-    Card(
+    Surface(
         modifier = Modifier
+            .padding(horizontal = padding)
+            .padding(bottom = padding)
             .fillMaxWidth()
             .height(height)
+            .clip(if (state == PlaylistState.COLLAPSED) RoundedCornerShape(16.dp) else RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
             .nestedScroll(nestedScrollConnection),
-        colors = CardDefaults.cardColors(containerColor = if (state == PlaylistState.COLLAPSED) Color.Black.copy(0.95f) else Color(0xFF1A1A1A)),
-        shape = if (state == PlaylistState.COLLAPSED) RoundedCornerShape(35.dp) else RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
-        border = BorderStroke(if (state == PlaylistState.COLLAPSED) 0.5.dp else 1.dp, Color.White.copy(0.12f)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 12.dp)
+        color = Color(0xFF1A1A1A),
+        tonalElevation = 8.dp,
+        border = if (state == PlaylistState.COLLAPSED) BorderStroke(1.dp, Color.White.copy(0.1f)) else null
     ) {
         Column {
-            // Header Bar
-            Surface(
+            // Handle Bar
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(70.dp)
+                    .height(48.dp)
                     .clickable { 
-                        if (state == PlaylistState.FULL) onStateChange(PlaylistState.COLLAPSED)
-                        else onStateChange(PlaylistState.FULL)
-                    },
-                color = if (state == PlaylistState.COLLAPSED) Color.Transparent else Color.White.copy(0.05f),
-                shape = if (state == PlaylistState.COLLAPSED) RoundedCornerShape(35.dp) else RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
-            ) {
-                Box(modifier = Modifier.padding(horizontal = 20.dp)) {
-                    // Drag Handle
-                    Box(
-                        Modifier
-                            .align(Alignment.TopCenter)
-                            .padding(top = 8.dp)
-                            .width(40.dp)
-                            .height(4.dp)
-                            .clip(CircleShape)
-                            .background(Color.White.copy(0.2f))
-                    )
-
-                    Row(
-                        modifier = Modifier.fillMaxSize(),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column(Modifier.weight(1f)) {
-                            val headerText = when(mediaType) {
-                                "adult" -> "Recommended Videos"
-                                "youtube" -> "Up Next"
-                                "movie", "tv" -> if (episodes.isNotEmpty()) "Episodes" else "Related Movies"
-                                else -> "Now Playing"
+                        onStateChange(
+                            when (state) {
+                                PlaylistState.COLLAPSED -> PlaylistState.HALF
+                                PlaylistState.HALF -> PlaylistState.FULL
+                                PlaylistState.FULL -> PlaylistState.COLLAPSED
                             }
-                            Text(headerText, color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 16.sp)
-                            val currentIdx = if (episodes.isNotEmpty()) {
-                                episodes.indexOfFirst { it.data == currentVideoId }.coerceAtLeast(0)
-                            } else 0
-                            
-                            val subText = if (episodes.isNotEmpty()) {
-                                "${currentIdx + 1} / ${episodes.size}"
-                            } else if (relatedVideos.isNotEmpty()) {
-                                "1 / ${relatedVideos.size + 1}"
-                            } else "1 / 1"
-                            Text(subText, color = Color.Gray, fontSize = 13.sp)
-                        }
-                        
-                        IconButton(onClick = { 
-                            if (state == PlaylistState.FULL) onStateChange(PlaylistState.COLLAPSED)
-                            else onStateChange(PlaylistState.FULL)
-                        }) {
-                            Icon(
-                                if (state != PlaylistState.COLLAPSED) Icons.Default.KeyboardArrowDown else Icons.Default.KeyboardArrowUp,
-                                null,
-                                tint = Color.White,
-                                modifier = Modifier.size(28.dp)
-                            )
-                        }
-                    }
+                        )
+                    },
+                contentAlignment = Alignment.Center
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Box(
+                        modifier = Modifier
+                            .size(width = 36.dp, height = 4.dp)
+                            .background(Color.White.copy(alpha = 0.2f), RoundedCornerShape(2.dp))
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        text = if (episodes.isNotEmpty()) "Episodes" else "Up Next",
+                        color = Color.White,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
             }
-            
+
             if (state != PlaylistState.COLLAPSED) {
-                Divider(color = Color.White.copy(0.1f))
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(bottom = 20.dp)
+                    contentPadding = PaddingValues(bottom = 16.dp)
                 ) {
-                    if (mediaType == "movie" || mediaType == "tv") {
-                        if (episodes.isNotEmpty()) {
-                            itemsIndexed(episodes) { index, ep ->
-                                EpisodeItem(ep, ep.data == currentVideoId, index + 1) { 
-                                    onEpisodeSelect(ep)
-                                    // Collapse playlist on select if full? Maybe just to HALF
-                                    if (state == PlaylistState.FULL) onStateChange(PlaylistState.HALF)
-                                }
-                            }
-                        } else {
-                            items(relatedVideos) { video ->
-                                RelatedVideoItem(video) { 
-                                    onVideoSelect(video)
-                                    if (state == PlaylistState.FULL) onStateChange(PlaylistState.HALF)
-                                }
-                            }
+                    if (episodes.isNotEmpty()) {
+                        itemsIndexed(episodes) { index, episode ->
+                            val isCurrent = episode.data == PlayerManager.currentEpisode.value?.data
+                            EpisodeItem(
+                                episode = episode,
+                                isCurrent = isCurrent,
+                                index = index + 1,
+                                onClick = { onEpisodeSelect(episode) }
+                            )
                         }
                     } else {
                         items(relatedVideos) { video ->
-                            RelatedVideoItem(video) { 
-                                onVideoSelect(video)
-                                if (state == PlaylistState.FULL) onStateChange(PlaylistState.HALF)
-                            }
+                            RelatedVideoItem(
+                                video = video,
+                                onClick = { onVideoSelect(video) }
+                            )
                         }
                     }
                 }
@@ -1180,50 +1375,38 @@ fun PlaylistPanel(
 }
 
 @Composable
-fun EpisodeItem(episode: Episode, isPlaying: Boolean, number: Int, onClick: () -> Unit) {
+fun EpisodeItem(episode: Episode, isCurrent: Boolean, index: Int, onClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(if (isPlaying) Color.White.copy(0.05f) else Color.Transparent)
             .clickable { onClick() }
-            .padding(horizontal = 16.dp, vertical = 10.dp),
+            .background(if (isCurrent) Color.White.copy(0.05f) else Color.Transparent)
+            .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Drag Handle icon as seen in Image 4
-        Icon(Icons.Default.Menu, null, tint = Color.Gray.copy(0.5f), modifier = Modifier.size(20.dp))
-        Spacer(Modifier.width(12.dp))
-        
-        Box(modifier = Modifier.size(110.dp, 62.dp).clip(RoundedCornerShape(8.dp)).background(Color(0xFF2C2C2C))) {
-            AsyncImage(model = episode.posterUrl, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
-            if (isPlaying) {
-                Box(Modifier.fillMaxSize().background(Color.Black.copy(0.6f)), contentAlignment = Alignment.Center) {
-                    Icon(Icons.Default.PlayArrow, null, tint = Color.White, modifier = Modifier.size(24.dp))
-                }
+        Text(
+            text = index.toString(),
+            color = if (isCurrent) Color.White else Color.White.copy(0.4f),
+            fontSize = 14.sp,
+            modifier = Modifier.width(32.dp)
+        )
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = episode.name ?: "Episode $index",
+                color = if (isCurrent) Color.White else Color.White.copy(0.8f),
+                fontSize = 15.sp,
+                fontWeight = if (isCurrent) FontWeight.Bold else FontWeight.Medium
+            )
+            if (episode.season != null || episode.episode != null) {
+                Text(
+                    text = "S${episode.season ?: 1} E${episode.episode ?: index}",
+                    color = Color.White.copy(0.4f),
+                    fontSize = 12.sp
+                )
             }
         }
-        
-        Spacer(Modifier.width(16.dp))
-        
-        Column(Modifier.weight(1f)) {
-            Text(
-                text = "${episode.episode ?: number}. ${episode.name ?: "Episode ${episode.episode ?: number}"}", 
-                color = if (isPlaying) Color.White else Color.White,
-                fontSize = 14.sp, 
-                fontWeight = if (isPlaying) FontWeight.Bold else FontWeight.Medium, 
-                maxLines = 1, 
-                overflow = TextOverflow.Ellipsis
-            )
-            Text(
-                text = episode.description ?: "Season ${episode.season ?: 1}", 
-                color = Color.Gray, 
-                fontSize = 12.sp, 
-                maxLines = 1, 
-                overflow = TextOverflow.Ellipsis
-            )
-        }
-        
-        IconButton(onClick = { /* Item options */ }) {
-            Icon(Icons.Default.MoreVert, null, tint = Color.Gray, modifier = Modifier.size(20.dp))
+        if (isCurrent) {
+            Icon(Icons.Default.PlayArrow, null, tint = Color.White, modifier = Modifier.size(20.dp))
         }
     }
 }
@@ -1234,125 +1417,322 @@ fun RelatedVideoItem(video: SearchResult, onClick: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick() }
-            .padding(12.dp),
+            .padding(horizontal = 16.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         AsyncImage(
             model = video.posterPath,
             contentDescription = null,
-            modifier = Modifier.size(120.dp, 68.dp).clip(RoundedCornerShape(4.dp)),
+            modifier = Modifier
+                .size(width = 120.dp, height = 68.dp)
+                .clip(RoundedCornerShape(8.dp))
+                .background(Color.White.copy(0.1f)),
             contentScale = ContentScale.Crop
         )
         Spacer(Modifier.width(12.dp))
         Column {
-            Text(video.title, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis)
-            Text(video.studio, color = Color.Gray, fontSize = 12.sp)
+            Text(
+                text = video.title,
+                color = Color.White,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+            Text(
+                text = video.studio,
+                color = Color.White.copy(0.5f),
+                fontSize = 12.sp
+            )
         }
     }
 }
 
 @Composable
-fun DescriptionBottomSheet(title: String, fullInfo: StreamInfo?, onDismiss: () -> Unit) {
-    ModalBottomSheet(onDismissRequest = onDismiss, containerColor = Color(0xFF1A1A1A), contentColor = Color.White) {
-        Column(Modifier.fillMaxWidth().padding(16.dp).verticalScroll(rememberScrollState())) {
-            Text("Description", fontSize = 20.sp, fontWeight = FontWeight.Bold)
-            Divider(color = Color.White.copy(0.1f), modifier = Modifier.padding(vertical = 12.dp))
-            Text(title, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+fun DescriptionBottomSheet(title: String, info: StreamInfo?, onDismiss: () -> Unit) {
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        containerColor = Color(0xFF121212),
+        contentColor = Color.White,
+        dragHandle = { BottomSheetDefaults.DragHandle(color = Color.White.copy(0.3f)) }
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp)
+                .padding(bottom = 32.dp)
+                .verticalScroll(rememberScrollState())
+        ) {
+            Text(title, fontSize = 20.sp, fontWeight = FontWeight.Bold)
             Spacer(Modifier.height(16.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                InfoStat(formatViews(fullInfo?.likeCount ?: 0L), "Likes")
-                InfoStat(formatViews(fullInfo?.viewCount ?: 0L), "Views")
-                InfoStat("2024", "Year")
-            }
-            Spacer(Modifier.height(20.dp))
-            val descriptionText = remember(fullInfo?.description?.content) {
-                val raw = fullInfo?.description?.content ?: "No description available."
-                if (raw.contains("<") && raw.contains(">")) {
-                    android.text.Html.fromHtml(raw, android.text.Html.FROM_HTML_MODE_LEGACY).toString()
-                } else {
-                    raw
+            if (info != null) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("${formatViews(info.viewCount)} views", color = Color.White.copy(0.7f), fontSize = 14.sp)
+                    Spacer(Modifier.width(12.dp))
+                    Text(info.textualUploadDate ?: "", color = Color.White.copy(0.7f), fontSize = 14.sp)
                 }
+                Spacer(Modifier.height(16.dp))
+                
+                AndroidView(
+                    factory = { context ->
+                        android.widget.TextView(context).apply {
+                            setTextColor(android.graphics.Color.WHITE)
+                            setLinkTextColor(android.graphics.Color.parseColor("#3EA6FF"))
+                            textSize = 14f
+                            movementMethod = android.text.method.LinkMovementMethod.getInstance()
+                        }
+                    },
+                    update = { textView ->
+                        val html = info.description?.content ?: "No description available."
+                        val formattedHtml = html.replace("\n", "<br>")
+                        textView.text = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+                            android.text.Html.fromHtml(formattedHtml, android.text.Html.FROM_HTML_MODE_COMPACT)
+                        } else {
+                            @Suppress("DEPRECATION")
+                            android.text.Html.fromHtml(formattedHtml)
+                        }
+                    }
+                )
+            } else {
+                Text("Loading details...", color = Color.White.copy(0.5f))
             }
-            LinkifiedText(descriptionText, Color.LightGray, 14.sp)
-            Spacer(Modifier.height(50.dp))
         }
     }
 }
 
-@Composable fun InfoStat(value: String, label: String) { Column(Modifier.background(Color.White.copy(0.05f), RoundedCornerShape(8.dp)).padding(horizontal = 16.dp, vertical = 12.dp), horizontalAlignment = Alignment.CenterHorizontally) { Text(value, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 15.sp); Text(label, color = Color.Gray, fontSize = 12.sp) } }
+@Composable
+fun InfoStat(label: String, value: String) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(text = label, color = Color.White.copy(0.5f), fontSize = 12.sp)
+        Text(text = value, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+    }
+}
 
 @Composable
-fun LinkifiedText(text: String, color: Color, fontSize: androidx.compose.ui.unit.TextUnit) {
-    val context = LocalContext.current
-    val urlPattern = remember { java.util.regex.Pattern.compile("(https?://[\\w-]+(\\.[\\w-]+)+(/\\S*)?)") }
-    val annotatedString = remember(text) {
-        val matcher = urlPattern.matcher(text)
-        buildAnnotatedString {
-            var lastIndex = 0
-            while (matcher.find()) {
-                val start = matcher.start(); val end = matcher.end()
-                append(text.substring(lastIndex, start))
-                val link = text.substring(start, end)
-                pushStringAnnotation("URL", link)
-                withStyle(SpanStyle(color = Color(0xFF2196F3), fontWeight = FontWeight.Bold)) { append(link) }
-                pop(); lastIndex = end
-            }
-            append(text.substring(lastIndex))
-        }
-    }
-    androidx.compose.foundation.text.ClickableText(annotatedString, style = androidx.compose.ui.text.TextStyle(color = color, fontSize = fontSize), onClick = { offset -> annotatedString.getStringAnnotations("URL", offset, offset).firstOrNull()?.let { try { context.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(it.item))) } catch (e: Exception) {} } })
+fun LinkifiedText(text: String, color: Color, size: androidx.compose.ui.unit.TextUnit) {
+    Text(text = text, color = color, fontSize = size)
 }
 
 @Composable
 fun AddToPlaylistDialog(video: SearchResult, onDismiss: () -> Unit) {
     Dialog(onDismissRequest = onDismiss) {
-        Card(colors = CardDefaults.cardColors(containerColor = Color(0xFF2C2C2C))) {
-            Column(Modifier.padding(24.dp).width(300.dp)) {
-                Text("Add to Playlist", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+        Card(
+            colors = CardDefaults.cardColors(containerColor = Color(0xFF1A1A1A)),
+            shape = RoundedCornerShape(16.dp)
+        ) {
+            Column(Modifier.padding(16.dp).width(280.dp)) {
+                Text("Add to Playlist", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
                 Spacer(Modifier.height(16.dp))
-                val context = LocalContext.current
-                TextButton(onClick = { onDismiss(); Toast.makeText(context, "Added to favorites", Toast.LENGTH_SHORT).show() }, modifier = Modifier.fillMaxWidth()) { Text("My Favorites", color = Color.White) }
-                TextButton(onClick = onDismiss, modifier = Modifier.fillMaxWidth()) { Text("CANCEL", color = Color(0xFF00BCD4)) }
+                Text("Coming soon...", color = Color.White.copy(0.5f))
+                Spacer(Modifier.height(16.dp))
+                Button(
+                    onClick = onDismiss,
+                    modifier = Modifier.align(Alignment.End),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = Color.Black)
+                ) {
+                    Text("Close")
+                }
             }
         }
     }
 }
 
 @Composable
-fun ResolutionSelectionDialog(
-    links: List<VideoLink>,
-    currentIndex: Int,
-    onLinkSelect: (Int) -> Unit,
-    onDismiss: () -> Unit
-) {
+fun ResolutionSelectionDialog(links: List<VideoLink>, currentIndex: Int, onLinkSelect: (Int) -> Unit, onDismiss: () -> Unit) {
     Dialog(onDismissRequest = onDismiss) {
         Card(
-            colors = CardDefaults.cardColors(containerColor = Color(0xFF2C2C2C)),
-            shape = RoundedCornerShape(12.dp)
+            colors = CardDefaults.cardColors(containerColor = Color(0xFF1A1A1A)),
+            shape = RoundedCornerShape(16.dp)
         ) {
-            Column(Modifier.padding(24.dp).width(300.dp)) {
-                Text("Select Resolution", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
-                Spacer(Modifier.height(16.dp))
-                LazyColumn(Modifier.heightIn(max = 400.dp)) {
+            Column(Modifier.padding(vertical = 16.dp).width(280.dp)) {
+                Text(
+                    "Select Resolution",
+                    color = Color.White,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
+                )
+                Divider(color = Color.White.copy(0.1f))
+                LazyColumn {
                     itemsIndexed(links) { index, link ->
-                        val isSelected = index == currentIndex
                         Row(
-                            Modifier
+                            modifier = Modifier
                                 .fillMaxWidth()
                                 .clickable { onLinkSelect(index) }
-                                .padding(vertical = 12.dp),
+                                .padding(horizontal = 20.dp, vertical = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            RadioButton(
+                                selected = index == currentIndex,
+                                onClick = null,
+                                colors = RadioButtonDefaults.colors(selectedColor = Color.White)
+                            )
+                            Spacer(Modifier.width(16.dp))
+                            Text(link.quality, color = if (index == currentIndex) Color(0xFFBB86FC) else Color.White, fontSize = 15.sp)
+                        }
+                    }
+                    
+                    item {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { onLinkSelect(0) } // Default to index 0 as Auto
+                                .padding(horizontal = 20.dp, vertical = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            RadioButton(
+                                selected = false,
+                                onClick = null,
+                                colors = RadioButtonDefaults.colors(selectedColor = Color.White)
+                            )
+                            Spacer(Modifier.width(16.dp))
+                            Text("Auto", color = Color.White, fontSize = 15.sp)
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun TrackSelectionDialog(title: String, tracks: List<Pair<Int, Int>>, player: ExoPlayer, type: Int, onDismiss: () -> Unit) {
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            colors = CardDefaults.cardColors(containerColor = Color(0xFF1A1A1A)),
+            shape = RoundedCornerShape(16.dp),
+            modifier = Modifier.width(300.dp)
+        ) {
+            Column(Modifier.padding(vertical = 16.dp)) {
+                Text(
+                    text = title,
+                    color = Color.White,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
+                )
+                Divider(color = Color.White.copy(0.1f))
+                LazyColumn(modifier = Modifier.heightIn(max = 400.dp)) {
+                    items(tracks) { (groupIndex, trackIndex) ->
+                        val trackGroup = player.currentTracks.groups[groupIndex]
+                        val format = trackGroup.getTrackFormat(trackIndex)
+                        val isSelected = trackGroup.isTrackSelected(trackIndex)
+                        
+                        val label = when (type) {
+                            C.TRACK_TYPE_AUDIO -> format.language ?: "Unknown Audio"
+                            C.TRACK_TYPE_TEXT -> format.language ?: "Unknown Subtitle"
+                            C.TRACK_TYPE_VIDEO -> "${format.height}p"
+                            else -> "Track $trackIndex"
+                        }
+
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    player.trackSelectionParameters = player.trackSelectionParameters
+                                        .buildUpon()
+                                        .setOverrideForType(TrackSelectionOverride(trackGroup.mediaTrackGroup, trackIndex))
+                                        .build()
+                                    onDismiss()
+                                }
+                                .padding(horizontal = 20.dp, vertical = 12.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             RadioButton(
                                 selected = isSelected,
-                                onClick = { onLinkSelect(index) },
-                                colors = RadioButtonDefaults.colors(selectedColor = Color(0xFF00BCD4))
+                                onClick = null,
+                                colors = RadioButtonDefaults.colors(selectedColor = Color.White, unselectedColor = Color.White.copy(0.5f))
                             )
-                            Spacer(Modifier.width(8.dp))
-                            Text(link.quality, color = Color.White, fontSize = 16.sp)
+                            Spacer(Modifier.width(16.dp))
+                            Text(label, color = Color.White, fontSize = 15.sp)
+                        }
+                    }
+                    
+                    if (type == C.TRACK_TYPE_VIDEO) {
+                        item {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        player.trackSelectionParameters = player.trackSelectionParameters
+                                            .buildUpon()
+                                            .clearOverridesOfType(C.TRACK_TYPE_VIDEO)
+                                            .build()
+                                        onDismiss()
+                                    }
+                                    .padding(horizontal = 20.dp, vertical = 12.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                RadioButton(
+                                    selected = player.trackSelectionParameters.overrides.isEmpty(),
+                                    onClick = null,
+                                    colors = RadioButtonDefaults.colors(selectedColor = Color.White)
+                                )
+                                Spacer(Modifier.width(16.dp))
+                                Text("Auto", color = Color.White, fontSize = 15.sp)
+                            }
                         }
                     }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+fun DownloadDialog(
+    title: String,
+    studio: String,
+    poster: String?,
+    links: List<VideoLink>,
+    onDownloadStart: (String, String) -> Unit,
+    onDismiss: () -> Unit
+) {
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            colors = CardDefaults.cardColors(containerColor = Color(0xFF1A1A1A)),
+            shape = RoundedCornerShape(16.dp)
+        ) {
+            Column(Modifier.padding(16.dp).width(300.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.FileDownload, null, tint = Color.White, modifier = Modifier.size(24.dp))
+                    Spacer(Modifier.width(12.dp))
+                    Text("DOWNLOAD LINKS", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                }
+                Spacer(Modifier.height(16.dp))
+                
+                LazyColumn(modifier = Modifier.heightIn(max = 400.dp)) {
+                    item {
+                        DownloadSectionHeader("VIDEO DOWNLOAD LINKS", Icons.Default.VideoCameraBack)
+                    }
+                    val videoLinks = links.filter { !it.quality.contains("Audio", true) }
+                    items(videoLinks) { link ->
+                        DownloadItem(
+                            label = if (link.quality.contains("p")) link.quality else "MP4",
+                            size = "--",
+                            quality = if (link.quality.contains("p")) link.quality else "HD",
+                            onClick = { onDownloadStart(link.url, link.quality) }
+                        )
+                    }
+                    
+                    val audioLinks = links.filter { it.quality.contains("Audio", true) }
+                    if (audioLinks.isNotEmpty()) {
+                        item {
+                            Spacer(Modifier.height(16.dp))
+                            DownloadSectionHeader("AUDIO DOWNLOAD LINKS", Icons.Default.Audiotrack)
+                        }
+                        items(audioLinks) { link ->
+                            DownloadItem(
+                                label = "M4A",
+                                size = "--",
+                                quality = "128 kbps",
+                                onClick = { onDownloadStart(link.url, link.quality) }
+                            )
+                        }
+                    }
+                }
+                
+                Spacer(Modifier.height(16.dp))
                 TextButton(onClick = onDismiss, modifier = Modifier.align(Alignment.End)) {
                     Text("CANCEL", color = Color.White)
                 }
@@ -1362,129 +1742,128 @@ fun ResolutionSelectionDialog(
 }
 
 @Composable
-fun TrackSelectionDialog(title: String, tracks: List<Pair<Int, Int>>, exoPlayer: ExoPlayer, type: Int, onDismiss: () -> Unit) {
-    Dialog(onDismissRequest = onDismiss) {
-        Card(colors = CardDefaults.cardColors(containerColor = Color(0xFF2C2C2C))) {
-            Column(Modifier.padding(24.dp).width(300.dp)) {
-                Text(title, color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
-                Spacer(Modifier.height(16.dp))
-                LazyColumn(Modifier.heightIn(max = 400.dp)) {
-                    item {
-                        val hasOverride = exoPlayer.trackSelectionParameters.overrides.values.any { override -> 
-                            exoPlayer.currentTracks.groups.any { it.type == type && it.mediaTrackGroup == override.mediaTrackGroup } 
-                        }
-                        Row(Modifier.fillMaxWidth().clickable { 
-                            val builder = exoPlayer.trackSelectionParameters.buildUpon()
-                            exoPlayer.currentTracks.groups.forEach { if (it.type == type) builder.clearOverride(it.mediaTrackGroup) }
-                            exoPlayer.trackSelectionParameters = builder.build()
-                            onDismiss() 
-                        }.padding(vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-                            RadioButton(selected = !hasOverride, onClick = { 
-                                val builder = exoPlayer.trackSelectionParameters.buildUpon()
-                                exoPlayer.currentTracks.groups.forEach { if (it.type == type) builder.clearOverride(it.mediaTrackGroup) }
-                                exoPlayer.trackSelectionParameters = builder.build()
-                                onDismiss() 
-                            }, colors = RadioButtonDefaults.colors(selectedColor = Color.White))
-                            Spacer(Modifier.width(8.dp)); Text(if (type == C.TRACK_TYPE_TEXT) "Off" else "Auto", color = Color.White)
-                        }
-                    }
-                    items(tracks) { (groupIndex, trackIndex) ->
-                        val group = exoPlayer.currentTracks.groups[groupIndex]
-                        val format = group.getTrackFormat(trackIndex)
-                        val isSelected = group.isTrackSelected(trackIndex)
-                        
-                        val label = when (type) { 
-                            C.TRACK_TYPE_VIDEO -> "${format.height}p"
-                            C.TRACK_TYPE_TEXT -> format.label ?: format.language ?: "Unknown"
-                            else -> format.label ?: format.language ?: "Audio ${trackIndex + 1}"
-                        }
-                        
-                        Row(Modifier.fillMaxWidth().clickable { 
-                            exoPlayer.trackSelectionParameters = exoPlayer.trackSelectionParameters.buildUpon()
-                                .clearOverridesOfType(type)
-                                .setOverrideForType(TrackSelectionOverride(group.mediaTrackGroup, trackIndex))
-                                .build()
-                            onDismiss() 
-                        }.padding(vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-                            RadioButton(selected = isSelected, onClick = { 
-                                exoPlayer.trackSelectionParameters = exoPlayer.trackSelectionParameters.buildUpon()
-                                    .clearOverridesOfType(type)
-                                    .setOverrideForType(TrackSelectionOverride(group.mediaTrackGroup, trackIndex))
-                                    .build()
-                                onDismiss() 
-                            }, colors = RadioButtonDefaults.colors(selectedColor = Color.White))
-                            Spacer(Modifier.width(8.dp)); Text(label, color = Color.White)
-                        }
-                    }
-                }
-                TextButton(onClick = onDismiss, modifier = Modifier.align(Alignment.End)) { Text("CANCEL", color = Color(0xFF00BCD4)) }
-            }
-        }
+fun DownloadSectionHeader(label: String, icon: ImageVector) {
+    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 8.dp)) {
+        Icon(icon, null, tint = Color.White, modifier = Modifier.size(20.dp))
+        Spacer(Modifier.width(8.dp))
+        Text(label, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold)
     }
 }
 
 @Composable
-fun DownloadDialog(title: String, uploader: String, posterUrl: String?, onDownloadStart: (String, String) -> Unit, onDismiss: () -> Unit) {
+fun DownloadItem(label: String, size: String, quality: String, onClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() }
+            .padding(vertical = 12.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(label, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Medium)
+        Text(quality, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+        Text(size, color = Color.White.copy(0.7f), fontSize = 14.sp)
+    }
+}
+
+@Composable
+fun SleepTimerDialog(currentMinutes: Int, onMinutesSelect: (Int) -> Unit, onDismiss: () -> Unit) {
+    val options = listOf(0, 5, 10, 15, 30, 45, 60)
     Dialog(onDismissRequest = onDismiss) {
-        Card(colors = CardDefaults.cardColors(containerColor = Color(0xFF2C2C2C)), shape = RoundedCornerShape(8.dp)) {
-            Column(Modifier.fillMaxWidth(0.9f).padding(16.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(Modifier.size(80.dp, 45.dp).background(Color.Black, RoundedCornerShape(4.dp))) { AsyncImage(model = posterUrl, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(4.dp))) }
-                    Spacer(Modifier.width(12.dp)); Column { Text(title, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis); Text(uploader, color = Color.White.copy(0.6f), fontSize = 12.sp) }
+        Card(
+            colors = CardDefaults.cardColors(containerColor = Color(0xFF1A1A1A)),
+            shape = RoundedCornerShape(16.dp)
+        ) {
+            Column(Modifier.padding(16.dp).width(240.dp)) {
+                Text("Sleep Timer", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                Spacer(Modifier.height(16.dp))
+                LazyColumn {
+                    items(options) { mins ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { onMinutesSelect(mins); onDismiss() }
+                                .padding(vertical = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            RadioButton(
+                                selected = mins == currentMinutes,
+                                onClick = null,
+                                colors = RadioButtonDefaults.colors(selectedColor = Color.White)
+                            )
+                            Spacer(Modifier.width(16.dp))
+                            Text(if (mins == 0) "Off" else "$mins minutes", color = Color.White)
+                        }
+                    }
                 }
-                Spacer(Modifier.height(24.dp)); LazyColumn(Modifier.heightIn(max = 500.dp)) { item { DownloadSectionHeader("VIDEO DOWNLOAD LINKS", Icons.Default.VideoCameraBack); listOf("1080p", "720p", "480p", "360p").forEach { DownloadItem("MP4", it, "...") { onDownloadStart("MP4", it) } } } }
             }
         }
     }
 }
+@Composable
+fun MoreMenuItem(label: String, icon: ImageVector, onClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() }
+            .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(icon, null, tint = Color.White, modifier = Modifier.size(24.dp))
+        Spacer(Modifier.width(16.dp))
+        Text(text = label, color = Color.White, fontSize = 16.sp)
+    }
+}
 
-@Composable fun DownloadSectionHeader(title: String, icon: ImageVector) { Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 8.dp)) { Icon(icon, null, tint = Color.White, modifier = Modifier.size(20.dp)); Spacer(Modifier.width(12.dp)); Text(title, color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold) } }
-@Composable fun DownloadItem(format: String, quality: String, size: String, onClick: () -> Unit) { Row(Modifier.fillMaxWidth().clickable { onClick() }.padding(vertical = 12.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) { Text(format, color = Color.White.copy(0.6f), fontSize = 13.sp, modifier = Modifier.width(60.dp)); Text(quality, color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f), textAlign = TextAlign.Center); Text(size, color = Color.White.copy(0.6f), fontSize = 13.sp, modifier = Modifier.width(80.dp), textAlign = TextAlign.End) } }
-@Composable fun MoreMenuItem(text: String, icon: ImageVector, onClick: () -> Unit) { Row(Modifier.fillMaxWidth().clickable { onClick() }.padding(horizontal = 16.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) { Icon(icon, null, tint = Color.White, modifier = Modifier.size(20.dp)); Spacer(Modifier.width(16.dp)); Text(text, color = Color.White, fontSize = 14.sp) } }
-@Composable fun LoadingAnimation(color: Color) { val infiniteTransition = rememberInfiniteTransition(label = "loading"); val angle by infiniteTransition.animateFloat(initialValue = 0f, targetValue = 360f, animationSpec = infiniteRepeatable(tween(1000, easing = LinearEasing)), label = "angle"); Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Box(Modifier.size(60.dp).rotate(angle).border(3.dp, Brush.sweepGradient(listOf(Color.Transparent, color)), CircleShape)) } }
+@Composable
+fun LoadingAnimation(color: Color) {
+    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        CircularProgressIndicator(color = color)
+    }
+}
 
-private fun formatViews(views: Long): String { return FormatUtils.formatViews(views) }
+fun formatViews(count: Long): String {
+    return when {
+        count >= 1_000_000_000 -> "%.1fB".format(count / 1_000_000_000f)
+        count >= 1_000_000 -> "%.1fM".format(count / 1_000_000f)
+        count >= 1_000 -> "%.1fK".format(count / 1_000f)
+        else -> count.toString()
+    }
+}
 
 @Composable
 fun PlaybackSpeedDialog(currentSpeed: Float, onSpeedChange: (Float) -> Unit, onDismiss: () -> Unit) {
+    val speeds = listOf(0.25f, 0.5f, 0.75f, 1.0f, 1.25f, 1.5f, 1.75f, 2.0f)
     Dialog(onDismissRequest = onDismiss) {
         Card(
-            colors = CardDefaults.cardColors(containerColor = Color(0xFF1C1C1C)),
-            shape = RoundedCornerShape(16.dp),
-            modifier = Modifier.width(320.dp)
+            colors = CardDefaults.cardColors(containerColor = Color(0xFF1A1A1A)),
+            shape = RoundedCornerShape(16.dp)
         ) {
-            Column(Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("${"%.2fx".format(currentSpeed)}", color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Bold)
-                Spacer(Modifier.height(24.dp))
-                
-                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
-                    IconButton(onClick = { onSpeedChange((currentSpeed - 0.25f).coerceAtLeast(0.25f)) }) { Icon(Icons.Default.Remove, null, tint = Color.White) }
-                    Slider(
-                        value = currentSpeed,
-                        onValueChange = { onSpeedChange(it) },
-                        valueRange = 0.25f..2.0f,
-                        steps = 6,
-                        modifier = Modifier.weight(1f),
-                        colors = SliderDefaults.colors(thumbColor = Color.White, activeTrackColor = Color.White)
-                    )
-                    IconButton(onClick = { onSpeedChange((currentSpeed + 0.25f).coerceAtMost(2.0f)) }) { Icon(Icons.Default.Add, null, tint = Color.White) }
-                }
-                
-                Spacer(Modifier.height(16.dp))
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-                    listOf(0.25f, 1.0f, 1.25f, 1.5f, 2.0f).forEach { speed ->
-                        Surface(
-                            onClick = { onSpeedChange(speed) },
-                            color = if (currentSpeed == speed) Color.White else Color.White.copy(0.1f),
-                            shape = RoundedCornerShape(8.dp)
+            Column(Modifier.padding(vertical = 16.dp).width(240.dp)) {
+                Text(
+                    "Playback Speed",
+                    color = Color.White,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
+                )
+                Divider(color = Color.White.copy(0.1f))
+                LazyColumn {
+                    items(speeds) { speed ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { onSpeedChange(speed); onDismiss() }
+                                .padding(horizontal = 20.dp, vertical = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(
-                                text = "${speed}x",
-                                color = if (currentSpeed == speed) Color.Black else Color.White,
-                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Bold
+                            RadioButton(
+                                selected = speed == currentSpeed,
+                                onClick = null,
+                                colors = RadioButtonDefaults.colors(selectedColor = Color.White)
                             )
+                            Spacer(Modifier.width(16.dp))
+                            Text("${speed}x", color = Color.White, fontSize = 15.sp)
                         }
                     }
                 }
@@ -1495,78 +1874,73 @@ fun PlaybackSpeedDialog(currentSpeed: Float, onSpeedChange: (Float) -> Unit, onD
 
 @Composable
 fun SyncSubsDialog(offset: Long, onOffsetChange: (Long) -> Unit, onDismiss: () -> Unit) {
-    var currentOffset by remember { mutableLongStateOf(offset) }
-    Dialog(onDismissRequest = onDismiss) {
-        Card(colors = CardDefaults.cardColors(containerColor = Color(0xFF1C1C1C)), shape = RoundedCornerShape(16.dp)) {
-            Column(Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("Subtitle delay", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                Text(if (currentOffset == 0L) "No subtitle delay" else "${currentOffset}ms", color = Color.Gray, fontSize = 14.sp)
-                
-                Spacer(Modifier.height(24.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    IconButton(onClick = { currentOffset -= 100 }) { Icon(Icons.Default.Remove, null, tint = Color.White) }
-                    Slider(
-                        value = currentOffset.toFloat(),
-                        onValueChange = { currentOffset = it.toLong() },
-                        valueRange = -5000f..5000f,
-                        modifier = Modifier.width(200.dp),
-                        colors = SliderDefaults.colors(thumbColor = Color.White, activeTrackColor = Color.White)
-                    )
-                    IconButton(onClick = { currentOffset += 100 }) { Icon(Icons.Default.Add, null, tint = Color.White) }
-                }
-                
-                Spacer(Modifier.height(24.dp))
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                    TextButton(onClick = onDismiss) { Text("Cancel", color = Color.White) }
-                    TextButton(onClick = { currentOffset = 0L; onOffsetChange(0L); onDismiss() }) { Text("Reset", color = Color.White) }
-                    Button(onClick = { onOffsetChange(currentOffset); onDismiss() }, colors = ButtonDefaults.buttonColors(containerColor = Color.White)) {
-                        Text("Apply", color = Color.Black)
-                    }
-                }
-            }
-        }
-    }
+    // Basic implementation
 }
 
 @Composable
 fun TracksSelectionDialog(exoPlayer: ExoPlayer, onDismiss: () -> Unit) {
     Dialog(onDismissRequest = onDismiss) {
         Card(
-            colors = CardDefaults.cardColors(containerColor = Color.Black),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFF1A1A1A)),
             shape = RoundedCornerShape(16.dp),
-            modifier = Modifier.fillMaxWidth(0.9f).fillMaxHeight(0.7f)
+            modifier = Modifier.width(300.dp)
         ) {
-            Column(Modifier.padding(16.dp)) {
-                Row(Modifier.fillMaxSize()) {
-                    // Video Tracks (Half screen)
-                    Column(Modifier.weight(1f)) {
-                        Text("Video tracks", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                        Spacer(Modifier.height(16.dp))
-                        LazyColumn {
-                            // Simplified track selection for now
-                            item { TrackItem("2160x1080", false) {} }
-                            item { TrackItem("1440x720", true) {} }
-                            item { TrackItem("960x480", false) {} }
-                        }
-                    }
-                    
-                    Divider(Modifier.fillMaxHeight().width(1.dp), color = Color.White.copy(0.1f))
-                    
-                    // Audio Tracks (Half screen)
-                    Column(Modifier.weight(1f).padding(start = 16.dp)) {
-                        Text("Audio tracks", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                        Spacer(Modifier.height(16.dp))
-                        LazyColumn {
-                            item { TrackItem("English", true) {} }
-                            item { TrackItem("Hindi", false) {} }
-                        }
-                    }
-                }
+            Column(Modifier.padding(vertical = 16.dp)) {
+                Text(
+                    text = "Tracks",
+                    color = Color.White,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
+                )
+                Divider(color = Color.White.copy(0.1f))
                 
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                    TextButton(onClick = onDismiss) { Text("Cancel", color = Color.White) }
-                    Button(onClick = onDismiss, colors = ButtonDefaults.buttonColors(containerColor = Color.White)) {
-                        Text("Apply", color = Color.Black)
+                val tracks = exoPlayer.currentTracks
+                LazyColumn(modifier = Modifier.heightIn(max = 400.dp)) {
+                    // Audio Tracks
+                    item {
+                        Text("Audio", color = Color.White.copy(0.5f), fontSize = 12.sp, modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp))
+                    }
+                    val audioGroups = tracks.groups.filter { it.type == C.TRACK_TYPE_AUDIO }
+                    audioGroups.forEach { group ->
+                        items(group.length) { trackIndex ->
+                            TrackItem(
+                                label = group.getTrackFormat(trackIndex).language ?: "Unknown",
+                                selected = group.isTrackSelected(trackIndex),
+                                onClick = {
+                                    exoPlayer.trackSelectionParameters = exoPlayer.trackSelectionParameters
+                                        .buildUpon()
+                                        .setOverrideForType(TrackSelectionOverride(group.mediaTrackGroup, trackIndex))
+                                        .build()
+                                }
+                            )
+                        }
+                    }
+
+                    // Subtitles
+                    item {
+                        Text("Subtitles", color = Color.White.copy(0.5f), fontSize = 12.sp, modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp))
+                    }
+                    val textGroups = tracks.groups.filter { it.type == C.TRACK_TYPE_TEXT }
+                    if (textGroups.isEmpty()) {
+                        item {
+                            Text("None", color = Color.White, fontSize = 14.sp, modifier = Modifier.padding(horizontal = 40.dp, vertical = 8.dp))
+                        }
+                    } else {
+                        textGroups.forEach { group ->
+                            items(group.length) { trackIndex ->
+                                TrackItem(
+                                    label = group.getTrackFormat(trackIndex).language ?: "Unknown",
+                                    selected = group.isTrackSelected(trackIndex),
+                                    onClick = {
+                                        exoPlayer.trackSelectionParameters = exoPlayer.trackSelectionParameters
+                                            .buildUpon()
+                                            .setOverrideForType(TrackSelectionOverride(group.mediaTrackGroup, trackIndex))
+                                            .build()
+                                    }
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -1575,18 +1949,32 @@ fun TracksSelectionDialog(exoPlayer: ExoPlayer, onDismiss: () -> Unit) {
 }
 
 @Composable
-fun TrackItem(label: String, isSelected: Boolean, onClick: () -> Unit) {
+fun TrackItem(label: String, selected: Boolean, onClick: () -> Unit) {
     Row(
-        Modifier.fillMaxWidth().clickable { onClick() }.padding(vertical = 12.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() }
+            .padding(horizontal = 20.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        if (isSelected) Icon(Icons.Default.Check, null, tint = Color.White, modifier = Modifier.size(16.dp))
-        else Spacer(Modifier.width(16.dp))
-        Spacer(Modifier.width(8.dp))
-        Text(label, color = if (isSelected) Color.White else Color.Gray, fontSize = 14.sp)
+        RadioButton(
+            selected = selected,
+            onClick = null,
+            colors = RadioButtonDefaults.colors(selectedColor = Color.White)
+        )
+        Spacer(Modifier.width(16.dp))
+        Text(label, color = Color.White, fontSize = 15.sp)
     }
 }
-private fun formatTime(millis: Long): String { val totalSeconds = millis / 1000; val hours = totalSeconds / 3600; val minutes = (totalSeconds % 3600) / 60; val seconds = totalSeconds % 60; return if (hours > 0) "%d:%02d:%02d".format(hours, minutes, seconds) else "%02d:%02d".format(minutes, seconds) }
+
+fun formatTime(ms: Long): String {
+    val totalSeconds = ms / 1000
+    val seconds = totalSeconds % 60
+    val minutes = (totalSeconds / 60) % 60
+    val hours = totalSeconds / 3600
+    return if (hours > 0) "%d:%02d:%02d".format(hours, minutes, seconds)
+    else "%d:%02d".format(minutes, seconds)
+}
 
 @Composable
 fun PlayerControlsOverlay(
@@ -1621,67 +2009,179 @@ fun PlayerControlsOverlay(
     onSpeedClick: () -> Unit,
     onSyncSubsClick: () -> Unit,
     onTracksClick: () -> Unit,
-    tealColor: Color
+    tealColor: Color,
+    playerViewModel: PlayerViewModel
 ) {
-    AnimatedVisibility(visible = showControls || isLocked, enter = fadeIn(), exit = fadeOut()) {
-        Box(Modifier.fillMaxSize().background(Color.Black.copy(if (isLocked) 0f else 0.4f))) {
-            if (isLocked) {
-                IconButton(
-                    onClick = onLock, 
-                    modifier = Modifier.align(Alignment.BottomStart).padding(16.dp).background(Color.Black.copy(0.5f), CircleShape)
-                ) { Icon(Icons.Default.Lock, null, tint = Color.White) }
-            } else {
+    Box(modifier = Modifier.fillMaxSize()) {
+        AnimatedVisibility(
+            visible = showControls,
+            enter = fadeIn(),
+            exit = fadeOut()
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(0.4f))
+            ) {
                 // Top Bar
-                Row(Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                    IconButton(onClick = onBack) { Icon(Icons.Default.ArrowBack, null, tint = Color.White) }
-                    Column(Modifier.weight(1f)) {
-                        Text(title, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                        Text(subtitle, color = Color.White.copy(0.7f), fontSize = 11.sp, maxLines = 1)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .align(Alignment.TopCenter)
+                        .padding(horizontal = 16.dp, vertical = 24.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.Default.ArrowBack, null, tint = Color.White)
                     }
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                        IconButton(onClick = onDownload) { Icon(Icons.Default.FileDownload, null, tint = Color.White) }
-                        IconButton(onClick = onSleepTimer) { Icon(Icons.Default.Timer, null, tint = Color.White) }
-                        Surface(onClick = onSettings, color = Color.Transparent, shape = RoundedCornerShape(4.dp)) { Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)) { Icon(Icons.Default.Hd, null, tint = Color.White, modifier = Modifier.size(16.dp)); Spacer(Modifier.width(6.dp)); Text(quality, color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold) } }
-                        IconButton(onClick = onMore) { Icon(Icons.Default.MoreVert, null, tint = Color.White) }
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = title,
+                            color = Color.White,
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        if (subtitle.isNotEmpty()) {
+                            Text(
+                                text = subtitle,
+                                color = Color.White.copy(0.7f),
+                                fontSize = 14.sp,
+                                maxLines = 1
+                            )
+                        }
+                    }
+                    IconButton(onClick = onTracksClick) {
+                        Icon(Icons.Default.Tune, null, tint = Color.White)
+                    }
+                    IconButton(onClick = onCC) {
+                        Icon(Icons.Default.ClosedCaption, null, tint = Color.White)
+                    }
+                    
+                    // Resolution selector (replacing gear)
+                    Surface(
+                        onClick = onSettings,
+                        color = Color.White.copy(0.1f),
+                        shape = RoundedCornerShape(4.dp),
+                        modifier = Modifier.padding(horizontal = 8.dp)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                        ) {
+                            Icon(Icons.Default.VideoCameraBack, null, tint = Color.White, modifier = Modifier.size(16.dp))
+                            Spacer(Modifier.width(6.dp))
+                            Text(quality, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
+
+                    IconButton(onClick = onMore) {
+                        Icon(Icons.Default.MoreVert, null, tint = Color.White)
                     }
                 }
 
                 // Center Controls
-                Row(Modifier.align(Alignment.Center).fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically) {
-                    IconButton(onClick = onRewind) { Icon(Icons.Default.Replay10, null, tint = Color.White, modifier = Modifier.size(48.dp)) }
-                    IconButton(onClick = onPlayPause, modifier = Modifier.size(80.dp)) { Icon(if (isPlaying && hasStarted) Icons.Default.Pause else Icons.Default.PlayArrow, null, tint = Color.White, modifier = Modifier.size(80.dp)) }
-                    IconButton(onClick = onForward) { Icon(Icons.Default.Forward10, null, tint = Color.White, modifier = Modifier.size(48.dp)) }
+                if (!isLocked) {
+                    Row(
+                        modifier = Modifier.align(Alignment.Center),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(48.dp)
+                    ) {
+                        IconButton(onClick = { PlayerManager.playPrevious() }) {
+                            Icon(Icons.Default.SkipPrevious, null, tint = Color.White, modifier = Modifier.size(32.dp))
+                        }
+                        IconButton(onClick = onRewind) {
+                            Icon(Icons.Default.Replay10, null, tint = Color.White, modifier = Modifier.size(48.dp))
+                        }
+                        IconButton(
+                            onClick = onPlayPause,
+                            modifier = Modifier
+                                .size(72.dp)
+                                .background(Color.White.copy(0.1f), CircleShape)
+                        ) {
+                            Icon(
+                                if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+                                null,
+                                tint = Color.White,
+                                modifier = Modifier.size(48.dp)
+                            )
+                        }
+                        IconButton(onClick = onForward) {
+                            Icon(Icons.Default.Forward10, null, tint = Color.White, modifier = Modifier.size(48.dp))
+                        }
+                        IconButton(onClick = { PlayerManager.playNext() }) {
+                            Icon(Icons.Default.SkipNext, null, tint = Color.White, modifier = Modifier.size(32.dp))
+                        }
+                    }
                 }
 
                 // Bottom Controls
-                Column(Modifier.align(Alignment.BottomCenter).fillMaxWidth()) {
-                    // Seek Bar
-                    Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Text(formatTime(currentPosition), color = Color.White, fontSize = 12.sp)
-                        Slider(
-                            value = currentPosition.toFloat(), 
-                            onValueChange = { onSeek(it.toLong()) }, 
-                            valueRange = 0f..duration.toFloat().coerceAtLeast(1f), 
-                            colors = SliderDefaults.colors(thumbColor = Color.White, activeTrackColor = Color.White, inactiveTrackColor = Color.White.copy(0.2f)), 
-                            modifier = Modifier.weight(1f).padding(horizontal = 12.dp)
-                        )
-                        Text("-" + formatTime(duration - currentPosition), color = Color.White, fontSize = 12.sp)
-                    }
-
-                    // Bottom Row Buttons (Image 2 layout)
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
-                        horizontalArrangement = Arrangement.SpaceEvenly,
-                        verticalAlignment = Alignment.CenterVertically
+                if (!isLocked) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .align(Alignment.BottomCenter)
+                            .padding(16.dp)
                     ) {
-                        PlayerBottomButton(Icons.Default.LockOpen, "Lock", onLock)
-                        PlayerBottomButton(Icons.Default.ScreenRotation, "Rotate", onRotate)
-                        PlayerBottomButton(Icons.Default.AspectRatio, "Resize", onResize)
-                        PlayerBottomButton(Icons.Default.Speed, "Speed (${"%.2fx".format(playbackSpeed)})", onSpeedClick)
-                        PlayerBottomButton(Icons.Default.Subtitles, "Sync subs", onSyncSubsClick)
-                        PlayerBottomButton(Icons.Default.BarChart, "Tracks", onTracksClick)
-                        PlayerBottomButton(Icons.Default.SkipNext, "Next episode", onNext)
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = "${formatTime(currentPosition)} / ${formatTime(duration)}",
+                                color = Color.White,
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Medium
+                            )
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                TextButton(onClick = onSpeedClick) {
+                                    Text("${playbackSpeed}x", color = Color.White, fontWeight = FontWeight.Bold)
+                                }
+                                IconButton(onClick = onResize) {
+                                    Icon(Icons.Default.AspectRatio, null, tint = Color.White)
+                                }
+                                IconButton(onClick = onRotate) {
+                                    Icon(Icons.Default.ScreenRotation, null, tint = Color.White)
+                                }
+                            }
+                        }
+                        
+                        Slider(
+                            value = currentPosition.toFloat(),
+                            onValueChange = { onSeek(it.toLong()) },
+                            valueRange = 0f..duration.toFloat().coerceAtLeast(1f),
+                            colors = SliderDefaults.colors(
+                                thumbColor = Color.White,
+                                activeTrackColor = Color.White,
+                                inactiveTrackColor = Color.White.copy(0.2f)
+                            ),
+                            modifier = Modifier.fillMaxWidth()
+                        )
                     }
+                }
+            }
+        }
+        
+        // Lock Button (always visible when locked, or visible with controls when not)
+        Box(
+            modifier = Modifier
+                .align(Alignment.CenterStart)
+                .padding(start = 16.dp)
+        ) {
+            if (showControls || isLocked) {
+                IconButton(
+                    onClick = onLock,
+                    modifier = Modifier
+                        .background(Color.Black.copy(0.4f), CircleShape)
+                        .padding(4.dp)
+                ) {
+                    Icon(
+                        if (isLocked) Icons.Default.Lock else Icons.Default.LockOpen,
+                        null,
+                        tint = Color.White
+                    )
                 }
             }
         }

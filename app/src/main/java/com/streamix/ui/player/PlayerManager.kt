@@ -23,6 +23,10 @@ object PlayerManager {
     val isLiked = mutableStateOf(false)
     val isDisliked = mutableStateOf(false)
 
+    // Current playlist/queue tracking
+    private var playlist = listOf<SearchResult>()
+    private var currentIndex = -1
+
     fun play(
         video: SearchResult,
         links: List<VideoLink>,
@@ -30,7 +34,8 @@ object PlayerManager {
         eps: List<Episode> = emptyList(),
         startPosition: Long = 0L,
         episode: Episode? = null,
-        isShort: Boolean = false
+        isShort: Boolean = false,
+        fullPlaylist: List<SearchResult> = emptyList()
     ) {
         currentVideo.value = video.copy(isShort = isShort)
         currentEpisode.value = episode
@@ -44,6 +49,54 @@ object PlayerManager {
         isHiddenTemporarily.value = false
         isLiked.value = false
         isDisliked.value = false
+
+        if (fullPlaylist.isNotEmpty()) {
+            playlist = fullPlaylist
+            currentIndex = playlist.indexOfFirst { it.id == video.id }
+        } else if (related.isNotEmpty()) {
+            playlist = listOf(video) + related
+            currentIndex = 0
+        } else {
+            playlist = listOf(video)
+            currentIndex = 0
+        }
+    }
+
+    fun playNext() {
+        if (episodes.value.isNotEmpty() && currentEpisode.value != null) {
+            val nextIdx = episodes.value.indexOfFirst { it.data == currentEpisode.value?.data } + 1
+            if (nextIdx < episodes.value.size) {
+                playEpisode(episodes.value[nextIdx])
+            }
+            return
+        }
+
+        if (currentIndex != -1 && currentIndex < playlist.size - 1) {
+            val nextVideo = playlist[currentIndex + 1]
+            // We need to trigger navigation or loading for the next video
+            // Since PlayerManager is just a state holder, we might need a callback or observe this change elsewhere
+            // For now, let's just update the state, but usually we need to fetch links.
+            // This logic is often handled by the UI or a ViewModel observing PlayerManager.
+        }
+    }
+
+    fun playPrevious() {
+        if (episodes.value.isNotEmpty() && currentEpisode.value != null) {
+            val prevIdx = episodes.value.indexOfFirst { it.data == currentEpisode.value?.data } - 1
+            if (prevIdx >= 0) {
+                playEpisode(episodes.value[prevIdx])
+            }
+            return
+        }
+
+        if (currentIndex > 0) {
+            val prevVideo = playlist[currentIndex - 1]
+        }
+    }
+
+    fun playEpisode(episode: Episode) {
+        currentEpisode.value = episode
+        // This will trigger a re-load in EmbeddedPlayer because it's observing the episode index or links
     }
 
     fun pause() {

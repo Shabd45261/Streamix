@@ -27,7 +27,8 @@ class ShortsViewModel @Inject constructor(
     private val pornhatScraperProvider: Provider<PornhatScraper>,
     private val watchlistDao: WatchlistDao,
     private val historyDao: com.streamix.core.storage.WatchHistoryDao,
-    private val prefs: PreferencesManager
+    private val prefs: PreferencesManager,
+    private val searchHistoryManager: com.streamix.core.storage.SearchHistoryManager
 ) : ViewModel() {
 
     private val okxxxScraper get() = okxxxScraperProvider.get()
@@ -47,11 +48,16 @@ class ShortsViewModel @Inject constructor(
     private val _searchResults = MutableStateFlow<List<ShortsItem>>(emptyList())
     val searchResults = _searchResults.asStateFlow()
 
-    val searchHistory: StateFlow<List<String>> = prefs.globalSearchHistory
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    private var currentContext: ShortsContext = ShortsContext.YOUTUBE
+
+    val searchHistory: StateFlow<List<String>> = _searchQuery.flatMapLatest {
+        searchHistoryManager.getShortsHistory(currentContext == ShortsContext.ADULT)
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     fun removeHistoryItem(q: String) {
-        viewModelScope.launch { prefs.removeGlobalSearch(q) }
+        viewModelScope.launch { 
+            searchHistoryManager.removeShortsSearch(currentContext == ShortsContext.ADULT, q)
+        }
     }
 
     private var currentSource = ShortsSource.FEED
@@ -109,6 +115,7 @@ class ShortsViewModel @Inject constructor(
     fun load(context: ShortsContext) {
         viewModelScope.launch {
             _isLoading.value = true
+            currentContext = context
             currentSource = ShortsSource.FEED
             currentAdultPage = 1
             youtubeFeedPage = 0
@@ -129,7 +136,7 @@ class ShortsViewModel @Inject constructor(
 
     private var searchShortsJob: Job? = null
 
-    fun searchShorts(query: String) {
+    fun searchShorts(query: String, addToHistory: Boolean = false) {
         _searchQuery.value = query
         searchShortsJob?.cancel()
         if (query.isBlank()) {
@@ -139,24 +146,24 @@ class ShortsViewModel @Inject constructor(
         }
         
         searchShortsJob = viewModelScope.launch {
+            if (addToHistory) {
+                searchHistoryManager.addShortsSearch(currentContext == ShortsContext.ADULT, query)
+            }
+
             // Highly aggressive debounce for fast typing
             val debounceTime = if (query.length < 3) 300L else 150L
             delay(debounceTime)
 
             _isLoading.value = true
             try {
-                // Save search query to history for personalization
-                viewModelScope.launch { prefs.addShortsSearch(query) }
-                
                 // Use the strictly filtered shorts search from the scraper
                 // targetTotal=150 ensures we get at least 100 distinct items
                 val results = mutableListOf<ShortsItem>()
-                youtubeScraper.searchShortsIncremental(query, targetTotal = 150) { newResults ->
-                    results.addAll(newResults.map { it.toShortsItem() })
-                    // Buffering to avoid excessive UI flickering, update in chunks of 40
-                    if (results.size % 40 == 0) {
-                        _searchResults.value = results.distinctBy { it.id }
-                    }
+                youtubeScraper.searchShortsIncremental(query, targetTotal = 100) { newResults ->
+                    val mapped = newResults.map { it.toShortsItem() }
+                    results.addAll(mapped)
+                    // Update UI as we get results, with a minimum chunk size or periodically
+                    _searchResults.value = results.distinctBy { it.id }
                 }
                 
                 val finalResults = results.distinctBy { it.id }
@@ -234,70 +241,100 @@ class ShortsViewModel @Inject constructor(
         }
     }
 
-    private suspend fun loadYoutubeShortsFeed(): List<ShortsItem> {
-        return try {
-            val cookies = prefs.youtubeCookies.first()
-            val localSubs = prefs.subscribedChannels.first()
-            val interests = prefs.userInterests.first()
-            val searchHistory = prefs.shortsSearchHistory.first()
-            
-            // Get channels from watch history (shorts specifically)
-            val historyItems = historyDao.getAllHistory().first().filter { it.mediaType == "youtube" && it.isShort }
-            val frequentlyWatchedShortsChannels = historyItems.groupBy { it.studio }.toList()
-                .sortedByDescending { it.second.size }
-                .map { it.first }
-                .filter { it.isNotEmpty() }
-                .take(15)
+    private suspend fun loadYoutubeShortsFeed(): List<ShortsItem> = coroutineScope {
+        try {
+            val watchedIds = historyDao.getAllHistory()
+                .first()
+                .filter { it.mediaType == "youtube" && it.isShort }
+                .map { it.id }
+                .toSet()
 
-            val baseShorts = youtubeScraper.getShortsFeed()
+            val likedIdsFromDb = watchlistDao.getByStatus("Liked")
+                .first()
+                .filter { it.mediaType == "youtube" && it.isShort }
+                .map { it.id }
+                .toSet()
             
-            // Fetch some shorts from interests, search history, and watched channels to personalize
-            val personalizedShorts = mutableListOf<SearchResult>()
+            val seenIds = watchedIds + likedIdsFromDb
+
+            val localSubs = prefs.subscribedChannels.first().toList().shuffled()
+            val shortsSearchHistory = prefs.ytShortsSearchHistory.first().take(10).shuffled()
             
-            // Prioritize topics from search history and watched channels
-            val combinedTopics = (searchHistory.toList() + frequentlyWatchedShortsChannels + interests.toList())
-                .distinct().shuffled().take(12)
-                
-            if (combinedTopics.isNotEmpty()) {
-                coroutineScope {
-                    combinedTopics.map { topic ->
-                        async {
-                            try {
-                                // Deeper search for better personalization
-                                youtubeScraper.searchShorts(topic, limit = 20)
-                            } catch (e: Exception) { emptyList<SearchResult>() }
-                        }
-                    }.awaitAll().forEach { personalizedShorts.addAll(it) }
+            val subShortsDeferred = localSubs.take(20).map { url ->
+                async {
+                    try { youtubeScraper.getChannelShorts(url).map { it.toShortsItem() } } catch (e: Exception) { emptyList() }
                 }
             }
             
-            // Fetch shorts from ALL subscribed channels (not just first 5)
-            val subscribedShorts = if (localSubs.isNotEmpty()) {
-                coroutineScope {
-                    localSubs.take(20).map { channelName ->
-                        async {
-                            try { youtubeScraper.searchShorts(channelName).take(8) } catch (e: Exception) { emptyList() }
-                        }
-                    }.awaitAll().flatten().map { it.toShortsItem() }
+            val searchShortsDeferred = shortsSearchHistory.take(10).map { query ->
+                async {
+                    try { youtubeScraper.searchShorts(query, limit = 20).map { it.toShortsItem() } } catch (e: Exception) { emptyList() }
                 }
-            } else emptyList()
-
-            val combined = if (!cookies.isNullOrBlank() || subscribedShorts.isNotEmpty() || personalizedShorts.isNotEmpty()) {
-                // Mix everything: Subscribed first, then Personalized, then General Feed
-                val topics = listOf("shorts", "trending shorts", "recommended shorts", "viral shorts")
-                val standardResults = youtubeScraper.search(topics.random()).map { it.toShortsItem() }
-                
-                (subscribedShorts + personalizedShorts.map { it.toShortsItem() } + baseShorts.map { it.toShortsItem() } + standardResults).distinctBy { it.id }
-            } else {
-                baseShorts.map { it.toShortsItem() }
             }
             
-            // Grouping: Mix Subscribed and Personalized at the top
-            val topMix = combined.take(50).shuffled()
-            val remaining = combined.drop(50)
+            val subShortsLists = subShortsDeferred.awaitAll()
+            val searchShortsLists = searchShortsDeferred.awaitAll()
             
-            topMix + remaining
-        } catch (e: Exception) { emptyList() }
+            val allSources = (subShortsLists + searchShortsLists).filter { it.isNotEmpty() }
+            
+            val resultList = mutableListOf<ShortsItem>()
+            val addedIds = mutableSetOf<String>()
+
+            // 1. Interleave Fresh from all sources for equal representation
+            val freshSources = allSources.map { list -> list.filter { it.id !in seenIds } }.filter { it.isNotEmpty() }
+            if (freshSources.isNotEmpty()) {
+                interleave(freshSources).forEach { 
+                    if (addedIds.add(it.id)) resultList.add(it)
+                }
+            }
+            
+            // 2. Add from general feed (fresh)
+            if (resultList.size < 50) {
+                youtubeScraper.getShortsFeed()
+                    .map { it.toShortsItem() }
+                    .filter { it.id !in seenIds && it.id !in addedIds }
+                    .shuffled()
+                    .forEach { if (addedIds.add(it.id)) resultList.add(it) }
+            }
+            
+            // 3. Fallback to Seen ONLY if too few total items collected
+            if (resultList.size < 20) {
+                val seenShorts = allSources.flatten().filter { it.id in seenIds && it.id !in addedIds }.shuffled()
+                seenShorts.forEach {
+                    if (addedIds.add(it.id)) resultList.add(it)
+                }
+                
+                if (resultList.size < 20) {
+                    youtubeScraper.getShortsFeed()
+                        .map { it.toShortsItem() }
+                        .filter { it.id !in addedIds }
+                        .shuffled()
+                        .forEach { if (addedIds.add(it.id)) resultList.add(it) }
+                }
+            }
+
+            resultList.take(150)
+        } catch (e: Exception) {
+            Log.e("ShortsVM", "Error loading personalized shorts feed", e)
+            youtubeScraper.getShortsFeed().map { it.toShortsItem() }.shuffled()
+        }
+    }
+
+    private fun <T> interleave(lists: List<List<T>>): List<T> {
+        val result = mutableListOf<T>()
+        val iterators = lists.filter { it.isNotEmpty() }.map { it.iterator() }.toMutableList()
+        while (iterators.isNotEmpty()) {
+            val it = iterators.iterator()
+            while (it.hasNext()) {
+                val listIt = it.next()
+                if (listIt.hasNext()) {
+                    result.add(listIt.next())
+                } else {
+                    it.remove()
+                }
+            }
+        }
+        return result
     }
 
     private fun com.streamix.core.model.SearchResult.toShortsItem(): ShortsItem {
@@ -307,6 +344,8 @@ class ShortsViewModel @Inject constructor(
             thumbnailUrl = this.posterPath ?: "",
             streamUrl = "", // resolve on demand
             channelName = this.studio,
+            channelAvatarUrl = this.studioAvatarUrl ?: "",
+            channelUrl = this.studioUrl ?: "",
             views = this.views,
             source = ShortsContext.YOUTUBE
         )
@@ -404,9 +443,14 @@ class ShortsViewModel @Inject constructor(
                 viewModelScope.launch {
                     try {
                         var url = ""
+                        var avatarUrl = ""
+                        var chUrl = ""
                         if (item.source == ShortsContext.YOUTUBE) {
-                            val links = youtubeScraper.getVideoLinks(item.id, "youtube")
+                            val info = youtubeScraper.getFullStreamInfo(item.id)
+                            val links = info?.let { youtubeScraper.getVideoLinksFromInfo(it) } ?: emptyList()
                             url = links.maxByOrNull { it.quality.contains("720") || it.quality.contains("1080") }?.url ?: links.firstOrNull()?.url ?: ""
+                            avatarUrl = info?.uploaderAvatars?.lastOrNull()?.getUrl() ?: ""
+                            chUrl = info?.uploaderUrl ?: ""
                         } else {
                             // ... existing adult resolution ...
                             val provider = ProviderRegistry.providers.find { item.id.startsWith(it.mainUrl) }
@@ -426,9 +470,13 @@ class ShortsViewModel @Inject constructor(
                             }
                         }
 
-                        if (url.isNotEmpty()) {
+                        if (url.isNotEmpty() || avatarUrl.isNotEmpty()) {
                             _shorts.value = _shorts.value.map {
-                                if (it.id == item.id) it.copy(streamUrl = url) else it
+                                if (it.id == item.id) it.copy(
+                                    streamUrl = if (url.isNotEmpty()) url else it.streamUrl,
+                                    channelAvatarUrl = if (avatarUrl.isNotEmpty()) avatarUrl else it.channelAvatarUrl,
+                                    channelUrl = if (chUrl.isNotEmpty()) chUrl else it.channelUrl
+                                ) else it
                             }
                         }
                     } catch (e: Exception) { /* log */ }

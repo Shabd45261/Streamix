@@ -3,6 +3,7 @@ package com.streamix.ui.youtube
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
@@ -40,10 +41,9 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.streamix.core.model.Profile
 import com.streamix.core.model.SearchResult
-import com.streamix.ui.components.StreamixHeader
-import com.streamix.ui.components.StreamixSearchBar
-import com.streamix.ui.components.StreamixHeroSection
-import com.streamix.ui.components.VideoOptionsPopup
+import com.streamix.core.utils.UrlUtils
+import com.streamix.ui.components.*
+import com.streamix.ui.navigation.LocalProfile
 import com.streamix.ui.navigation.Screen
 import com.streamix.ui.theme.LocalCustomColors
 import java.net.URLEncoder
@@ -60,12 +60,22 @@ fun YoutubeHomeScreen(
     val history     by viewModel.history.collectAsState()
     val subscribed  by viewModel.subscribed.collectAsState()
     val recommended by viewModel.recommended.collectAsState()
+    val liked       by viewModel.liked.collectAsState()
     
     val isLoading   by viewModel.isLoading.collectAsState()
     val isRefreshing by viewModel.isRefreshing.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
+    val searchHistory by viewModel.searchHistory.collectAsState()
     val searchResults by viewModel.searchResults.collectAsState()
     val showRefreshBanner by viewModel.showRefreshBanner.collectAsState()
+    val hiddenIds by com.streamix.core.utils.SessionVideoManager.hiddenVideoIds.collectAsState()
+
+    val filteredTrending = remember(trending, hiddenIds) { trending.filter { it.id !in hiddenIds } }
+    val filteredHistory = remember(history, hiddenIds) { history.filter { it.id !in hiddenIds } }
+    val filteredSubscribed = remember(subscribed, hiddenIds) { subscribed.filter { it.id !in hiddenIds } }
+    val filteredRecommended = remember(recommended, hiddenIds) { recommended.filter { it.id !in hiddenIds } }
+    val filteredLiked = remember(liked, hiddenIds) { liked.filter { it.id !in hiddenIds } }
+    val filteredSearchResults = remember(searchResults, hiddenIds) { searchResults.filter { it.id !in hiddenIds } }
 
     val colors = LocalCustomColors.current
     val pullToRefreshState = rememberPullToRefreshState()
@@ -98,9 +108,9 @@ fun YoutubeHomeScreen(
             Box(modifier = Modifier.fillMaxSize().nestedScroll(pullToRefreshState.nestedScrollConnection)) {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(bottom = 100.dp)
+                    contentPadding = PaddingValues(bottom = 150.dp)
                 ) {
-                    item {
+                    item(key = "header") {
                         StreamixHeader(
                             currentProfile = profileState.value,
                             onSettingsTap = { navController.navigate(Screen.Settings.route) },
@@ -108,19 +118,21 @@ fun YoutubeHomeScreen(
                         )
                     }
 
-                    item {
+                    item(key = "search_bar") {
                         Box(modifier = Modifier.fillMaxWidth().background(colors.primary).padding(horizontal = 16.dp, vertical = 8.dp)) {
                             StreamixSearchBar(
                                 query = searchQuery,
                                 onQueryChange = viewModel::onQueryChange,
-                                onSearch = { viewModel.search(searchQuery) }
+                                onSearch = { viewModel.search(searchQuery) },
+                                history = searchHistory,
+                                onRemoveHistoryItem = viewModel::removeHistoryItem
                             )
                         }
                     }
 
                     if (searchQuery.isBlank()) {
                         if (showRefreshBanner) {
-                            item {
+                            item(key = "refresh_banner") {
                                 Button(
                                     onClick = { 
                                         viewModel.refresh()
@@ -138,11 +150,12 @@ fun YoutubeHomeScreen(
                         }
 
                         // 0. Hero Section
-                        if (trending.isNotEmpty()) {
-                            item {
+                        if (filteredTrending.isNotEmpty()) {
+                            item(key = "trending_hero") {
                                 StreamixHeroSection(
-                                    items = trending.take(5),
+                                    items = filteredTrending.take(5),
                                     onOptionSelect = { item, status -> viewModel.addToLibrary(item, status) },
+                                    onRemoveFromHistory = viewModel::removeFromHistory,
                                     onClick = { video ->
                                         val encoded = URLEncoder.encode(video.id, "UTF-8")
                                         navController.navigate("youtube_detail?videoId=$encoded")
@@ -152,18 +165,20 @@ fun YoutubeHomeScreen(
                         }
 
                         // 1. Recent Watch
-                        if (history.isNotEmpty()) {
-                            item { SectionHeader("Recent Watch") }
-                            item {
+                        if (filteredHistory.isNotEmpty()) {
+                            item(key = "history_header") { SectionHeader("Recent Watch") }
+                            item(key = "history_row") {
                                 LazyRow(
                                     horizontalArrangement = Arrangement.spacedBy(16.dp),
                                     contentPadding = PaddingValues(horizontal = 16.dp)
                                 ) {
-                                    items(history.take(12), key = { "history_${it.id}" }) { video ->
+                                    items(filteredHistory.take(12), key = { "history_${it.id}" }) { video ->
                                         YoutubeHorizontalCard(
+                                            modifier = Modifier.animateItemPlacement(),
                                             item = video, 
                                             width = 180.dp,
                                             onOptionSelect = { item, status -> viewModel.addToLibrary(item, status) },
+                                            onRemoveFromHistory = viewModel::removeFromHistory,
                                             onClick = {
                                                 val encoded = URLEncoder.encode(video.id, "UTF-8")
                                                 navController.navigate("youtube_detail?videoId=$encoded")
@@ -175,15 +190,16 @@ fun YoutubeHomeScreen(
                         }
 
                         // 2. Just Added
-                        if (trending.size > 5) {
-                            item { SectionHeader("Just Added") }
-                            item {
+                        if (filteredTrending.size > 5) {
+                            item(key = "trending_row_header") { SectionHeader("Just Added") }
+                            item(key = "trending_row") {
                                 LazyRow(
                                     horizontalArrangement = Arrangement.spacedBy(14.dp),
                                     contentPadding = PaddingValues(horizontal = 16.dp)
                                 ) {
-                                    items(trending.drop(5).take(12)) { video ->
+                                    items(filteredTrending.drop(5).take(12), key = { it.id }) { video ->
                                         YoutubeHorizontalCard(
+                                            modifier = Modifier.animateItemPlacement(),
                                             item = video, 
                                             width = 240.dp,
                                             onOptionSelect = { item, status -> viewModel.addToLibrary(item, status) },
@@ -198,15 +214,16 @@ fun YoutubeHomeScreen(
                         }
 
                         // 3. Subscribed
-                        if (subscribed.isNotEmpty()) {
-                            item { SectionHeader("Subscribed") }
-                            item {
+                        if (filteredSubscribed.isNotEmpty()) {
+                            item(key = "subscribed_header") { SectionHeader("Subscribed") }
+                            item(key = "subscribed_row") {
                                 LazyRow(
                                     horizontalArrangement = Arrangement.spacedBy(14.dp),
                                     contentPadding = PaddingValues(horizontal = 16.dp)
                                 ) {
-                                    items(subscribed.take(12)) { video ->
+                                    items(filteredSubscribed.take(12), key = { it.id }) { video ->
                                         YoutubeHorizontalCard(
+                                            modifier = Modifier.animateItemPlacement(),
                                             item = video, 
                                             width = 240.dp,
                                             onOptionSelect = { item, status -> viewModel.addToLibrary(item, status) },
@@ -220,16 +237,17 @@ fun YoutubeHomeScreen(
                             }
                         }
 
-                        // 4. Recommended
-                        if (recommended.isNotEmpty()) {
-                            item { SectionHeader("Recommended") }
-                            item {
+                        // 3.5 Liked Videos
+                        if (filteredLiked.isNotEmpty()) {
+                            item(key = "liked_header") { SectionHeader("Liked Videos") }
+                            item(key = "liked_row") {
                                 LazyRow(
                                     horizontalArrangement = Arrangement.spacedBy(14.dp),
                                     contentPadding = PaddingValues(horizontal = 16.dp)
                                 ) {
-                                    items(recommended.take(12)) { video ->
+                                    items(filteredLiked.take(12), key = { "liked_${it.id}" }) { video ->
                                         YoutubeHorizontalCard(
+                                            modifier = Modifier.animateItemPlacement(),
                                             item = video, 
                                             width = 240.dp,
                                             onOptionSelect = { item, status -> viewModel.addToLibrary(item, status) },
@@ -241,11 +259,39 @@ fun YoutubeHomeScreen(
                                     }
                                 }
                             }
-                            
-                            // Vertical list for Recommended (actual feed recommendations)
-                            val feedRecommended = recommended.drop(12)
-                            items(feedRecommended) { video ->
+                        }
+
+                        // 4. Personalized Feed
+                        if (filteredRecommended.isNotEmpty()) {
+                            item(key = "recommended_header") { SectionHeader("For You") }
+                            item(key = "recommended_row") {
+                                LazyRow(
+                                    horizontalArrangement = Arrangement.spacedBy(14.dp),
+                                    contentPadding = PaddingValues(horizontal = 16.dp)
+                                ) {
+                                    items(filteredRecommended.take(12), key = { it.id }) { video ->
+                                        YoutubeHorizontalCard(
+                                            modifier = Modifier.animateItemPlacement(),
+                                            item = video, 
+                                            width = 240.dp,
+                                            onOptionSelect = { item, status -> viewModel.addToLibrary(item, status) },
+                                            onClick = {
+                                                val encoded = URLEncoder.encode(video.id, "UTF-8")
+                                                navController.navigate("youtube_detail?videoId=$encoded")
+                                            }
+                                        )
+                                    }
+                                }
+                            }
+
+                            // Vertical list for For You / Mixed feed
+                            val feedRecommended = filteredRecommended.drop(12)
+                            if (feedRecommended.isNotEmpty()) {
+                                item(key = "mixed_for_you_header") { SectionHeader("Mixed for You") }
+                            }
+                            items(feedRecommended, key = { "rec_list_${it.id}" }) { video ->
                                 YoutubeVideoListCard(
+                                    modifier = Modifier.animateItemPlacement(),
                                     item = video,
                                     onOptionSelect = { item, status -> viewModel.addToLibrary(item, status) },
                                     onClick = {
@@ -257,11 +303,12 @@ fun YoutubeHomeScreen(
                         }
 
                         // 5. More Videos (Trending remaining)
-                        if (trending.size > 17) {
-                            item { SectionHeader("More Videos") }
-                            val remaining = trending.drop(17)
-                            items(remaining) { video ->
+                        if (filteredTrending.size > 17) {
+                            item(key = "more_videos_header") { SectionHeader("Subscriptions & More") }
+                            val remaining = filteredTrending.drop(17)
+                            items(remaining, key = { "more_list_${it.id}" }) { video ->
                                 YoutubeVideoListCard(
+                                    modifier = Modifier.animateItemPlacement(),
                                     item = video,
                                     onOptionSelect = { item, status -> viewModel.addToLibrary(item, status) },
                                     onClick = {
@@ -274,7 +321,7 @@ fun YoutubeHomeScreen(
 
                     } else {
                         // Search Results Section
-                        items(searchResults, key = { "search_${it.id}" }) { video ->
+                        items(filteredSearchResults, key = { "search_${it.id}" }) { video ->
                             if (video.mediaType == "youtube_channel") {
                                 YoutubeChannelListCard(
                                     item = video,
@@ -285,6 +332,7 @@ fun YoutubeHomeScreen(
                                 )
                             } else {
                                 YoutubeVideoListCard(
+                                    modifier = Modifier.animateItemPlacement(),
                                     item = video,
                                     onOptionSelect = { item, status -> viewModel.addToLibrary(item, status) },
                                     onClick = {
@@ -331,29 +379,37 @@ fun YoutubeHomeScreen(
 
 @Composable
 fun SectionHeader(title: String) {
-    val colors = LocalCustomColors.current
     Row(
         modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 28.dp, bottom = 12.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(text = title, color = colors.secondary, fontSize = 20.sp, fontWeight = FontWeight.Black)
-        Icon(Icons.Default.KeyboardArrowRight, null, tint = colors.secondary.copy(0.5f))
+        Text(text = title, color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Black)
+        Icon(Icons.Default.KeyboardArrowRight, null, tint = Color.White.copy(0.5f))
     }
 }
 
 @Composable
-fun YoutubeHeroSection(item: SearchResult, onOptionSelect: (SearchResult, String) -> Unit, onClick: (SearchResult) -> Unit) {
+fun YoutubeHeroSection(
+    item: SearchResult, 
+    onOptionSelect: (SearchResult, String) -> Unit, 
+    onRemoveFromHistory: ((String) -> Unit)? = null,
+    onClick: (SearchResult) -> Unit
+) {
     val context = LocalContext.current
     var showMenu by remember { mutableStateOf(false) }
+    var showExpandedCard by remember { mutableStateOf(false) }
 
     Box(
-        modifier = Modifier.fillMaxSize().pointerInput(Unit) {
-            detectTapGestures(
-                onTap = { onClick(item) },
-                onLongPress = { showMenu = true }
-            )
-        }
+        modifier = Modifier
+            .fillMaxSize()
+            .touchBorder(RoundedCornerShape(0.dp), 0.dp, 3.dp)
+            .pointerInput(Unit) {
+                detectTapGestures(
+                    onTap = { onClick(item) },
+                    onLongPress = { showExpandedCard = true }
+                )
+            }
     ) {
         AsyncImage(
             model = ImageRequest.Builder(context)
@@ -372,6 +428,17 @@ fun YoutubeHeroSection(item: SearchResult, onOptionSelect: (SearchResult, String
             onSelect = { status -> onOptionSelect(item, status) },
             item = item
         )
+
+        if (showExpandedCard) {
+            ExpandedVideoCard(
+                item = item,
+                onDismiss = { showExpandedCard = false },
+                onPlay = { showExpandedCard = false; onClick(item) },
+                onLike = { onOptionSelect(item, "Favorites") },
+                onWatched = { onOptionSelect(item, "Completed") },
+                onRemoveFromHistory = onRemoveFromHistory
+            )
+        }
         
         Box(
             modifier = Modifier.fillMaxSize().background(
@@ -432,18 +499,30 @@ fun YoutubeHeroSection(item: SearchResult, onOptionSelect: (SearchResult, String
 }
 
 @Composable
-fun YoutubeHorizontalCard(item: SearchResult, width: Dp = 180.dp, onOptionSelect: (SearchResult, String) -> Unit, onClick: () -> Unit) {
+fun YoutubeHorizontalCard(
+    modifier: Modifier = Modifier, 
+    item: SearchResult, 
+    width: Dp = 180.dp, 
+    onOptionSelect: (SearchResult, String) -> Unit, 
+    onRemoveFromHistory: ((String) -> Unit)? = null,
+    onClick: () -> Unit
+) {
     val colors = LocalCustomColors.current
     val context = LocalContext.current
-    val modifier = if (width == Dp.Unspecified) Modifier.fillMaxWidth() else Modifier.width(width)
+    val cardModifier = if (width == Dp.Unspecified) modifier.fillMaxWidth() else modifier.width(width)
     var showMenu by remember { mutableStateOf(false) }
+    var showExpandedCard by remember { mutableStateOf(false) }
 
-    Column(modifier = modifier.pointerInput(Unit) {
-        detectTapGestures(
-            onTap = { onClick() },
-            onLongPress = { showMenu = true }
-        )
-    }) {
+    Column(
+        modifier = cardModifier
+            .touchBorder()
+            .pointerInput(Unit) {
+                detectTapGestures(
+                    onTap = { onClick() },
+                    onLongPress = { showExpandedCard = true }
+                )
+            }
+    ) {
         Box {
             AsyncImage(
                 model = ImageRequest.Builder(context)
@@ -462,7 +541,20 @@ fun YoutubeHorizontalCard(item: SearchResult, width: Dp = 180.dp, onOptionSelect
                 item = item
             )
         }
+
+        if (showExpandedCard) {
+            ExpandedVideoCard(
+                item = item,
+                onDismiss = { showExpandedCard = false },
+                onPlay = { showExpandedCard = false; onClick() },
+                onLike = { onOptionSelect(item, "Favorites") },
+                onWatched = { onOptionSelect(item, "Completed") },
+                onRemoveFromHistory = onRemoveFromHistory
+            )
+        }
+
         Spacer(Modifier.height(8.dp))
+        @Suppress("HardcodedText")
         Text(item.title, color = colors.secondary, fontSize = 13.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
         if (item.studio.isNotEmpty()) {
             Text(item.studio, color = Color.White.copy(0.7f), fontSize = 10.sp, fontWeight = FontWeight.Bold)
@@ -471,27 +563,34 @@ fun YoutubeHorizontalCard(item: SearchResult, width: Dp = 180.dp, onOptionSelect
 }
 
 @Composable
-fun YoutubeVideoListCard(item: SearchResult, onOptionSelect: (SearchResult, String) -> Unit, onClick: () -> Unit) {
-    val colors = LocalCustomColors.current
+fun YoutubeVideoListCard(
+    modifier: Modifier = Modifier, 
+    item: SearchResult, 
+    onOptionSelect: (SearchResult, String) -> Unit, 
+    onRemoveFromHistory: ((String) -> Unit)? = null,
+    onClick: () -> Unit
+) {
     val context = LocalContext.current
     var showMenu by remember { mutableStateOf(false) }
+    var showExpandedCard by remember { mutableStateOf(false) }
 
-    // Redesigned to strictly match Image 1 from requested Batman style
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 6.dp)
+            .touchBorder()
             .pointerInput(Unit) {
                 detectTapGestures(
                     onTap = { onClick() },
-                    onLongPress = { showMenu = true }
+                    onLongPress = { showExpandedCard = true }
                 )
             }
-            .background(Color.White.copy(0.05f), RoundedCornerShape(12.dp))
+            .background(Color.White.copy(0.03f), RoundedCornerShape(16.dp))
+            .border(0.5.dp, Color.White.copy(0.08f), RoundedCornerShape(16.dp))
             .padding(10.dp)
     ) {
         Row(verticalAlignment = Alignment.Top) {
-            Box(modifier = Modifier.width(135.dp).aspectRatio(16f/9f).clip(RoundedCornerShape(8.dp))) {
+            Box(modifier = Modifier.width(140.dp).aspectRatio(16f/9f).clip(RoundedCornerShape(12.dp))) {
                 AsyncImage(
                     model = ImageRequest.Builder(context)
                         .data(item.posterPath)
@@ -503,48 +602,58 @@ fun YoutubeVideoListCard(item: SearchResult, onOptionSelect: (SearchResult, Stri
                     modifier = Modifier.fillMaxSize()
                 )
                 if (item.duration.isNotBlank()) {
-                    Box(Modifier.align(Alignment.BottomEnd).padding(4.dp).background(Color.Black.copy(0.7f), RoundedCornerShape(4.dp)).padding(horizontal = 4.dp, vertical = 2.dp)) {
+                    Box(Modifier.align(Alignment.BottomEnd).padding(6.dp).background(Color.Black.copy(0.8f), RoundedCornerShape(4.dp)).padding(horizontal = 5.dp, vertical = 2.dp)) {
                         Text(item.duration, color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold)
                     }
                 }
-                VideoOptionsPopup(
-                    expanded = showMenu,
-                    onDismiss = { showMenu = false },
-                    onSelect = { status -> onOptionSelect(item, status) },
-                    item = item
-                )
             }
             Spacer(Modifier.width(14.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = item.title, 
                     color = Color.White, 
-                    fontSize = 14.sp, 
-                    fontWeight = FontWeight.SemiBold, 
+                    fontSize = 15.sp, 
+                    fontWeight = FontWeight.Bold, 
                     maxLines = 2, 
-                    overflow = TextOverflow.Ellipsis
+                    overflow = TextOverflow.Ellipsis,
+                    lineHeight = 19.sp
                 )
+                Spacer(Modifier.height(4.dp))
                 if (item.studio.isNotEmpty()) {
                     Text(
                         text = item.studio, 
-                        color = Color.White.copy(0.85f),
-                        fontSize = 11.sp, 
+                        color = Color.White.copy(0.7f),
+                        fontSize = 12.sp, 
                         fontWeight = FontWeight.Medium
                     )
                 }
-                Text(
-                    text = item.views, 
-                    color = Color.White.copy(0.5f), 
-                    fontSize = 11.sp
-                )
-                if (item.year.isNotBlank()) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        text = item.year, 
+                        text = item.views, 
                         color = Color.White.copy(0.4f), 
-                        fontSize = 10.sp
+                        fontSize = 11.sp
                     )
+                    if (item.year.isNotBlank()) {
+                        Box(Modifier.padding(horizontal = 4.dp).size(2.dp).background(Color.White.copy(0.3f), CircleShape))
+                        Text(
+                            text = item.year, 
+                            color = Color.White.copy(0.4f), 
+                            fontSize = 11.sp
+                        )
+                    }
                 }
             }
+        }
+
+        if (showExpandedCard) {
+            ExpandedVideoCard(
+                item = item,
+                onDismiss = { showExpandedCard = false },
+                onPlay = { showExpandedCard = false; onClick() },
+                onLike = { onOptionSelect(item, "Favorites") },
+                onWatched = { onOptionSelect(item, "Completed") },
+                onRemoveFromHistory = onRemoveFromHistory
+            )
         }
     }
 }
@@ -563,15 +672,20 @@ fun YoutubeChannelListCard(item: SearchResult, onClick: () -> Unit) {
             AsyncImage(
                 model = item.posterPath,
                 contentDescription = null,
-                modifier = Modifier.size(60.dp).clip(CircleShape).background(Color.White.copy(0.1f)),
+                modifier = Modifier
+                    .size(50.dp)
+                    .clip(CircleShape)
+                    .background(Color.White.copy(0.1f)),
                 contentScale = ContentScale.Crop
             )
             Spacer(Modifier.width(16.dp))
-            Column(Modifier.weight(1f)) {
-                Text(item.title, color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                Text(item.views, color = Color.White.copy(0.6f), fontSize = 13.sp)
+            Column(modifier = Modifier.weight(1f)) {
+                Text(item.title, color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                if (item.views.isNotBlank()) {
+                    Text(item.views, color = Color.White.copy(0.5f), fontSize = 12.sp)
+                }
             }
-            IconButton(onClick = {}) { Icon(Icons.Default.MoreVert, null, tint = Color.White) }
+            Icon(Icons.Default.ChevronRight, null, tint = Color.White.copy(0.3f))
         }
     }
 }

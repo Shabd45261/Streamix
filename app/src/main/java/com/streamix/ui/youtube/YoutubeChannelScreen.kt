@@ -103,7 +103,10 @@ fun YoutubeChannelScreen(
                         }
                     },
                     actions = {
-                        IconButton(onClick = { /* Search in channel */ }) {
+                        IconButton(onClick = { 
+                            val query = URLEncoder.encode(channelInfo?.name ?: "", "UTF-8")
+                            navController.navigate("search?query=$query")
+                        }) {
                             Icon(Icons.Default.Search, null)
                         }
                     },
@@ -171,7 +174,10 @@ fun YoutubeChannelScreen(
                 val isShortsTab = tabName.contains("shorts")
                 val isPlaylistsTab = tabName.contains("playlists")
 
-                LazyColumn(modifier = Modifier.fillMaxSize()) {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(bottom = 150.dp)
+                ) {
                     item {
                         channelInfo?.let { info ->
                             Box(modifier = Modifier.fillMaxWidth()) {

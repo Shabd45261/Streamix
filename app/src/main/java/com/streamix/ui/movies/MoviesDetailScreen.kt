@@ -45,12 +45,17 @@ import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
 import androidx.media3.ui.AspectRatioFrameLayout
+import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 
 @Composable
 fun MoviesDetailScreen(
     navController: NavController,
     movieId: String,
     apiName: String,
+    initialSeason: Int? = null,
+    initialEpisode: Int? = null,
     fallbackUrl: String? = null,
     viewModel: MoviesDetailViewModel = hiltViewModel()
 ) {
@@ -77,8 +82,26 @@ fun MoviesDetailScreen(
         }
     }
 
-    DisposableEffect(exoPlayer) {
-        onDispose { exoPlayer.release() }
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(exoPlayer, lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_PAUSE -> {
+                    exoPlayer.pause()
+                }
+                Lifecycle.Event.ON_RESUME -> {
+                    if (trailerLinks.isNotEmpty() && (!isPlayerVisible || isPlayerMinimized)) {
+                        exoPlayer.play()
+                    }
+                }
+                else -> {}
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { 
+            lifecycleOwner.lifecycle.removeObserver(observer)
+            exoPlayer.release() 
+        }
     }
 
     LaunchedEffect(isPlayerVisible, isPlayerMinimized) {
@@ -104,7 +127,7 @@ fun MoviesDetailScreen(
     }
 
     LaunchedEffect(movieId, apiName, fallbackUrl) {
-        viewModel.load(movieId, apiName, fallbackUrl)
+        viewModel.load(movieId, apiName, fallbackUrl, initialSeason, initialEpisode)
     }
 
     LaunchedEffect(links) {
@@ -142,7 +165,7 @@ fun MoviesDetailScreen(
         movie?.let { data ->
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(bottom = 120.dp)
+                contentPadding = PaddingValues(bottom = 150.dp)
             ) {
                 item {
                     DetailHeroSection(data, trailerLinks, exoPlayer, isPlayerVisible, isPlayerMinimized)
@@ -150,7 +173,8 @@ fun MoviesDetailScreen(
 
                 item {
                     val history by viewModel.historyItem.collectAsState()
-                    DetailInfoContent(data, selectedEpisode, history) { episode, pos ->
+                    val episodesList by viewModel.episodes.collectAsState()
+                    DetailInfoContent(data, selectedEpisode, episodesList, history) { episode, pos ->
                         episode?.let { viewModel.selectEpisode(it, pos) }
                             ?: viewModel.loadLinks(data.dataUrl, data.apiName, data.name, null, pos)
                     }
@@ -232,8 +256,10 @@ fun MoviesDetailScreen(
         DetailTopBar(
             navController = navController,
             title = movie?.name ?: "",
+            movieId = movieId,
             url = movie?.dataUrl ?: "",
             isLiked = isLiked,
+            selectedEpisode = selectedEpisode,
             onLikeToggle = {
                 movie?.let { data ->
                     viewModel.toggleLike(
@@ -268,8 +294,10 @@ fun MoviesDetailScreen(
 fun DetailTopBar(
     navController: NavController,
     title: String,
+    movieId: String,
     url: String,
     isLiked: Boolean,
+    selectedEpisode: Episode? = null,
     onLikeToggle: () -> Unit
 ) {
     val context = LocalContext.current
@@ -303,7 +331,18 @@ fun DetailTopBar(
             }
             
             IconButton(onClick = { 
-                ShareUtils.shareLink(context, title, url)
+                val profile = "movies"
+                val contentType = if (selectedEpisode != null) "episode" else "movie"
+                ShareUtils.shareContent(
+                    context = context,
+                    title = title,
+                    profile = profile,
+                    contentType = contentType,
+                    id = movieId,
+                    timestamp = PlayerManager.initialPlaybackPosition.value, // This is not quite right for sharing from screen, but better than nothing
+                    season = selectedEpisode?.season,
+                    episode = selectedEpisode?.episode
+                )
             }) { Icon(Icons.Default.Share, null, tint = Color.White) }
             
             IconButton(onClick = { 
@@ -390,6 +429,7 @@ fun DetailHeroSection(
 fun DetailInfoContent(
     data: com.streamix.scraper.cloudstream.LoadResponse,
     selectedEpisode: Episode?,
+    episodes: List<Episode>,
     history: com.streamix.core.storage.WatchHistoryEntity?,
     onPlay: (Episode?, Long) -> Unit
 ) {
@@ -512,10 +552,14 @@ fun DetailInfoContent(
         Button(
             onClick = {
                 if (data.type == TvType.TvSeries && history?.lastEpisodeData != null) {
-                    // Try to find the episode in current list
-                    val episode = (com.streamix.scraper.cloudstream.utils.AppUtils.tryParseJson<List<Episode>>(data.dataUrl) ?: emptyList())
-                        .find { it.data == history.lastEpisodeData }
-                    onPlay(episode, history.progress)
+                    // Try to find the episode in current list using the passed episodes list
+                    val episode = episodes.find { it.data == history.lastEpisodeData }
+                    if (episode != null) {
+                        onPlay(episode, history.progress)
+                    } else {
+                        // Fallback to selected episode if history episode not found in list
+                        onPlay(selectedEpisode, 0L)
+                    }
                 } else {
                     onPlay(selectedEpisode, history?.progress ?: 0L)
                 }

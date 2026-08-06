@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "597437815776",
+    "project_id": "streamix-c56cc",
+    "storage_bucket": "streamix-c56cc.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:597437815776:android:8a99a2804580d8aeade985",
+        "android_client_info": {
+          "package_name": "com.streamix.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAA-wQVTRzjrXt_M7_kbgImeYJdNlhBPLM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

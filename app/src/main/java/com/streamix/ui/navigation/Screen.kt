@@ -11,5 +11,5 @@ sealed class Screen(val route: String) {
     object YoutubeChannel : Screen("youtube_channel?channelUrl={channelUrl}")
     object YoutubeLogin   : Screen("youtube_login")
     object AdultDetail    : Screen("adult_detail/{pageUrl}")
-    object MoviesDetail   : Screen("movies_detail?movieId={movieId}&apiName={apiName}")
+    object MoviesDetail   : Screen("movies_detail?movieId={movieId}&apiName={apiName}&season={season}&episode={episode}")
 }

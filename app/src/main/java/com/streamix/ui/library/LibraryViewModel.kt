@@ -133,6 +133,18 @@ class LibraryViewModel @Inject constructor(
         }
     }
     
+    fun toggleLibrary(item: WatchlistEntity) {
+        viewModelScope.launch {
+            if (watchlistDao.isItemInStatus(item.id, item.status).first()) {
+                watchlistDao.deleteByIdAndStatus(item.id, item.status)
+            } else {
+                watchlistDao.insert(item)
+            }
+        }
+    }
+
+    fun isInStatus(id: String, status: String): Flow<Boolean> = watchlistDao.isItemInStatus(id, status)
+    
     fun addToLibrary(item: WatchlistEntity) {
         viewModelScope.launch {
             watchlistDao.insert(item)

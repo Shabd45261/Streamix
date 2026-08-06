@@ -23,6 +23,8 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.navigation.NavController
 import com.streamix.core.storage.PreferencesManager
 import com.streamix.ui.theme.LocalCustomColors
+import com.streamix.core.analytics.AnalyticsManager
+import com.streamix.core.analytics.AnalyticsEvent
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -30,7 +32,8 @@ import kotlinx.coroutines.launch
 @Composable
 fun YouTubeLoginScreen(
     navController: NavController,
-    preferencesManager: PreferencesManager
+    preferencesManager: PreferencesManager,
+    analyticsManager: AnalyticsManager? = null
 ) {
     val context = LocalContext.current
     val colors = LocalCustomColors.current
@@ -87,6 +90,7 @@ fun YouTubeLoginScreen(
                                     // User likely logged in
                                     scope.launch {
                                         preferencesManager.setYoutubeAccount(cookies, "Logged In")
+                                        analyticsManager?.logEvent("youtube_login_success")
                                         navController.popBackStack()
                                     }
                                 }

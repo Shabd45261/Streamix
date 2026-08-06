@@ -39,10 +39,8 @@ import coil.compose.SubcomposeAsyncImage
 import com.streamix.core.model.Profile
 import com.streamix.core.model.SearchResult
 import com.streamix.core.utils.UrlUtils
-import com.streamix.ui.components.StreamixHeader
-import com.streamix.ui.components.StreamixSearchBar
-import com.streamix.ui.components.SwipeableProfileHost
-import com.streamix.ui.components.VideoOptionsPopup
+import com.streamix.ui.components.*
+import com.streamix.ui.navigation.LocalProfile
 import com.streamix.ui.navigation.Screen
 import com.streamix.ui.youtube.YoutubeHomeScreen
 import com.streamix.ui.shorts.ShortsScreen
@@ -96,6 +94,7 @@ fun MoviesHomeContent(
     val topRated by viewModel.topRated.collectAsState()
     val history by viewModel.history.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
+    val searchHistory by viewModel.searchHistory.collectAsState()
     val showRefreshBanner by viewModel.showRefreshBanner.collectAsState()
     
     val pullToRefreshState = rememberPullToRefreshState()
@@ -138,9 +137,12 @@ fun MoviesHomeContent(
                         onQueryChange = viewModel::onSearchQueryChange,
                         onSearch = { 
                             if (searchQuery.isNotBlank()) {
+                                viewModel.search(searchQuery)
                                 navController.navigate("search?query=${URLEncoder.encode(searchQuery, "UTF-8")}")
                             }
                         },
+                        history = searchHistory,
+                        onRemoveHistoryItem = viewModel::removeHistoryItem,
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                     )
                 }
@@ -283,13 +285,18 @@ fun SectionHeader(title: String) {
 @Composable
 fun MovieHeroSection(item: SearchResult, onOptionSelect: (SearchResult, String) -> Unit, onClick: (SearchResult) -> Unit) {
     var showMenu by remember { mutableStateOf(false) }
+    var showExpandedCard by remember { mutableStateOf(false) }
+
     Box(
-        modifier = Modifier.fillMaxSize().pointerInput(Unit) {
-            detectTapGestures(
-                onTap = { onClick(item) },
-                onLongPress = { showMenu = true }
-            )
-        }
+        modifier = Modifier
+            .fillMaxSize()
+            .touchBorder(RoundedCornerShape(0.dp), 0.dp, 3.dp)
+            .pointerInput(Unit) {
+                detectTapGestures(
+                    onTap = { onClick(item) },
+                    onLongPress = { showExpandedCard = true }
+                )
+            }
     ) {
         val backdropUrl = remember(item.posterPath) { "https://image.tmdb.org/t/p/w780${item.posterPath}" }
         AsyncImage(model = backdropUrl, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
@@ -299,6 +306,17 @@ fun MovieHeroSection(item: SearchResult, onOptionSelect: (SearchResult, String) 
             onSelect = { status -> onOptionSelect(item, status) },
             item = item
         )
+
+        if (showExpandedCard) {
+            ExpandedVideoCard(
+                item = item,
+                onDismiss = { showExpandedCard = false },
+                onPlay = { showExpandedCard = false; onClick(item) },
+                onLike = { onOptionSelect(item, "Favorites") },
+                onWatched = { onOptionSelect(item, "Completed") }
+            )
+        }
+
         Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(0.5f), Color.Black), startY = 400f)))
         Column(modifier = Modifier.align(Alignment.BottomCenter).padding(horizontal = 24.dp, vertical = 40.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             Text(item.title, color = Color.White, fontSize = 28.sp, fontWeight = FontWeight.Black, textAlign = TextAlign.Center, maxLines = 2, overflow = TextOverflow.Ellipsis)
@@ -338,12 +356,17 @@ fun MovieHorizontalCard(
     onClick: (SearchResult) -> Unit
 ) {
     var showMenu by remember { mutableStateOf(false) }
-    Column(modifier = Modifier.width(width).pointerInput(Unit) {
-        detectTapGestures(
-            onTap = { onClick(item) },
-            onLongPress = { showMenu = true }
-        )
-    }) {
+    var showExpandedCard by remember { mutableStateOf(false) }
+
+    Column(modifier = Modifier
+        .width(width)
+        .touchBorder()
+        .pointerInput(Unit) {
+            detectTapGestures(
+                onTap = { onClick(item) },
+                onLongPress = { showExpandedCard = true }
+            )
+        }) {
         val posterUrl = remember(item.posterPath) { "https://image.tmdb.org/t/p/w342${item.posterPath}" }
         Box {
             AsyncImage(model = posterUrl, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxWidth().aspectRatio(2/3f).clip(RoundedCornerShape(8.dp)))
@@ -354,6 +377,17 @@ fun MovieHorizontalCard(
                 item = item
             )
         }
+
+        if (showExpandedCard) {
+            ExpandedVideoCard(
+                item = item,
+                onDismiss = { showExpandedCard = false },
+                onPlay = { showExpandedCard = false; onClick(item) },
+                onLike = { onOptionSelect(item, "Favorites") },
+                onWatched = { onOptionSelect(item, "Completed") }
+            )
+        }
+
         Spacer(Modifier.height(8.dp))
         Text(item.title, color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
@@ -362,13 +396,19 @@ fun MovieHorizontalCard(
 @Composable
 fun MovieVerticalListCard(item: SearchResult, onOptionSelect: (SearchResult, String) -> Unit = { _, _ -> }, onClick: (SearchResult) -> Unit) {
     var showMenu by remember { mutableStateOf(false) }
+    var showExpandedCard by remember { mutableStateOf(false) }
+
     Card(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp).pointerInput(Unit) {
-            detectTapGestures(
-                onTap = { onClick(item) },
-                onLongPress = { showMenu = true }
-            )
-        },
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .touchBorder()
+            .pointerInput(Unit) {
+                detectTapGestures(
+                    onTap = { onClick(item) },
+                    onLongPress = { showExpandedCard = true }
+                )
+            },
         colors = CardDefaults.cardColors(containerColor = Color.White.copy(0.05f)),
         shape = RoundedCornerShape(12.dp)
     ) {
@@ -391,6 +431,16 @@ fun MovieVerticalListCard(item: SearchResult, onOptionSelect: (SearchResult, Str
                 Spacer(Modifier.height(8.dp))
                 Text("${item.year} • ${item.mediaType.uppercase()}", color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
             }
+        }
+
+        if (showExpandedCard) {
+            ExpandedVideoCard(
+                item = item,
+                onDismiss = { showExpandedCard = false },
+                onPlay = { showExpandedCard = false; onClick(item) },
+                onLike = { onOptionSelect(item, "Favorites") },
+                onWatched = { onOptionSelect(item, "Completed") }
+            )
         }
     }
 }

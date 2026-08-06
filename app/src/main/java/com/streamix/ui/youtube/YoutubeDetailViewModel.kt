@@ -39,6 +39,9 @@ class YoutubeDetailViewModel @Inject constructor(
     private val _relatedVideos = MutableStateFlow<List<SearchResult>>(emptyList())
     val relatedVideos = _relatedVideos.asStateFlow()
 
+    private val _initialPosition = MutableStateFlow(0L)
+    val initialPosition = _initialPosition.asStateFlow()
+
     private val _currentVideo = MutableStateFlow<SearchResult?>(null)
     private val _channelUrl = MutableStateFlow("")
     private val _channelName = MutableStateFlow("")
@@ -77,8 +80,12 @@ class YoutubeDetailViewModel @Inject constructor(
                 )
                 _currentVideo.value = item
 
+                // Fetch existing history to resume
+                val existing = historyDao.getHistoryItem(videoId)
+                _initialPosition.value = existing?.progress ?: 0L
+
                 // Save to history
-                saveToHistory(item)
+                saveToHistory(item, existing?.progress ?: 0L, existing?.totalDuration ?: 0L)
 
                 // Optimization: Use already loaded streamInfo to get links
                 val links = youtubeScraper.getVideoLinksFromInfo(streamInfo)
@@ -120,7 +127,7 @@ class YoutubeDetailViewModel @Inject constructor(
         }
     }
 
-    private fun saveToHistory(video: SearchResult) {
+    private fun saveToHistory(video: SearchResult, progress: Long = 0L, total: Long = 0L) {
         viewModelScope.launch {
             historyDao.insertHistory(
                 com.streamix.core.storage.WatchHistoryEntity(
@@ -130,7 +137,9 @@ class YoutubeDetailViewModel @Inject constructor(
                     mediaType = "youtube",
                     duration = video.duration,
                     views = video.views,
-                    lastWatchedAt = System.currentTimeMillis()
+                    lastWatchedAt = System.currentTimeMillis(),
+                    progress = progress,
+                    totalDuration = total
                 )
             )
         }

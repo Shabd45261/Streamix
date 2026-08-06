@@ -24,6 +24,7 @@ fun YoutubeDetailScreen(
     val links by viewModel.videoLinks.collectAsState()
     val relatedVideos by viewModel.relatedVideos.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
+    val initialPosition by viewModel.initialPosition.collectAsState()
     
     val context = LocalContext.current
     
@@ -41,7 +42,8 @@ fun YoutubeDetailScreen(
                     mediaType = "youtube"
                 ),
                 links = links,
-                related = relatedVideos
+                related = relatedVideos,
+                startPosition = initialPosition
             )
             // Navigate back immediately as the player is now global
             navController.popBackStack()

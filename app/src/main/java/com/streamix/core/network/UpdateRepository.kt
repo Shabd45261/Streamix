@@ -24,12 +24,13 @@ class UpdateRepository @Inject constructor(
 
     suspend fun getUpdateInfo(): Result<UpdateInfo> {
         var lastError: Exception? = null
+        val cacheBusterUrl = "$updateMetadataUrl?t=${System.currentTimeMillis()}"
         repeat(3) { attempt ->
             try {
-                return Result.success(updateApiService.getUpdateInfo(updateMetadataUrl))
+                return Result.success(updateApiService.getUpdateInfo(cacheBusterUrl))
             } catch (e: Exception) {
                 lastError = e
-                if (attempt < 2) delay(10000)
+                if (attempt < 2) delay(2000)
             }
         }
         return Result.failure(lastError ?: Exception("Unknown error"))

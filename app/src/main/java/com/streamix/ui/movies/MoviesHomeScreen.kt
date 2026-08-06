@@ -11,8 +11,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -43,10 +41,8 @@ import coil.request.ImageRequest
 import com.streamix.core.model.Profile
 import com.streamix.core.model.SearchResult
 import com.streamix.core.utils.UrlUtils
-import com.streamix.ui.components.StreamixHeader
-import com.streamix.ui.components.StreamixHeroSection
-import com.streamix.ui.components.StreamixSearchBar
-import com.streamix.ui.components.VideoOptionsPopup
+import com.streamix.ui.components.*
+import com.streamix.ui.navigation.LocalProfile
 import com.streamix.ui.navigation.Screen
 import com.streamix.ui.theme.LocalCustomColors
 import java.net.URLEncoder
@@ -65,8 +61,17 @@ fun MoviesHomeScreen(
     val isRefreshing by viewModel.isRefreshing.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
     val searchResults by viewModel.searchResults.collectAsState()
+    val searchHistory by viewModel.searchHistory.collectAsState()
     val showRefreshBanner by viewModel.showRefreshBanner.collectAsState()
+    val hiddenIds by com.streamix.core.utils.SessionVideoManager.hiddenVideoIds.collectAsState()
 
+    val filteredHistory = remember(history, hiddenIds) { history.filter { it.id !in hiddenIds } }
+    val filteredSearchResults = remember(searchResults, hiddenIds) { searchResults.filter { it.id !in hiddenIds } }
+    val filteredHeroItems = remember(homeRows, hiddenIds) {
+        val row = homeRows.firstOrNull { it.name.contains("Trending", true) } ?: homeRows.firstOrNull()
+        row?.items?.filter { it.id !in hiddenIds }?.take(5) ?: emptyList()
+    }
+    
     val colors = LocalCustomColors.current
     val pullToRefreshState = rememberPullToRefreshState()
 
@@ -96,9 +101,9 @@ fun MoviesHomeScreen(
         Box(modifier = Modifier.fillMaxSize().nestedScroll(pullToRefreshState.nestedScrollConnection)) {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(bottom = 100.dp)
+                contentPadding = PaddingValues(bottom = 150.dp)
             ) {
-                item {
+                item(key = "header") {
                     StreamixHeader(
                         currentProfile = profileState.value,
                         onSettingsTap = { navController.navigate(Screen.Settings.route) },
@@ -106,11 +111,13 @@ fun MoviesHomeScreen(
                     )
                 }
 
-                item {
+                item(key = "search_bar") {
                     StreamixSearchBar(
                         query = searchQuery,
                         onQueryChange = viewModel::onQueryChange,
                         onSearch = { viewModel.search(searchQuery) },
+                        history = searchHistory,
+                        onRemoveHistoryItem = viewModel::removeHistoryItem,
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                     )
                 }
@@ -118,7 +125,7 @@ fun MoviesHomeScreen(
                 if (searchQuery.isBlank()) {
                     // Refresh Banner
                     if (showRefreshBanner) {
-                        item {
+                        item(key = "refresh_banner") {
                             Button(
                                 onClick = { 
                                     viewModel.refresh()
@@ -136,13 +143,10 @@ fun MoviesHomeScreen(
                     }
 
                     // Hero Section
-                    val heroItems = homeRows.firstOrNull { it.name.contains("Trending", true) }?.items?.take(5)
-                        ?: homeRows.firstOrNull()?.items?.take(5) ?: emptyList()
-                    
-                    if (heroItems.isNotEmpty()) {
-                        item {
+                    if (filteredHeroItems.isNotEmpty()) {
+                        item(key = "hero_section") {
                             StreamixHeroSection(
-                                items = heroItems,
+                                items = filteredHeroItems,
                                 onOptionSelect = { item, status -> viewModel.addToLibrary(item, status) },
                                 onClick = { movie ->
                                     val encoded = URLEncoder.encode(movie.id, "UTF-8")
@@ -154,18 +158,20 @@ fun MoviesHomeScreen(
                     }
 
                     // History Section
-                    if (history.isNotEmpty()) {
-                        item { MoviesSectionHeader("Continue Watching") }
-                        item {
+                    if (filteredHistory.isNotEmpty()) {
+                        item(key = "history_header") { MoviesSectionHeader("Continue Watching") }
+                        item(key = "history_row") {
                             LazyRow(
                                 horizontalArrangement = Arrangement.spacedBy(16.dp),
                                 contentPadding = PaddingValues(horizontal = 16.dp)
                             ) {
-                                items(history.take(20), key = { "history_${it.id}" }) { movie ->
+                                items(filteredHistory.take(20), key = { "history_${it.id}" }) { movie ->
                                     MoviesHorizontalCard(
+                                        modifier = Modifier.animateItemPlacement(),
                                         item = movie, 
                                         width = 180.dp,
                                         onOptionSelect = { item, status -> viewModel.addToLibrary(item, status) },
+                                        onRemoveFromHistory = viewModel::removeFromHistory,
                                         onClick = {
                                             val encoded = URLEncoder.encode(movie.id, "UTF-8")
                                             val apiEncoded = URLEncoder.encode(movie.studio, "UTF-8")
@@ -178,31 +184,35 @@ fun MoviesHomeScreen(
                     }
 
                     // Dynamic Rows
-                    homeRows.forEach { row ->
-                        item { MoviesSectionHeader(row.name) }
-                        item {
-                            LazyRow(
-                                horizontalArrangement = Arrangement.spacedBy(14.dp),
-                                contentPadding = PaddingValues(horizontal = 16.dp)
-                            ) {
-                                items(row.items) { movie ->
-                                    MoviesHorizontalCard(
-                                        item = movie, 
-                                        width = 240.dp,
-                                        onOptionSelect = { item, status -> viewModel.addToLibrary(item, status) },
-                                        onClick = {
-                                            val encoded = URLEncoder.encode(movie.id, "UTF-8")
-                                            val apiEncoded = URLEncoder.encode(movie.studio, "UTF-8")
-                                            navController.navigate("movies_detail?movieId=$encoded&apiName=$apiEncoded")
-                                        }
-                                    )
+                    homeRows.forEachIndexed { index, row ->
+                        val filteredRowItems = row.items.filter { it.id !in hiddenIds }
+                        if (filteredRowItems.isNotEmpty()) {
+                            item(key = "dynamic_header_$index") { MoviesSectionHeader(row.name) }
+                            item(key = "dynamic_row_$index") {
+                                LazyRow(
+                                    horizontalArrangement = Arrangement.spacedBy(14.dp),
+                                    contentPadding = PaddingValues(horizontal = 16.dp)
+                                ) {
+                                    items(filteredRowItems, key = { it.id }) { movie ->
+                                        MoviesHorizontalCard(
+                                            modifier = Modifier.animateItemPlacement(),
+                                            item = movie, 
+                                            width = 240.dp,
+                                            onOptionSelect = { item, status -> viewModel.addToLibrary(item, status) },
+                                            onClick = {
+                                                val encoded = URLEncoder.encode(movie.id, "UTF-8")
+                                                val apiEncoded = URLEncoder.encode(movie.studio, "UTF-8")
+                                                navController.navigate("movies_detail?movieId=$encoded&apiName=$apiEncoded")
+                                            }
+                                        )
+                                    }
                                 }
                             }
                         }
                     }
 
                     if (homeRows.isEmpty() && !isLoading && history.isEmpty()) {
-                        item {
+                        item(key = "empty_state") {
                             Box(
                                 modifier = Modifier.fillParentMaxSize().padding(bottom = 150.dp),
                                 contentAlignment = Alignment.Center
@@ -219,15 +229,16 @@ fun MoviesHomeScreen(
                         }
                     }
                 } else {
-                    if (searchResults.isEmpty() && !isLoading) {
-                        item {
+                    if (filteredSearchResults.isEmpty() && !isLoading) {
+                        item(key = "no_search_results") {
                             Box(modifier = Modifier.fillParentMaxSize(), contentAlignment = Alignment.Center) {
                                 Text("No results for \"$searchQuery\"", color = colors.secondary.copy(0.5f))
                             }
                         }
                     }
-                    items(searchResults, key = { "search_${it.id}" }) { movie ->
+                    items(filteredSearchResults, key = { "search_${it.id}" }) { movie ->
                         MovieVerticalCard(
+                            modifier = Modifier.animateItemPlacement(),
                             item = movie,
                             onOptionSelect = { item, status -> viewModel.addToLibrary(item, status) },
                             onClick = {
@@ -274,14 +285,18 @@ fun MoviesHeroSection(item: SearchResult, onOptionSelect: (SearchResult, String)
     val colors = LocalCustomColors.current
     val context = LocalContext.current
     var showMenu by remember { mutableStateOf(false) }
+    var showExpandedCard by remember { mutableStateOf(false) }
 
     Box(
-        modifier = Modifier.fillMaxSize().pointerInput(Unit) {
-            detectTapGestures(
-                onTap = { onClick(item) },
-                onLongPress = { showMenu = true }
-            )
-        }
+        modifier = Modifier
+            .fillMaxSize()
+            .touchBorder(RoundedCornerShape(0.dp), 0.dp, 3.dp)
+            .pointerInput(Unit) {
+                detectTapGestures(
+                    onTap = { onClick(item) },
+                    onLongPress = { showExpandedCard = true }
+                )
+            }
     ) {
         val thumbUrl = remember(item.posterPath, item.id) {
             UrlUtils.resolveImageUrl(item.posterPath, item.mediaType, item.id)
@@ -303,6 +318,16 @@ fun MoviesHeroSection(item: SearchResult, onOptionSelect: (SearchResult, String)
             onSelect = { status -> onOptionSelect(item, status) },
             item = item
         )
+
+        if (showExpandedCard) {
+            ExpandedVideoCard(
+                item = item,
+                onDismiss = { showExpandedCard = false },
+                onPlay = { showExpandedCard = false; onClick(item) },
+                onLike = { onOptionSelect(item, "Favorites") },
+                onWatched = { onOptionSelect(item, "Completed") }
+            )
+        }
         
         Box(
             modifier = Modifier.fillMaxSize().background(
@@ -371,18 +396,30 @@ fun MoviesHeroSection(item: SearchResult, onOptionSelect: (SearchResult, String)
 }
 
 @Composable
-fun MoviesHorizontalCard(item: SearchResult, width: Dp = 180.dp, onOptionSelect: (SearchResult, String) -> Unit, onClick: () -> Unit) {
+fun MoviesHorizontalCard(
+    modifier: Modifier = Modifier, 
+    item: SearchResult, 
+    width: Dp = 180.dp, 
+    onOptionSelect: (SearchResult, String) -> Unit, 
+    onRemoveFromHistory: ((String) -> Unit)? = null,
+    onClick: () -> Unit
+) {
     val colors = LocalCustomColors.current
     val context = LocalContext.current
-    val modifier = if (width == Dp.Unspecified) Modifier.fillMaxWidth() else Modifier.width(width)
+    val cardModifier = if (width == Dp.Unspecified) modifier.fillMaxWidth() else modifier.width(width)
     var showMenu by remember { mutableStateOf(false) }
+    var showExpandedCard by remember { mutableStateOf(false) }
 
-    Column(modifier = modifier.pointerInput(Unit) {
-        detectTapGestures(
-            onTap = { onClick() },
-            onLongPress = { showMenu = true }
-        )
-    }) {
+    Column(
+        modifier = cardModifier
+            .touchBorder()
+            .pointerInput(Unit) {
+                detectTapGestures(
+                    onTap = { onClick() },
+                    onLongPress = { showExpandedCard = true }
+                )
+            }
+    ) {
         val thumbUrl = remember(item.posterPath, item.id) {
             UrlUtils.resolveImageUrl(item.posterPath, item.mediaType, item.id)
         }
@@ -421,24 +458,47 @@ fun MoviesHorizontalCard(item: SearchResult, width: Dp = 180.dp, onOptionSelect:
                 item = item
             )
         }
+
+        if (showExpandedCard) {
+            ExpandedVideoCard(
+                item = item,
+                onDismiss = { showExpandedCard = false },
+                onPlay = { showExpandedCard = false; onClick() },
+                onLike = { onOptionSelect(item, "Favorites") },
+                onWatched = { onOptionSelect(item, "Completed") },
+                onRemoveFromHistory = onRemoveFromHistory
+            )
+        }
+
         Spacer(Modifier.height(8.dp))
         Text(item.title, color = colors.secondary, fontSize = 13.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
 }
 
 @Composable
-fun MovieVerticalCard(item: SearchResult, onOptionSelect: (SearchResult, String) -> Unit, onClick: () -> Unit) {
+fun MovieVerticalCard(
+    modifier: Modifier = Modifier, 
+    item: SearchResult, 
+    onOptionSelect: (SearchResult, String) -> Unit, 
+    onRemoveFromHistory: ((String) -> Unit)? = null,
+    onClick: () -> Unit
+) {
     val colors = LocalCustomColors.current
     val context = LocalContext.current
     var showMenu by remember { mutableStateOf(false) }
+    var showExpandedCard by remember { mutableStateOf(false) }
 
     Card(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp).pointerInput(Unit) {
-            detectTapGestures(
-                onTap = { onClick() },
-                onLongPress = { showMenu = true }
-            )
-        },
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .touchBorder()
+            .pointerInput(Unit) {
+                detectTapGestures(
+                    onTap = { onClick() },
+                    onLongPress = { showExpandedCard = true }
+                )
+            },
         colors = CardDefaults.cardColors(containerColor = Color.White.copy(0.05f)),
         shape = RoundedCornerShape(12.dp)
     ) {
@@ -481,6 +541,17 @@ fun MovieVerticalCard(item: SearchResult, onOptionSelect: (SearchResult, String)
                     Text(item.rating, color = colors.secondary.copy(0.7f), fontSize = 11.sp)
                 }
             }
+        }
+
+        if (showExpandedCard) {
+            ExpandedVideoCard(
+                item = item,
+                onDismiss = { showExpandedCard = false },
+                onPlay = { showExpandedCard = false; onClick() },
+                onLike = { onOptionSelect(item, "Favorites") },
+                onWatched = { onOptionSelect(item, "Completed") },
+                onRemoveFromHistory = onRemoveFromHistory
+            )
         }
     }
 }

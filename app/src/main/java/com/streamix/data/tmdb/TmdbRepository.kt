@@ -8,12 +8,14 @@ import javax.inject.Singleton
 
 @Singleton
 class TmdbRepository @Inject constructor(
-    private val api: TmdbApiService
+    private val api: TmdbApiService,
+    private val analyticsManager: com.streamix.core.analytics.AnalyticsManager
 ) {
     suspend fun search(query: String): List<SearchResult> {
         return try {
             api.searchMulti(query = query).results.map { it.toSearchResult() }
         } catch (e: Exception) {
+            analyticsManager.logEvent(com.streamix.core.analytics.AnalyticsEvent.ERROR_API, android.os.Bundle().apply { putString("message", e.message) })
             emptyList()
         }
     }

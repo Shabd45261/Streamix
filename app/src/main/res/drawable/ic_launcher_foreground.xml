@@ -1,0 +1,18 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="1024"
+    android:viewportHeight="1024">
+    <!-- Background Circle/Ring -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M512,128c-212.1,0 -384,171.9 -384,384s171.9,384 384,384c212.1,0 384,-171.9 384,-384S724.1,128 512,128zM512,832c-176.7,0 -320,-143.3 -320,-320s143.3,-320 320,-320c176.7,0 320,143.3 320,320S688.7,832 512,832z" />
+    <!-- Play Triangle -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M416,352l256,160l-256,160z" />
+    <!-- Crescent accent (approximating the 'C' shape in the image) -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M813.5,321.4c-35.4,-72.2 -100.9,-128.4 -179.5,-153.8c114.7,40.1 196,150.3 196,279.7c0,164.6 -133.4,298 -298,298c-85.1,0 -161.8,-35.6 -216.3,-92.7c60.3,95.7 166.4,159.4 287,159.4c189.4,0 343,-153.6 343,-343C946.7,515 896.2,404.7 813.5,321.4z" />
+</vector>

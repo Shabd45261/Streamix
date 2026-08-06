@@ -44,10 +44,8 @@ import com.streamix.core.model.Profile
 import com.streamix.core.model.SearchResult
 import com.streamix.core.utils.UrlUtils
 import com.streamix.core.utils.ShareUtils
-import com.streamix.ui.components.StreamixHeader
-import com.streamix.ui.components.StreamixHeroSection
-import com.streamix.ui.components.StreamixSearchBar
-import com.streamix.ui.components.VideoOptionsPopup
+import com.streamix.ui.components.*
+import com.streamix.ui.navigation.LocalProfile
 import com.streamix.ui.navigation.Screen
 import com.streamix.ui.theme.LocalCustomColors
 import com.streamix.ui.theme.ThemeViewModel
@@ -68,13 +66,19 @@ fun AdultHomeScreen(
     val isLoading  by viewModel.isLoading.collectAsState()
     val isRefreshing by viewModel.isRefreshing.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
+    val searchHistory by viewModel.searchHistory.collectAsState()
     val searchResults by viewModel.searchResults.collectAsState()
     val isAdultVerified by themeViewModel.isAdultVerified.collectAsState()
     val showRefreshBanner by viewModel.showRefreshBanner.collectAsState()
+    val hiddenIds by com.streamix.core.utils.SessionVideoManager.hiddenVideoIds.collectAsState()
 
     val colors = LocalCustomColors.current
     val pullToRefreshState = rememberPullToRefreshState()
     val scope = rememberCoroutineScope()
+
+    val filteredTrending = remember(trending, hiddenIds) { trending.filter { it.id !in hiddenIds } }
+    val filteredHistory = remember(history, hiddenIds) { history.filter { it.id !in hiddenIds } }
+    val filteredSearchResults = remember(searchResults, hiddenIds) { searchResults.filter { it.id !in hiddenIds } }
 
     BackHandler {
         if (searchQuery.isNotBlank()) {
@@ -103,7 +107,7 @@ fun AdultHomeScreen(
         Box(Modifier.fillMaxSize().nestedScroll(pullToRefreshState.nestedScrollConnection)) {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(bottom = 100.dp)
+                contentPadding = PaddingValues(bottom = 150.dp)
             ) {
                 item {
                     StreamixHeader(
@@ -118,35 +122,18 @@ fun AdultHomeScreen(
                         query = searchQuery,
                         onQueryChange = viewModel::onQueryChange,
                         onSearch = { viewModel.search(searchQuery) },
+                        history = searchHistory,
+                        onRemoveHistoryItem = viewModel::removeHistoryItem,
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                     )
                 }
 
                 if (searchQuery.isBlank()) {
-                    // Latest Videos Refresh Banner
-                    if (showRefreshBanner) {
-                        item {
-                            Button(
-                                onClick = { 
-                                    viewModel.refresh()
-                                    viewModel.dismissRefreshBanner()
-                                },
-                                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
-                                colors = ButtonDefaults.buttonColors(containerColor = Color.White),
-                                shape = RoundedCornerShape(8.dp)
-                            ) {
-                                Icon(Icons.Default.Refresh, null, tint = Color.Black)
-                                Spacer(Modifier.width(8.dp))
-                                Text("Latest videos", color = Color.Black, fontWeight = FontWeight.Bold)
-                            }
-                        }
-                    }
-
-                    // 0. Hero Section
-                    if (trending.isNotEmpty()) {
+                    // Hero Section
+                    if (filteredTrending.isNotEmpty()) {
                         item {
                             StreamixHeroSection(
-                                items = trending.take(5),
+                                items = filteredTrending.take(5),
                                 onOptionSelect = { item, status -> viewModel.addToLibrary(item, status) },
                                 onClick = { video ->
                                     val encoded = URLEncoder.encode(video.id, "UTF-8")
@@ -157,15 +144,16 @@ fun AdultHomeScreen(
                     }
 
                     // 2. Recent Watch (Horizontally scrollable)
-                    if (history.isNotEmpty()) {
+                    if (filteredHistory.isNotEmpty()) {
                         item { SectionHeader("Recent Watch") }
                         item {
                             LazyRow(
                                 horizontalArrangement = Arrangement.spacedBy(16.dp),
                                 contentPadding = PaddingValues(horizontal = 16.dp)
                             ) {
-                                items(history.take(20), key = { "recent_${it.id}" }) { video ->
+                                items(filteredHistory.take(20), key = { "recent_${it.id}" }) { video ->
                                     AdultHorizontalCard(
+                                        modifier = Modifier.animateItemPlacement(),
                                         item = video, 
                                         width = 180.dp,
                                         onOptionSelect = { item, status -> viewModel.addToLibrary(item, status) },
@@ -180,15 +168,16 @@ fun AdultHomeScreen(
                     }
 
                     // Horizontal Block - Just Added
-                    if (trending.size > 5) {
+                    if (filteredTrending.size > 5) {
                         item { SectionHeader("Just Added") }
                         item {
                             LazyRow(
                                 horizontalArrangement = Arrangement.spacedBy(14.dp),
                                 contentPadding = PaddingValues(horizontal = 16.dp)
                             ) {
-                                items(trending.drop(5).take(10)) { video ->
+                                items(filteredTrending.drop(5).take(10), key = { it.id }) { video ->
                                     AdultHorizontalCard(
+                                        modifier = Modifier.animateItemPlacement(),
                                         item = video, 
                                         width = 240.dp,
                                         onOptionSelect = { item, status -> viewModel.addToLibrary(item, status) },
@@ -203,15 +192,16 @@ fun AdultHomeScreen(
                     }
 
                     // Horizontal Block - Trending Now
-                    if (trending.size > 15) {
+                    if (filteredTrending.size > 15) {
                         item { SectionHeader("Trending Now") }
                         item {
                             LazyRow(
                                 horizontalArrangement = Arrangement.spacedBy(14.dp),
                                 contentPadding = PaddingValues(horizontal = 16.dp)
                             ) {
-                                items(trending.drop(15).take(12)) { video ->
+                                items(filteredTrending.drop(15).take(12), key = { it.id }) { video ->
                                     AdultHorizontalCard(
+                                        modifier = Modifier.animateItemPlacement(),
                                         item = video, 
                                         width = 240.dp,
                                         onOptionSelect = { item, status -> viewModel.addToLibrary(item, status) },
@@ -226,15 +216,16 @@ fun AdultHomeScreen(
                     }
 
                     // Horizontal Block - Recommended
-                    if (trending.size > 27) {
+                    if (filteredTrending.size > 27) {
                         item { SectionHeader("Recommended") }
                         item {
                             LazyRow(
                                 horizontalArrangement = Arrangement.spacedBy(14.dp),
                                 contentPadding = PaddingValues(horizontal = 16.dp)
                             ) {
-                                items(trending.drop(27).take(12)) { video ->
+                                items(filteredTrending.drop(27).take(12), key = { it.id }) { video ->
                                     AdultHorizontalCard(
+                                        modifier = Modifier.animateItemPlacement(),
                                         item = video, 
                                         width = 240.dp,
                                         onOptionSelect = { item, status -> viewModel.addToLibrary(item, status) },
@@ -249,11 +240,12 @@ fun AdultHomeScreen(
                     }
 
                     // Vertical List - All Videos
-                    if (trending.size > 39) {
+                    if (filteredTrending.size > 39) {
                         item { SectionHeader("More Videos") }
-                        val remaining = trending.drop(39)
-                        items(remaining) { video ->
+                        val remaining = filteredTrending.drop(39)
+                        items(remaining, key = { it.id }) { video ->
                             AdultVideoListCard(
+                                modifier = Modifier.animateItemPlacement(),
                                 item = video,
                                 onOptionSelect = { item, status -> viewModel.addToLibrary(item, status) },
                                 onClick = {
@@ -265,8 +257,9 @@ fun AdultHomeScreen(
                     }
 
                 } else {
-                    items(searchResults, key = { it.id }) { video ->
+                    items(filteredSearchResults, key = { it.id }) { video ->
                         AdultVideoListCard(
+                            modifier = Modifier.animateItemPlacement(),
                             item = video,
                             onOptionSelect = { item, status -> viewModel.addToLibrary(item, status) },
                             onClick = {
@@ -311,14 +304,18 @@ fun AdultHeroSection(item: SearchResult, onOptionSelect: (SearchResult, String) 
     val colors = LocalCustomColors.current
     val context = LocalContext.current
     var showMenu by remember { mutableStateOf(false) }
+    var showExpandedCard by remember { mutableStateOf(false) }
 
     Box(
-        modifier = Modifier.fillMaxSize().pointerInput(Unit) {
-            detectTapGestures(
-                onTap = { onClick(item) },
-                onLongPress = { showMenu = true }
-            )
-        }
+        modifier = Modifier
+            .fillMaxSize()
+            .touchBorder(RoundedCornerShape(0.dp), 0.dp, 3.dp)
+            .pointerInput(Unit) {
+                detectTapGestures(
+                    onTap = { onClick(item) },
+                    onLongPress = { showExpandedCard = true }
+                )
+            }
     ) {
         val thumbUrl = remember(item.posterPath, item.id) {
             UrlUtils.resolveImageUrl(item.posterPath, item.mediaType, item.id)
@@ -341,6 +338,16 @@ fun AdultHeroSection(item: SearchResult, onOptionSelect: (SearchResult, String) 
             onSelect = { status -> onOptionSelect(item, status) },
             item = item
         )
+
+        if (showExpandedCard) {
+            ExpandedVideoCard(
+                item = item,
+                onDismiss = { showExpandedCard = false },
+                onPlay = { showExpandedCard = false; onClick(item) },
+                onLike = { onOptionSelect(item, "Favorites") },
+                onWatched = { onOptionSelect(item, "Completed") }
+            )
+        }
         
         Box(
             modifier = Modifier.fillMaxSize().background(
@@ -398,18 +405,23 @@ fun AdultHeroSection(item: SearchResult, onOptionSelect: (SearchResult, String) 
 }
 
 @Composable
-fun AdultHorizontalCard(item: SearchResult, width: Dp = 180.dp, onOptionSelect: (SearchResult, String) -> Unit, onClick: () -> Unit) {
+fun AdultHorizontalCard(modifier: Modifier = Modifier, item: SearchResult, width: Dp = 180.dp, onOptionSelect: (SearchResult, String) -> Unit, onClick: () -> Unit) {
     val colors = LocalCustomColors.current
     val context = LocalContext.current
-    val modifier = if (width == Dp.Unspecified) Modifier.fillMaxWidth() else Modifier.width(width)
+    val cardModifier = if (width == Dp.Unspecified) modifier.fillMaxWidth() else modifier.width(width)
     var showMenu by remember { mutableStateOf(false) }
+    var showExpandedCard by remember { mutableStateOf(false) }
 
-    Column(modifier = modifier.pointerInput(Unit) {
-        detectTapGestures(
-            onTap = { onClick() },
-            onLongPress = { showMenu = true }
-        )
-    }) {
+    Column(
+        modifier = cardModifier
+            .touchBorder()
+            .pointerInput(Unit) {
+                detectTapGestures(
+                    onTap = { onClick() },
+                    onLongPress = { showExpandedCard = true }
+                )
+            }
+    ) {
         val thumbUrl = remember(item.posterPath, item.id) {
             UrlUtils.resolveImageUrl(item.posterPath, item.mediaType, item.id)
         }
@@ -431,24 +443,40 @@ fun AdultHorizontalCard(item: SearchResult, width: Dp = 180.dp, onOptionSelect: 
                 item = item
             )
         }
+
+        if (showExpandedCard) {
+            ExpandedVideoCard(
+                item = item,
+                onDismiss = { showExpandedCard = false },
+                onPlay = { showExpandedCard = false; onClick() },
+                onLike = { onOptionSelect(item, "Favorites") },
+                onWatched = { onOptionSelect(item, "Completed") }
+            )
+        }
+
         Spacer(Modifier.height(8.dp))
         Text(item.title, color = colors.secondary, fontSize = 13.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
 }
 
 @Composable
-fun AdultVideoListCard(item: SearchResult, onOptionSelect: (SearchResult, String) -> Unit, onClick: () -> Unit) {
+fun AdultVideoListCard(modifier: Modifier = Modifier, item: SearchResult, onOptionSelect: (SearchResult, String) -> Unit, onClick: () -> Unit) {
     val colors = LocalCustomColors.current
     val context = LocalContext.current
     var showMenu by remember { mutableStateOf(false) }
+    var showExpandedCard by remember { mutableStateOf(false) }
 
     Card(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp).pointerInput(Unit) {
-            detectTapGestures(
-                onTap = { onClick() },
-                onLongPress = { showMenu = true }
-            )
-        },
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .touchBorder()
+            .pointerInput(Unit) {
+                detectTapGestures(
+                    onTap = { onClick() },
+                    onLongPress = { showExpandedCard = true }
+                )
+            },
         colors = CardDefaults.cardColors(containerColor = Color.White.copy(0.05f)),
         shape = RoundedCornerShape(12.dp)
     ) {
@@ -485,6 +513,16 @@ fun AdultVideoListCard(item: SearchResult, onOptionSelect: (SearchResult, String
                 Spacer(Modifier.height(8.dp))
                 Text(item.views, color = colors.secondary.copy(0.7f), fontSize = 11.sp)
             }
+        }
+
+        if (showExpandedCard) {
+            ExpandedVideoCard(
+                item = item,
+                onDismiss = { showExpandedCard = false },
+                onPlay = { showExpandedCard = false; onClick() },
+                onLike = { onOptionSelect(item, "Favorites") },
+                onWatched = { onOptionSelect(item, "Completed") }
+            )
         }
     }
 }

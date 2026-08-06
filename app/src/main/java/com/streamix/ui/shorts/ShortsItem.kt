@@ -6,6 +6,8 @@ data class ShortsItem(
     val thumbnailUrl: String,
     val streamUrl:    String,   // direct MP4 or HLS URL
     val channelName:  String = "",
+    val channelAvatarUrl: String = "",
+    val channelUrl:   String = "",
     val description:  String? = null,
     val duration:     Int    = 0,   // seconds
     val views:        String = "",

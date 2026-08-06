@@ -1,12 +1,10 @@
 {
-  "latestVersion": 235,
-  "versionName": "1.235",
-  "apkUrl": "https://media.githubusercontent.com/media/Shabd45261/Streamix.github.io/main/apk/Streamix_20260712_Sunday_0234pm_235th(235).apk",
-  "mandatory": false,
+  "latestVersion": 275,
+  "versionName": "1.275",
+  "apkUrl": "https://media.githubusercontent.com/media/Shabd45261/Streamix.github.io/main/apk/Streamix_06-08-2026_Thursday_0938PM_275th(275).apk",
+  "mandatory": true,
   "releaseNotes": [
-    "Functionalized Top Bar buttons (Cast, Reminder, Like, Share, Browser)",
-    "Added 'Liked' section to Library",
-    "Removed redundant search icon from video page",
-    "Enhanced Adult profile interactions"
+    "Improved update check reliability",
+    "Internal stability improvements"
   ]
 }

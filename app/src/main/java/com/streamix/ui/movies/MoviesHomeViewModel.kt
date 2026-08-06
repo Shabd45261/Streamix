@@ -18,7 +18,9 @@ import javax.inject.Inject
 class MoviesHomeViewModel @Inject constructor(
     private val repo: MoviesScraperRepository,
     private val historyDao: WatchHistoryDao,
-    private val watchlistDao: WatchlistDao
+    private val watchlistDao: WatchlistDao,
+    private val prefs: com.streamix.core.storage.PreferencesManager,
+    private val searchHistoryManager: com.streamix.core.storage.SearchHistoryManager
 ) : ViewModel() {
 
     private val _homeRows = MutableStateFlow<List<MovieHomeRow>>(emptyList())
@@ -50,6 +52,9 @@ class MoviesHomeViewModel @Inject constructor(
 
     private val _showRefreshBanner = MutableStateFlow(false)
     val showRefreshBanner = _showRefreshBanner.asStateFlow()
+
+    val searchHistory: StateFlow<List<String>> = searchHistoryManager.getHistory(com.streamix.core.model.Profile.MOVIES)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     private var searchJob: Job? = null
     private var backPressCount = 0
@@ -131,26 +136,44 @@ class MoviesHomeViewModel @Inject constructor(
 
         searchJob = viewModelScope.launch {
             delay(500)
-            search(q)
+            performSearch(q, addToHistory = false)
         }
     }
 
     fun search(q: String) {
         if (q.isBlank()) return
         viewModelScope.launch {
-            _isLoading.value = true
-            try {
-                Log.d("MoviesVM", "Searching for: $q")
-                val results = repo.search(q)
-                Log.d("MoviesVM", "Found ${results.size} results")
-                _searchResults.value = results
-            } catch (e: Exception) {
-                Log.e("MoviesVM", "Search failed", e)
-                _searchResults.value = emptyList()
-            } finally {
-                _isLoading.value = false
-            }
+            performSearch(q, addToHistory = true)
         }
+    }
+
+    private suspend fun performSearch(q: String, addToHistory: Boolean) {
+        if (q.isBlank()) return
+        
+        if (addToHistory) {
+            searchHistoryManager.addSearch(com.streamix.core.model.Profile.MOVIES, q)
+        }
+
+        _isLoading.value = true
+        try {
+            Log.d("MoviesVM", "Searching for: $q")
+            val results = repo.search(q)
+            Log.d("MoviesVM", "Found ${results.size} results")
+            _searchResults.value = results
+        } catch (e: Exception) {
+            Log.e("MoviesVM", "Search failed", e)
+            _searchResults.value = emptyList()
+        } finally {
+            _isLoading.value = false
+        }
+    }
+
+    fun removeHistoryItem(q: String) {
+        viewModelScope.launch { searchHistoryManager.removeSearch(com.streamix.core.model.Profile.MOVIES, q) }
+    }
+
+    fun removeFromHistory(id: String) {
+        viewModelScope.launch { historyDao.deleteHistory(id) }
     }
 
     fun addToLibrary(item: SearchResult, status: String) {

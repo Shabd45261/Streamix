@@ -20,6 +20,7 @@ class YoutubeHomeViewModel @Inject constructor(
     private val historyDao: WatchHistoryDao,
     private val watchlistDao: WatchlistDao,
     private val prefs: PreferencesManager,
+    private val searchHistoryManager: com.streamix.core.storage.SearchHistoryManager,
     private val savedStateHandle: androidx.lifecycle.SavedStateHandle
 ) : ViewModel() {
 
@@ -35,6 +36,9 @@ class YoutubeHomeViewModel @Inject constructor(
     private val _recommended   = MutableStateFlow<List<SearchResult>>(emptyList())
     val recommended = _recommended.asStateFlow()
 
+    private val _liked = MutableStateFlow<List<SearchResult>>(emptyList())
+    val liked = _liked.asStateFlow()
+
     private val _searchResults = MutableStateFlow<List<SearchResult>>(emptyList())
     val searchResults = _searchResults.asStateFlow()
 
@@ -49,6 +53,9 @@ class YoutubeHomeViewModel @Inject constructor(
 
     private val _showRefreshBanner = MutableStateFlow(false)
     val showRefreshBanner = _showRefreshBanner.asStateFlow()
+
+    val searchHistory: StateFlow<List<String>> = searchHistoryManager.getHistory(com.streamix.core.model.Profile.YOUTUBE)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     private var searchJob: Job? = null
     private var backPressCount = 0
@@ -69,6 +76,12 @@ class YoutubeHomeViewModel @Inject constructor(
             try {
                 val localSubs = prefs.subscribedChannels.first()
                 val historyItems = historyDao.getAllHistory().first().filter { it.mediaType == "youtube" && !it.isShort }
+                val likedItems = watchlistDao.getByStatus("Liked").first()
+                    .filter { it.mediaType == "youtube" }
+                    .map { it.toSearchResult() }
+                
+                _liked.value = likedItems
+
                 val frequentlyWatchedChannels = historyItems.groupBy { it.studio }.toList()
                     .sortedByDescending { it.second.size }
                     .map { it.first }
@@ -130,7 +143,8 @@ class YoutubeHomeViewModel @Inject constructor(
                     val finalSubs = (subsFeed + interleavedChannelVideos).distinctBy { it.id }
                     _subscribed.value = if (finalSubs.isNotEmpty()) finalSubs else youtubeScraper.search("popular channels")
                     
-                    val finalRec = (recFeed + interleavedChannelVideos.shuffled()).distinctBy { it.id }
+                    // Mix recommendations with subscribed and interleaved content for "For You" feel
+                    val finalRec = (recFeed.shuffled() + interleavedChannelVideos.shuffled() + subsFeed.shuffled()).distinctBy { it.id }
                     _recommended.value = if (finalRec.isNotEmpty()) finalRec else youtubeScraper.search("suggested videos")
                 }
             } catch (e: Exception) {
@@ -198,30 +212,47 @@ class YoutubeHomeViewModel @Inject constructor(
 
         searchJob = viewModelScope.launch {
             delay(500)
-            search(q)
+            performSearch(q, addToHistory = false)
         }
     }
 
     fun search(q: String) {
         if (q.isBlank()) return
         viewModelScope.launch {
-            _isLoading.value = _searchResults.value.isEmpty() // Only show full loader if no results yet
-            try {
-                Log.d("YoutubeVM", "Searching for: $q")
-                val results = youtubeScraper.search(q)
-                
-                // Group results: Channels first, then videos
-                val channels = results.filter { it.mediaType == "youtube_channel" }
-                val videos = results.filter { it.mediaType != "youtube_channel" }
-                
-                _searchResults.value = channels + videos
-            } catch (e: Exception) {
-                Log.e("YoutubeVM", "Search failed", e)
-                if (_searchResults.value.isEmpty()) _searchResults.value = emptyList()
-            } finally {
-                _isLoading.value = false
-            }
+            performSearch(q, addToHistory = true)
         }
+    }
+
+    private suspend fun performSearch(q: String, addToHistory: Boolean) {
+        if (q.isBlank()) return
+        
+        if (addToHistory) {
+            searchHistoryManager.addSearch(com.streamix.core.model.Profile.YOUTUBE, q)
+        }
+
+        _isLoading.value = _searchResults.value.isEmpty()
+        try {
+            Log.d("YoutubeVM", "Searching for: $q")
+            val results = youtubeScraper.search(q)
+            
+            val channels = results.filter { it.mediaType == "youtube_channel" }
+            val videos = results.filter { it.mediaType != "youtube_channel" }
+            
+            _searchResults.value = channels + videos
+        } catch (e: Exception) {
+            Log.e("YoutubeVM", "Search failed", e)
+            if (_searchResults.value.isEmpty()) _searchResults.value = emptyList()
+        } finally {
+            _isLoading.value = false
+        }
+    }
+
+    fun removeHistoryItem(q: String) {
+        viewModelScope.launch { searchHistoryManager.removeSearch(com.streamix.core.model.Profile.YOUTUBE, q) }
+    }
+
+    fun removeFromHistory(id: String) {
+        viewModelScope.launch { historyDao.deleteHistory(id) }
     }
 
     fun addToLibrary(item: SearchResult, status: String) {
@@ -241,6 +272,17 @@ class YoutubeHomeViewModel @Inject constructor(
             )
         }
     }
+
+    private fun com.streamix.core.storage.WatchlistEntity.toSearchResult() = SearchResult(
+        id = id,
+        title = title,
+        posterPath = posterPath,
+        mediaType = mediaType,
+        year = year,
+        views = views,
+        duration = "",
+        studio = studio
+    )
 
     private fun com.streamix.core.storage.WatchHistoryEntity.toSearchResult() = SearchResult(
         id = id,

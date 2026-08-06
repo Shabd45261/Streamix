@@ -1,0 +1,90 @@
+package com.streamix.scrapers.adult
+
+import com.streamix.core.plugin.ContentCategory
+import com.streamix.scrapers.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import org.jsoup.Jsoup
+
+class UniversalAdultScraper(
+    id: String,
+    displayName: String,
+    baseUrl: String,
+    private val listSelector: String = "div.item, article, li.pcVideoListItem, .thumb-block",
+    private val titleSelector: String = "a.title, .name, h2, h3, a[title]",
+    private val thumbSelector: String = "img",
+    private val linkSelector: String = "a"
+) : BaseScraper {
+
+    override val info = ScraperInfo(
+        id = id,
+        displayName = displayName,
+        baseUrl = baseUrl,
+        categories = listOf(ContentCategory.ADULT)
+    )
+
+    override suspend fun getTrending(page: Int): List<ScrapeResult> = withContext(Dispatchers.IO) {
+        val url = if (page == 1) info.baseUrl else "${info.baseUrl}/page/$page/"
+        val html = ScraperHttpClient.get(url) ?: return@withContext emptyList()
+        parseList(html)
+    }
+
+    override suspend fun search(query: String, page: Int): List<ScrapeResult> = withContext(Dispatchers.IO) {
+        val url = "${info.baseUrl}/?s=$query&page=$page"
+        val html = ScraperHttpClient.get(url) ?: return@withContext emptyList()
+        parseList(html)
+    }
+
+    private fun parseList(html: String): List<ScrapeResult> {
+        return try {
+            val doc = Jsoup.parse(html, info.baseUrl)
+            val results = mutableListOf<ScrapeResult>()
+
+            doc.select(listSelector).forEach { el ->
+                val linkEl = el.select(linkSelector).firstOrNull() ?: return@forEach
+                val titleEl = el.select(titleSelector).firstOrNull() ?: linkEl
+                val title = titleEl.attr("title").ifEmpty { titleEl.text() }.trim()
+                val href = linkEl.attr("href")
+                if (title.isEmpty() || href.isEmpty()) return@forEach
+
+                val link = if (href.startsWith("http")) href else "${info.baseUrl}$href"
+                val img = el.select(thumbSelector).firstOrNull()
+                val thumb = img?.attr("data-src") ?: img?.attr("data-original") ?: img?.attr("src") ?: ""
+
+                results.add(ScrapeResult(
+                    id = link, title = title,
+                    posterUrl = thumb.takeIf { it.startsWith("http") || it.startsWith("//") }?.let { if (it.startsWith("//")) "https:$it" else it },
+                    pageUrl = link, sourceId = info.id
+                ))
+            }
+            results.distinctBy { it.pageUrl }.take(30)
+        } catch (e: Exception) { emptyList() }
+    }
+
+    override suspend fun getStreamLinks(pageUrl: String): List<StreamResult> = withContext(Dispatchers.IO) {
+        val html = ScraperHttpClient.get(pageUrl) ?: return@withContext emptyList()
+        val results = mutableListOf<StreamResult>()
+
+        // Try to find m3u8
+        val m3u8Regex = Regex("""(https?://[^\s"']+\.m3u8[^\s"']*)""")
+        m3u8Regex.findAll(html).forEach { m ->
+            results.add(StreamResult(url = m.value, quality = "Auto", format = "hls"))
+        }
+
+        // Try to find mp4
+        val mp4Regex = Regex("""(https?://[^\s"']+\.mp4[^\s"']*)""")
+        mp4Regex.findAll(html).forEach { m ->
+            results.add(StreamResult(url = m.value, quality = "Auto", format = "mp4"))
+        }
+
+        // Check iframes
+        Jsoup.parse(html).select("iframe[src]").forEach { iframe ->
+            val src = iframe.attr("src")
+            if (src.contains(".m3u8") || src.contains(".mp4")) {
+                results.add(StreamResult(url = src, quality = "External", format = "mp4"))
+            }
+        }
+
+        results
+    }
+}

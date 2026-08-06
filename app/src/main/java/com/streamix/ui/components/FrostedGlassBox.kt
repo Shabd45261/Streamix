@@ -3,8 +3,7 @@ package com.streamix.ui.components
 import android.os.Build
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -25,11 +24,33 @@ fun FrostedGlassBox(
 ) {
     Box(
         modifier = modifier
-            .background(Color.White.copy(alpha = 0.08f), RoundedCornerShape(cornerRadius))
-            .border(0.5.dp, Color.White.copy(alpha = 0.12f), RoundedCornerShape(cornerRadius))
-            .clip(RoundedCornerShape(cornerRadius)),
-        content = content
-    )
+            .clip(RoundedCornerShape(cornerRadius))
+    ) {
+        // Blurred Background Layer
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .graphicsLayer {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                        renderEffect = BlurEffect(30f, 30f, TileMode.Clamp)
+                    }
+                }
+                .background(
+                    Brush.verticalGradient(
+                        listOf(
+                            Color.White.copy(alpha = 0.15f),
+                            Color.White.copy(alpha = 0.08f)
+                        )
+                    )
+                )
+        )
+        
+        // Content Layer (Clear)
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            content = content
+        )
+    }
 }
 
 fun Modifier.frostedGlass(

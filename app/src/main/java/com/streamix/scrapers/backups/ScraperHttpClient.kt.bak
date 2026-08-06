@@ -1,0 +1,48 @@
+package com.streamix.scrapers
+
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.Response
+import java.util.concurrent.TimeUnit
+
+object ScraperHttpClient {
+
+    val client: OkHttpClient = OkHttpClient.Builder()
+        .connectTimeout(15, TimeUnit.SECONDS)
+        .readTimeout(20, TimeUnit.SECONDS)
+        .followRedirects(true)
+        .followSslRedirects(true)
+        .addInterceptor { chain ->
+            val request = chain.request().newBuilder()
+                .header("User-Agent", "Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36")
+                .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
+                .header("Accept-Language", "en-US,en;q=0.9")
+                .build()
+            chain.proceed(request)
+        }
+        .build()
+
+    fun get(url: String, headers: Map<String, String> = emptyMap()): String? {
+        return try {
+            val request = Request.Builder().url(url).apply {
+                headers.forEach { (k, v) -> addHeader(k, v) }
+            }.build()
+            client.newCall(request).execute().use { response ->
+                if (response.isSuccessful) response.body?.string() else null
+            }
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    fun getWithResponse(url: String, headers: Map<String, String> = emptyMap()): Response? {
+        return try {
+            val request = Request.Builder().url(url).apply {
+                headers.forEach { (k, v) -> addHeader(k, v) }
+            }.build()
+            client.newCall(request).execute()
+        } catch (e: Exception) {
+            null
+        }
+    }
+}

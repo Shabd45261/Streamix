@@ -1,0 +1,92 @@
+package com.streamix.scrapers.adult
+
+import com.streamix.core.plugin.ContentCategory
+import com.streamix.scrapers.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import org.json.JSONObject
+
+class RedgifsBackupScraper : BaseScraper {
+
+    override val info = ScraperInfo(
+        id = "redgifs_backup",
+        displayName = "Redgifs (Backup)",
+        baseUrl = "https://www.redgifs.com",
+        categories = listOf(ContentCategory.ADULT)
+    )
+
+    private var cachedToken: String? = null
+    private var lastTokenTime: Long = 0
+
+    private suspend fun getAuthToken(): String? {
+        if (cachedToken != null && (System.currentTimeMillis() - lastTokenTime < 600000)) return cachedToken
+        
+        val html = ScraperHttpClient.get("https://api.redgifs.com/v2/auth/temporary") ?: return null
+        return try {
+            val token = JSONObject(html).getString("token")
+            cachedToken = "Bearer $token"
+            lastTokenTime = System.currentTimeMillis()
+            cachedToken
+        } catch (_: Exception) { null }
+    }
+
+    override suspend fun getTrending(page: Int): List<ScrapeResult> = withContext(Dispatchers.IO) {
+        val token = getAuthToken() ?: return@withContext emptyList()
+        val url = "https://api.redgifs.com/v2/gifs/search?type=g&order=trending&count=30&page=$page"
+        val json = ScraperHttpClient.get(url, mapOf("Authorization" to token)) ?: return@withContext emptyList()
+        parseJson(json)
+    }
+
+    override suspend fun search(query: String, page: Int): List<ScrapeResult> = withContext(Dispatchers.IO) {
+        val token = getAuthToken() ?: return@withContext emptyList()
+        val url = "https://api.redgifs.com/v2/gifs/search?type=g&order=score&count=40&page=$page&query=$query"
+        val json = ScraperHttpClient.get(url, mapOf("Authorization" to token)) ?: return@withContext emptyList()
+        parseJson(json)
+    }
+
+    private fun parseJson(json: String): List<ScrapeResult> {
+        return try {
+            val obj = JSONObject(json)
+            val gifs = obj.optJSONArray("gifs") ?: return emptyList()
+            val results = mutableListOf<ScrapeResult>()
+            for (i in 0 until gifs.length()) {
+                val gif = gifs.getJSONObject(i)
+                val id = gif.getString("id")
+                val urls = gif.getJSONObject("urls")
+                val poster = urls.optString("thumbnail", urls.optString("poster"))
+                val tags = gif.optJSONArray("tags")?.let { arr ->
+                    (0 until minOf(arr.length(), 3)).map { arr.getString(it) }.joinToString(" ")
+                } ?: id
+
+                results.add(ScrapeResult(
+                    id = "https://www.redgifs.com/watch/$id",
+                    title = tags,
+                    posterUrl = poster,
+                    pageUrl = "https://www.redgifs.com/watch/$id",
+                    sourceId = info.id
+                ))
+            }
+            results
+        } catch (_: Exception) { emptyList() }
+    }
+
+    override suspend fun getStreamLinks(pageUrl: String): List<StreamResult> = withContext(Dispatchers.IO) {
+        val id = pageUrl.substringAfter("watch/").substringBefore("?").substringBefore("/").lowercase()
+        val token = getAuthToken() ?: return@withContext emptyList()
+        
+        val json = ScraperHttpClient.get("https://api.redgifs.com/v2/gifs/$id", mapOf("Authorization" to token))
+            ?: return@withContext emptyList()
+            
+        val results = mutableListOf<StreamResult>()
+        try {
+            val urls = JSONObject(json).getJSONObject("gif").getJSONObject("urls")
+            val hd = urls.optString("hd")
+            val sd = urls.optString("sd")
+            
+            if (hd.isNotEmpty()) results.add(StreamResult(url = hd, quality = "HD", format = "mp4", headers = mapOf("Referer" to "https://www.redgifs.com/")))
+            if (sd.isNotEmpty()) results.add(StreamResult(url = sd, quality = "SD", format = "mp4", headers = mapOf("Referer" to "https://www.redgifs.com/")))
+        } catch (_: Exception) {}
+        
+        results
+    }
+}

@@ -75,19 +75,13 @@ fun UpdateDialog(
             }
         },
         dismissButton = {
-            if (!info.mandatory) {
-                TextButton(onClick = onIgnore) {
-                    Text("Ignore", color = colors.secondary.copy(0.6f))
-                }
-            } else {
-                TextButton(onClick = onExit) {
-                    Text("Exit App", color = colors.secondary.copy(0.6f))
-                }
+            TextButton(onClick = onIgnore) {
+                Text("Ignore", color = colors.secondary.copy(0.6f))
             }
         },
         properties = DialogProperties(
-            dismissOnBackPress = !info.mandatory,
-            dismissOnClickOutside = !info.mandatory
+            dismissOnBackPress = true,
+            dismissOnClickOutside = true
         )
     )
 }

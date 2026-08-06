@@ -34,4 +34,10 @@ interface WatchlistDao {
 
     @Query("DELETE FROM watchlist WHERE id = :id")
     suspend fun deleteById(id: String)
+
+    @Query("SELECT EXISTS(SELECT 1 FROM watchlist WHERE id = :id AND status = :status LIMIT 1)")
+    fun isItemInStatus(id: String, status: String): Flow<Boolean>
+
+    @Query("DELETE FROM watchlist WHERE id = :id AND status = :status")
+    suspend fun deleteByIdAndStatus(id: String, status: String)
 }

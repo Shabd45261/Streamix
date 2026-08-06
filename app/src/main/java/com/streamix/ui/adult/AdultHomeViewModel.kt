@@ -7,19 +7,19 @@ import com.streamix.core.storage.WatchHistoryDao
 import com.streamix.core.storage.WatchlistDao
 import com.streamix.core.storage.WatchlistEntity
 import com.streamix.data.scraper.AdultScraperRepository
+import com.streamix.core.storage.PreferencesManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.*
 import javax.inject.Inject
 
 @HiltViewModel
 class AdultHomeViewModel @Inject constructor(
     private val repo: AdultScraperRepository,
     private val historyDao: WatchHistoryDao,
-    private val watchlistDao: WatchlistDao
+    private val watchlistDao: WatchlistDao,
+    private val prefs: PreferencesManager,
+    private val searchHistoryManager: com.streamix.core.storage.SearchHistoryManager
 ) : ViewModel() {
 
     private val _trending      = MutableStateFlow<List<SearchResult>>(emptyList())
@@ -42,6 +42,9 @@ class AdultHomeViewModel @Inject constructor(
 
     private val _showRefreshBanner = MutableStateFlow(false)
     val showRefreshBanner = _showRefreshBanner.asStateFlow()
+
+    val searchHistory: StateFlow<List<String>> = searchHistoryManager.getHistory(com.streamix.core.model.Profile.ADULT)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     private var searchJob: Job? = null
     private var backPressCount = 0
@@ -135,29 +138,43 @@ class AdultHomeViewModel @Inject constructor(
         }
         searchJob = viewModelScope.launch {
             delay(300)
-            search(q)
+            performSearch(q, addToHistory = false)
         }
     }
 
     fun search(q: String) {
         viewModelScope.launch {
-            _isLoading.value = true
-            try {
-                val results = withContext(Dispatchers.IO) {
-                    repo.search(q)
-                        .filter { it.id.isNotBlank() }
-                        .distinctBy { it.id }
-                        .take(80)
-                }
-                _searchResults.value = results
-            } catch (e: Exception) {
-                _searchResults.value = emptyList()
-            } finally {
-                _isLoading.value = false
+            performSearch(q, addToHistory = true)
+        }
+    }
+
+    private suspend fun performSearch(q: String, addToHistory: Boolean) {
+        if (q.isBlank()) return
+        
+        if (addToHistory) {
+            searchHistoryManager.addSearch(com.streamix.core.model.Profile.ADULT, q)
+        }
+
+        _isLoading.value = true
+        try {
+            val results = withContext(Dispatchers.IO) {
+                repo.search(q)
+                    .filter { it.id.isNotBlank() }
+                    .distinctBy { it.id }
+                    .take(80)
             }
+            _searchResults.value = results
+        } catch (e: Exception) {
+            _searchResults.value = emptyList()
+        } finally {
+            _isLoading.value = false
         }
     }
     
+    fun removeHistoryItem(q: String) {
+        viewModelScope.launch { searchHistoryManager.removeSearch(com.streamix.core.model.Profile.ADULT, q) }
+    }
+
     fun removeFromHistory(id: String) {
         viewModelScope.launch {
             try { historyDao.deleteHistory(id) } catch (e: Exception) {}

@@ -32,7 +32,18 @@ fun VideoOptionsPopup(
         DropdownMenuItem(
             text = { Text("Share", color = colors.secondary) },
             onClick = { 
-                ShareUtils.shareLink(context, item.title, item.id)
+                val profile = when(item.mediaType) {
+                    "youtube" -> "youtube"
+                    "adult" -> "adult"
+                    else -> "movies"
+                }
+                val contentType = when(item.mediaType) {
+                    "youtube" -> if (item.isShort) "short" else "video"
+                    "adult" -> "video"
+                    "tv" -> "episode"
+                    else -> "movie"
+                }
+                ShareUtils.shareContent(context, item.title, profile, contentType, item.id)
                 onDismiss() 
             },
             leadingIcon = { Icon(Icons.Default.Share, null, tint = colors.secondary) }

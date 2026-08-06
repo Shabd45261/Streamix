@@ -1,7 +1,11 @@
 package com.streamix.scraper.youtube
 
 import com.streamix.core.model.SearchResult
+import com.streamix.core.model.SponsorSegment
 import com.streamix.core.model.VideoLink
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import org.json.JSONArray
 import com.streamix.scraper.base.BaseScraper
 import org.schabi.newpipe.extractor.ServiceList
 import org.schabi.newpipe.extractor.channel.ChannelInfo
@@ -231,6 +235,25 @@ class YouTubeScraper @Inject constructor() : BaseScraper() {
         }
     }
 
+    suspend fun getChannelShorts(channelUrl: String): List<SearchResult> = withContext(Dispatchers.IO) {
+        try {
+            val channelInfo = ChannelInfo.getInfo(service, channelUrl)
+            val shortsTab = channelInfo.tabs.firstOrNull { 
+                it.contentFilters?.any { filter -> filter.equals("shorts", ignoreCase = true) } == true
+            }
+
+            if (shortsTab != null) {
+                val tabInfo = org.schabi.newpipe.extractor.channel.tabs.ChannelTabInfo.getInfo(service, shortsTab)
+                tabInfo.relatedItems.filterIsInstance<StreamInfoItem>().map { it.toSearchResult() }
+            } else {
+                searchShorts(channelInfo.name, limit = 20)
+            }
+        } catch (e: Exception) {
+            Log.e("YouTubeScraper", "Failed to get channel shorts for: $channelUrl", e)
+            emptyList()
+        }
+    }
+
     suspend fun getChannelVideos(channelUrl: String): List<SearchResult> = withContext(Dispatchers.IO) {
         try {
             val channelInfo = ChannelInfo.getInfo(service, channelUrl)
@@ -276,50 +299,56 @@ class YouTubeScraper @Inject constructor() : BaseScraper() {
         val variations = if (maxPagesPerVariation <= 2) listOf(query) else listOf(query, "$query shorts", "$query #shorts", "shorts $query", "#shorts $query", "youtube shorts $query")
         val collectedCount = java.util.concurrent.atomic.AtomicInteger(0)
         
-        coroutineScope {
-            variations.forEach { q ->
-                launch {
-                    try {
-                        if (collectedCount.get() >= targetTotal) return@launch
-                        
-                        val qh = service.searchQHFactory.fromQuery(q)
-                        val searchInfo = SearchInfo.getInfo(service, qh)
-                        
-                        val initialShorts = searchInfo.relatedItems.filterIsInstance<StreamInfoItem>()
-                            .filter { item ->
-                                item.duration <= 90 || item.url.contains("/shorts/", ignoreCase = true) || item.duration <= 0
-                            }
-                            .map { it.toSearchResult() }
-                        
-                        if (initialShorts.isNotEmpty()) {
-                            collectedCount.addAndGet(initialShorts.size)
-                            onResults(initialShorts)
-                        }
-
-                        var nextPage = searchInfo.nextPage
-                        var pagesFetched = 1
-                        while (pagesFetched < maxPagesPerVariation && nextPage != null && collectedCount.get() < targetTotal) { 
+        try {
+            withTimeout(15000) { // 15 seconds max search
+                coroutineScope {
+                    variations.forEach { q ->
+                        launch {
                             try {
-                                val moreItems = SearchInfo.getMoreItems(service, qh, nextPage)
-                                val nextShorts = moreItems.items.filterIsInstance<StreamInfoItem>()
+                                if (collectedCount.get() >= targetTotal) return@launch
+                                
+                                val qh = service.searchQHFactory.fromQuery(q)
+                                val searchInfo = SearchInfo.getInfo(service, qh)
+                                
+                                val initialShorts = searchInfo.relatedItems.filterIsInstance<StreamInfoItem>()
                                     .filter { item ->
                                         item.duration <= 90 || item.url.contains("/shorts/", ignoreCase = true) || item.duration <= 0
                                     }
                                     .map { it.toSearchResult() }
                                 
-                                if (nextShorts.isNotEmpty()) {
-                                    collectedCount.addAndGet(nextShorts.size)
-                                    onResults(nextShorts)
+                                if (initialShorts.isNotEmpty()) {
+                                    collectedCount.addAndGet(initialShorts.size)
+                                    onResults(initialShorts)
                                 }
-                                nextPage = moreItems.nextPage
-                                pagesFetched++
-                            } catch (e: Exception) { break }
+
+                                var nextPage = searchInfo.nextPage
+                                var pagesFetched = 1
+                                while (pagesFetched < maxPagesPerVariation && nextPage != null && collectedCount.get() < targetTotal) { 
+                                    try {
+                                        val moreItems = SearchInfo.getMoreItems(service, qh, nextPage)
+                                        val nextShorts = moreItems.items.filterIsInstance<StreamInfoItem>()
+                                            .filter { item ->
+                                                item.duration <= 90 || item.url.contains("/shorts/", ignoreCase = true) || item.duration <= 0
+                                            }
+                                            .map { it.toSearchResult() }
+                                        
+                                        if (nextShorts.isNotEmpty()) {
+                                            collectedCount.addAndGet(nextShorts.size)
+                                            onResults(nextShorts)
+                                        }
+                                        nextPage = moreItems.nextPage
+                                        pagesFetched++
+                                    } catch (e: Exception) { break }
+                                }
+                            } catch (e: Exception) {
+                                Log.w("YouTubeScraper", "Variation search failed for $q")
+                            }
                         }
-                    } catch (e: Exception) {
-                        Log.w("YouTubeScraper", "Variation search failed for $q")
                     }
                 }
             }
+        } catch (e: TimeoutCancellationException) {
+            Log.w("YouTubeScraper", "Search timed out for: $query")
         }
     }
 
@@ -339,6 +368,32 @@ class YouTubeScraper @Inject constructor() : BaseScraper() {
         } catch (e: Exception) {
             Log.e("YouTubeScraper", "Failed to get full stream info for: $mediaId", e)
             null
+        }
+    }
+
+    suspend fun getSponsorSegments(videoId: String): List<SponsorSegment> = withContext(Dispatchers.IO) {
+        try {
+            val url = "https://sponsor.ajay.app/api/skipSegments?videoID=$videoId&categories=[\"sponsor\",\"selfpromo\",\"interaction\",\"intro\",\"outro\",\"preview\",\"music_offtopic\",\"filler\"]"
+            val request = Request.Builder().url(url).build()
+            val client = OkHttpClient()
+            client.newCall(request).execute().use { response ->
+                if (!response.isSuccessful) return@withContext emptyList()
+                val body = response.body?.string() ?: return@withContext emptyList()
+                val json = JSONArray(body)
+                val segments = mutableListOf<SponsorSegment>()
+                for (i in 0 until json.length()) {
+                    val obj = json.getJSONObject(i)
+                    val segment = obj.getJSONArray("segment")
+                    segments.add(SponsorSegment(
+                        start = (segment.getDouble(0) * 1000).toLong(),
+                        end = (segment.getDouble(1) * 1000).toLong(),
+                        category = obj.getString("category")
+                    ))
+                }
+                segments
+            }
+        } catch (e: Exception) {
+            emptyList()
         }
     }
 
@@ -375,7 +430,8 @@ class YouTubeScraper @Inject constructor() : BaseScraper() {
             views = FormatUtils.formatViews(viewCount),
             year = textualUploadDate ?: "", // Use year field for textual date
             studio = uploaderName,
-            isShort = url.contains("/shorts/")
+            isShort = url.contains("/shorts/"),
+            studioUrl = uploaderUrl
         )
     }
 

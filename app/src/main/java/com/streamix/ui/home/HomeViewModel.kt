@@ -6,17 +6,18 @@ import com.streamix.core.model.SearchResult
 import com.streamix.core.storage.WatchlistDao
 import com.streamix.core.storage.WatchlistEntity
 import com.streamix.data.tmdb.TmdbRepository
+import com.streamix.core.storage.PreferencesManager
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val tmdbRepository: TmdbRepository,
-    private val watchlistDao: WatchlistDao
+    private val watchlistDao: WatchlistDao,
+    private val prefs: PreferencesManager,
+    private val searchHistoryManager: com.streamix.core.storage.SearchHistoryManager
 ) : ViewModel() {
 
     private val _trending = MutableStateFlow<List<SearchResult>>(emptyList())
@@ -36,6 +37,9 @@ class HomeViewModel @Inject constructor(
 
     private val _showRefreshBanner = MutableStateFlow(false)
     val showRefreshBanner = _showRefreshBanner.asStateFlow()
+
+    val searchHistory: StateFlow<List<String>> = searchHistoryManager.getHistory(com.streamix.core.model.Profile.MOVIES)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     private var backPressCount = 0
     private var lastBackPressTime = 0L
@@ -94,6 +98,15 @@ class HomeViewModel @Inject constructor(
 
     fun onSearchQueryChange(query: String) {
         _searchQuery.value = query
+    }
+
+    fun search(q: String) {
+        if (q.isBlank()) return
+        viewModelScope.launch { searchHistoryManager.addSearch(com.streamix.core.model.Profile.MOVIES, q) }
+    }
+
+    fun removeHistoryItem(q: String) {
+        viewModelScope.launch { searchHistoryManager.removeSearch(com.streamix.core.model.Profile.MOVIES, q) }
     }
 
     private fun loadContent() {

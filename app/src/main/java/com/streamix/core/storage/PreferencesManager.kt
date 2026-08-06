@@ -35,12 +35,24 @@ class PreferencesManager @Inject constructor(
         val SUBSCRIBED_CHANNELS = stringPreferencesKey("subscribed_channels")
         val USER_INTERESTS      = stringPreferencesKey("user_interests")
         val SHORTS_SEARCH_HISTORY = stringPreferencesKey("shorts_search_history")
+        val ADULT_SHORTS_SEARCH_HISTORY = stringPreferencesKey("adult_shorts_search_history")
+        val HOME_YT_SEARCH_HISTORY = stringPreferencesKey("home_yt_search_history")
+        val HOME_MOVIES_SEARCH_HISTORY = stringPreferencesKey("home_movies_search_history")
+        val HOME_ADULT_SEARCH_HISTORY = stringPreferencesKey("home_adult_search_history")
         val GLOBAL_SEARCH_HISTORY = stringPreferencesKey("global_search_history")
         val AUTO_SCROLL_SHORTS  = booleanPreferencesKey("auto_scroll_shorts")
         val BACKGROUND_PLAYBACK_YOUTUBE = booleanPreferencesKey("background_playback_youtube")
+        val SPONSOR_BLOCK_ENABLED = booleanPreferencesKey("sponsor_block_enabled")
         val FLOATING_DOCK_ENABLED = booleanPreferencesKey("floating_dock_enabled")
         val IGNORED_VERSION = intPreferencesKey("ignored_version")
         val LAST_UPDATE_CHECK = longPreferencesKey("last_update_check")
+    }
+
+    val sponsorBlockEnabled: Flow<Boolean> = context.dataStore.data
+        .map { it[SPONSOR_BLOCK_ENABLED] ?: true }
+
+    suspend fun setSponsorBlockEnabled(enabled: Boolean) {
+        context.dataStore.edit { it[SPONSOR_BLOCK_ENABLED] = enabled }
     }
 
     val floatingDockEnabled: Flow<Boolean> = context.dataStore.data
@@ -81,20 +93,53 @@ class PreferencesManager @Inject constructor(
         .map { it[GLOBAL_SEARCH_HISTORY]?.split("|")?.filter { it.isNotBlank() } ?: emptyList() }
 
     suspend fun addGlobalSearch(query: String) {
-        if (query.isBlank()) return
-        context.dataStore.edit {
-            val current = it[GLOBAL_SEARCH_HISTORY]?.split("|")?.filter { it.isNotBlank() }?.toMutableList() ?: mutableListOf()
-            current.remove(query) // Remove if exists to bring to top
-            current.add(0, query)
-            it[GLOBAL_SEARCH_HISTORY] = current.take(20).joinToString("|")
-        }
+        addSearchHistory(GLOBAL_SEARCH_HISTORY, query)
     }
 
     suspend fun removeGlobalSearch(query: String) {
+        removeSearchHistory(GLOBAL_SEARCH_HISTORY, query)
+    }
+
+    val homeYtSearchHistory: Flow<List<String>> = context.dataStore.data
+        .map { it[HOME_YT_SEARCH_HISTORY]?.split("|")?.filter { it.isNotBlank() } ?: emptyList() }
+    suspend fun addHomeYtSearch(query: String) = addSearchHistory(HOME_YT_SEARCH_HISTORY, query)
+    suspend fun removeHomeYtSearch(query: String) = removeSearchHistory(HOME_YT_SEARCH_HISTORY, query)
+
+    val homeMoviesSearchHistory: Flow<List<String>> = context.dataStore.data
+        .map { it[HOME_MOVIES_SEARCH_HISTORY]?.split("|")?.filter { it.isNotBlank() } ?: emptyList() }
+    suspend fun addHomeMoviesSearch(query: String) = addSearchHistory(HOME_MOVIES_SEARCH_HISTORY, query)
+    suspend fun removeHomeMoviesSearch(query: String) = removeSearchHistory(HOME_MOVIES_SEARCH_HISTORY, query)
+
+    val homeAdultSearchHistory: Flow<List<String>> = context.dataStore.data
+        .map { it[HOME_ADULT_SEARCH_HISTORY]?.split("|")?.filter { it.isNotBlank() } ?: emptyList() }
+    suspend fun addHomeAdultSearch(query: String) = addSearchHistory(HOME_ADULT_SEARCH_HISTORY, query)
+    suspend fun removeHomeAdultSearch(query: String) = removeSearchHistory(HOME_ADULT_SEARCH_HISTORY, query)
+
+    val ytShortsSearchHistory: Flow<List<String>> = context.dataStore.data
+        .map { it[SHORTS_SEARCH_HISTORY]?.split("|")?.filter { it.isNotBlank() } ?: emptyList() }
+    suspend fun addYtShortsSearch(query: String) = addSearchHistory(SHORTS_SEARCH_HISTORY, query)
+    suspend fun removeYtShortsSearch(query: String) = removeSearchHistory(SHORTS_SEARCH_HISTORY, query)
+
+    val adultShortsSearchHistory: Flow<List<String>> = context.dataStore.data
+        .map { it[ADULT_SHORTS_SEARCH_HISTORY]?.split("|")?.filter { it.isNotBlank() } ?: emptyList() }
+    suspend fun addAdultShortsSearch(query: String) = addSearchHistory(ADULT_SHORTS_SEARCH_HISTORY, query)
+    suspend fun removeAdultShortsSearch(query: String) = removeSearchHistory(ADULT_SHORTS_SEARCH_HISTORY, query)
+
+    private suspend fun addSearchHistory(key: androidx.datastore.preferences.core.Preferences.Key<String>, query: String) {
+        if (query.isBlank()) return
         context.dataStore.edit {
-            val current = it[GLOBAL_SEARCH_HISTORY]?.split("|")?.filter { it.isNotBlank() }?.toMutableList() ?: mutableListOf()
+            val current = it[key]?.split("|")?.filter { it.isNotBlank() }?.toMutableList() ?: mutableListOf()
+            current.removeAll { it.equals(query, ignoreCase = true) }
+            current.add(0, query)
+            it[key] = current.take(30).joinToString("|")
+        }
+    }
+
+    private suspend fun removeSearchHistory(key: androidx.datastore.preferences.core.Preferences.Key<String>, query: String) {
+        context.dataStore.edit {
+            val current = it[key]?.split("|")?.filter { it.isNotBlank() }?.toMutableList() ?: mutableListOf()
             current.remove(query)
-            it[GLOBAL_SEARCH_HISTORY] = current.joinToString("|")
+            it[key] = current.joinToString("|")
         }
     }
 

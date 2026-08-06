@@ -13,11 +13,35 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+import kotlinx.coroutines.flow.map
+
 @HiltViewModel
 class HistoryViewModel @Inject constructor(
     private val historyDao: WatchHistoryDao,
+    private val watchlistDao: com.streamix.core.storage.WatchlistDao,
     private val prefs: PreferencesManager
 ) : ViewModel() {
+
+    fun addToWatchlist(video: SearchResult, status: String) {
+        viewModelScope.launch {
+            watchlistDao.insert(
+                com.streamix.core.storage.WatchlistEntity(
+                    id = video.id,
+                    title = video.title,
+                    posterPath = video.posterPath,
+                    mediaType = video.mediaType,
+                    status = status,
+                    isShort = video.isShort
+                )
+            )
+        }
+    }
+
+    fun isLiked(id: String): kotlinx.coroutines.flow.Flow<Boolean> {
+        return watchlistDao.getAll().map { list ->
+            list.any { it.id == id && (it.status == "Liked" || it.status == "Favorites") }
+        }
+    }
 
     fun updateProgress(
         video: SearchResult,

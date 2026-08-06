@@ -15,6 +15,7 @@ import com.streamix.scraper.cloudstream.LoadResponse
 import com.streamix.scraper.cloudstream.TvType
 import com.streamix.scraper.cloudstream.utils.AppUtils.toJson
 import com.streamix.scraper.cloudstream.utils.AppUtils.tryParseJson
+import com.streamix.ui.player.PlayerManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -68,7 +69,7 @@ class MoviesDetailViewModel @Inject constructor(
     private var _apiName: String = ""
     private var _fallbackUrl: String? = null
 
-    fun load(movieId: String, apiName: String = "MovieBoxPh", fallbackUrl: String? = null) {
+    fun load(movieId: String, apiName: String = "MovieBoxPh", fallbackUrl: String? = null, initialSeason: Int? = null, initialEpisode: Int? = null) {
         _apiName = apiName
         _fallbackUrl = fallbackUrl
         viewModelScope.launch {
@@ -84,26 +85,50 @@ class MoviesDetailViewModel @Inject constructor(
                     _description.value = detail.plot ?: ""
                     _posterUrl.value = detail.posterUrl ?: ""
                     
-                    var initialSeason: Int? = null
+                    var seasonToLoad: Int? = initialSeason
+                    var epToLoad: Episode? = null
+                    
                     if (detail.type == TvType.TvSeries) {
-                        val eps = tryParseJson<List<Episode>>(detail.dataUrl) ?: emptyList()
+                        val eps = try {
+                            com.streamix.scraper.cloudstream.utils.json.decodeFromString<List<Episode>>(detail.dataUrl)
+                        } catch (_: Exception) {
+                            tryParseJson<List<Episode>>(detail.dataUrl) ?: emptyList()
+                        }
                         _episodes.value = eps
                         val uniqueSeasons = eps.mapNotNull { it.season }.distinct().sorted()
                         _seasons.value = uniqueSeasons
-                        if (uniqueSeasons.isNotEmpty()) {
-                            initialSeason = uniqueSeasons.first()
-                            _selectedSeason.value = initialSeason
-                            _selectedEpisode.value = eps.find { it.season == initialSeason }
+                        
+                        if (seasonToLoad == null && uniqueSeasons.isNotEmpty()) {
+                            seasonToLoad = uniqueSeasons.first()
                         }
+                        
+                        _selectedSeason.value = seasonToLoad ?: 1
+                        
+                        epToLoad = if (initialEpisode != null && initialSeason != null) {
+                            eps.find { it.season == initialSeason && it.episode == initialEpisode }
+                        } else {
+                            eps.find { it.season == seasonToLoad }
+                        }
+                        _selectedEpisode.value = epToLoad
+                    } else {
+                        val eps = try {
+                            com.streamix.scraper.cloudstream.utils.json.decodeFromString<List<Episode>>(detail.dataUrl)
+                        } catch (_: Exception) {
+                            tryParseJson<List<Episode>>(detail.dataUrl) ?: emptyList()
+                        }
+                        epToLoad = eps.firstOrNull() ?: Episode(detail.dataUrl, detail.name, 1, 1)
+                        _selectedEpisode.value = epToLoad
                     }
                     
-                    loadTrailer(detail, initialSeason)
+                    loadTrailer(detail, seasonToLoad)
 
-                    // REMOVED: Auto-loading video links. 
-                    // Links should only load when Play is clicked.
-                    if (detail.type != TvType.TvSeries) {
-                        val eps = tryParseJson<List<Episode>>(detail.dataUrl) ?: emptyList()
-                        _selectedEpisode.value = eps.firstOrNull()
+                    // Auto-play if coming from deep link (initialSeason/initialEpisode provided) or resuming from history
+                    if (initialSeason != null || detail.type != TvType.TvSeries) {
+                        val pos = if (PlayerManager.initialPlaybackPosition.value > 0) 
+                            PlayerManager.initialPlaybackPosition.value 
+                        else _historyItem.value?.progress ?: 0L
+
+                        epToLoad?.let { selectEpisode(it, pos) }
                     }
                 } else {
                     Log.e("MoviesDetailVM", "Detail is null for $movieId from $apiName")

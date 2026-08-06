@@ -4,6 +4,7 @@ import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -17,6 +18,10 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.ui.draw.clip
 import androidx.compose.material.icons.filled.*
+import androidx.activity.compose.BackHandler
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.pulltorefresh.*
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -54,11 +59,15 @@ import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import com.streamix.ui.navigation.LocalBottomDockVisible
 import com.streamix.core.utils.ShareUtils
 
+import coil.compose.AsyncImage
+import androidx.navigation.NavController
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
-@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 fun ShortsScreen(
     context:        ShortsContext,
+    navController:  NavController,
     onClose:        () -> Unit = {},
     isScreenActive: Boolean = true,
     viewModel:      ShortsViewModel = hiltViewModel()
@@ -76,6 +85,18 @@ fun ShortsScreen(
     val prefs = remember { com.streamix.core.storage.PreferencesManager(androidContext) }
     val autoScrollEnabled by prefs.autoScrollShorts.collectAsState(initial = false)
 
+    val pullToRefreshState = rememberPullToRefreshState()
+    
+    LaunchedEffect(pullToRefreshState.isRefreshing) {
+        if (pullToRefreshState.isRefreshing) {
+            viewModel.load(context)
+        }
+    }
+    
+    LaunchedEffect(isLoading) {
+        if (!isLoading) pullToRefreshState.endRefresh()
+    }
+
     val exoPlayer = remember {
         val httpDataSourceFactory = DefaultHttpDataSource.Factory()
             .setUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36")
@@ -91,6 +112,21 @@ fun ShortsScreen(
     val pagerState = rememberPagerState(pageCount = { items.size })
     val scope = rememberCoroutineScope()
     var userPaused by remember { mutableStateOf(false) }
+
+    var isSearching by remember { mutableStateOf(false) }
+
+    BackHandler(enabled = isScreenActive) {
+        if (isSearching) {
+            isSearching = false
+            viewModel.searchShorts("")
+        } else if (pagerState.currentPage > 0) {
+            scope.launch {
+                pagerState.animateScrollToPage(0)
+            }
+        } else {
+            onClose()
+        }
+    }
 
     LaunchedEffect(exoPlayer, autoScrollEnabled) {
         val listener = object : Player.Listener {
@@ -131,11 +167,15 @@ fun ShortsScreen(
         if (!isScreenActive) exoPlayer.pause() else if (!userPaused) exoPlayer.play()
     }
 
-    LaunchedEffect(context) { viewModel.load(context) }
+    LaunchedEffect(isScreenActive, context) {
+        if (isScreenActive) {
+            viewModel.load(context)
+        }
+    }
 
     var showControls by remember { mutableStateOf(true) }
     var isLocked by remember { mutableStateOf(false) }
-    var isSearching by remember { mutableStateOf(false) }
+    // isSearching moved up to BackHandler scope
     
     LaunchedEffect(showControls, isScreenActive, isLocked) {
         if (showControls && isScreenActive && !isLocked) {
@@ -148,6 +188,7 @@ fun ShortsScreen(
         Modifier
             .fillMaxSize()
             .background(colors.primary)
+            .nestedScroll(pullToRefreshState.nestedScrollConnection)
             .pointerInput(isLocked) {
                 if (context == ShortsContext.ADULT) {
                     detectTapGestures { } // consume taps
@@ -233,7 +274,11 @@ fun ShortsScreen(
                     onToggleControls = { if (!isLocked) showControls = !showControls },
                     isLocked = isLocked,
                     onLockToggle = { isLocked = it },
-                    onUserPaused = { userPaused = it }
+                    onUserPaused = { userPaused = it },
+                    onChannelClick = { url ->
+                        val encoded = java.net.URLEncoder.encode(url, "UTF-8")
+                        navController.navigate("youtube_channel?channelUrl=$encoded")
+                    }
                 )
             }
 
@@ -249,7 +294,7 @@ fun ShortsScreen(
                                     Modifier
                                         .fillMaxWidth()
                                         .clickable { 
-                                            viewModel.searchShorts(item)
+                                            viewModel.searchShorts(item, addToHistory = true)
                                         }
                                         .padding(horizontal = 16.dp, vertical = 14.dp),
                                     verticalAlignment = Alignment.CenterVertically
@@ -264,8 +309,31 @@ fun ShortsScreen(
                                         maxLines = 1,
                                         overflow = TextOverflow.Ellipsis
                                     )
-                                    IconButton(onClick = { viewModel.removeHistoryItem(item) }, modifier = Modifier.size(24.dp)) {
+                                    var showDeleteDialog by remember { mutableStateOf(false) }
+                                    IconButton(onClick = { showDeleteDialog = true }, modifier = Modifier.size(24.dp)) {
                                         Icon(Icons.Default.Close, null, tint = Color.White.copy(0.4f), modifier = Modifier.size(16.dp))
+                                    }
+                                    
+                                    if (showDeleteDialog) {
+                                        AlertDialog(
+                                            onDismissRequest = { showDeleteDialog = false },
+                                            title = { Text("Delete search?", color = Color.White) },
+                                            text = { Text("Remove \"$item\" from history?", color = Color.White.copy(0.7f)) },
+                                            confirmButton = {
+                                                TextButton(onClick = { 
+                                                    viewModel.removeHistoryItem(item)
+                                                    showDeleteDialog = false 
+                                                }) {
+                                                    Text("DELETE", color = Color.Red)
+                                                }
+                                            },
+                                            dismissButton = {
+                                                TextButton(onClick = { showDeleteDialog = false }) {
+                                                    Text("CANCEL", color = Color.White)
+                                                }
+                                            },
+                                            containerColor = Color(0xFF1C1C1C)
+                                        )
                                     }
                                 }
                             }
@@ -315,6 +383,13 @@ fun ShortsScreen(
                 }
             }
 
+            PullToRefreshContainer(
+                state = pullToRefreshState,
+                modifier = Modifier.align(Alignment.TopCenter),
+                containerColor = Color.Black.copy(0.7f),
+                contentColor = Color.White
+            )
+
             AnimatedVisibility(
                 visible = showControls || isSearching,
                 enter = fadeIn(),
@@ -346,7 +421,7 @@ fun ShortsScreen(
                             keyboardActions = androidx.compose.foundation.text.KeyboardActions(
                                 onSearch = { 
                                     if (searchQuery.isNotBlank()) {
-                                        viewModel.searchShorts(searchQuery)
+                                        viewModel.searchShorts(searchQuery, addToHistory = true)
                                     }
                                 }
                             ),
@@ -414,7 +489,8 @@ fun ShortVideoItem(
     onToggleControls: () -> Unit,
     isLocked: Boolean,
     onLockToggle: (Boolean) -> Unit,
-    onUserPaused: (Boolean) -> Unit = {}
+    onUserPaused: (Boolean) -> Unit = {},
+    onChannelClick: (String) -> Unit = {}
 ) {
     val colors = LocalCustomColors.current
     val androidContext = LocalContext.current
@@ -461,6 +537,13 @@ fun ShortVideoItem(
             }
         }
         player?.addListener(listener)
+        
+        // Initial state check to prevent stuck thumbnail
+        if (player?.playbackState == Player.STATE_READY) {
+            isPlayerReady = true
+            playbackError = null
+        }
+
         onDispose {
             player?.removeListener(listener)
             isPlayerReady = false
@@ -511,11 +594,7 @@ fun ShortVideoItem(
                     PlayerView(it).apply {
                         this.player = player
                         useController = false
-                        resizeMode = if (context == ShortsContext.ADULT || isLandscape) {
-                            androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_FIT
-                        } else {
-                            androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_ZOOM
-                        }
+                        resizeMode = androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_FIT
                         layoutParams = FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
                         setBackgroundColor(android.graphics.Color.BLACK)
                     }
@@ -523,18 +602,26 @@ fun ShortVideoItem(
                 modifier = Modifier.fillMaxSize(),
                 update = { view -> 
                     view.player = player 
-                    view.resizeMode = if (context == ShortsContext.ADULT || isLandscape) {
-                        androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_FIT
-                    } else {
-                        androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_ZOOM
-                    }
+                    view.resizeMode = androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_FIT
                 }
             )
 
-            if (!isPlayerReady && playbackError == null) {
-                SubcomposeAsyncImage(model = item.thumbnailUrl, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
-                Box(Modifier.fillMaxSize(), Alignment.Center) {
-                    CircularProgressIndicator(color = Color.White.copy(0.5f))
+            // Overlay Thumbnail / Loading
+            AnimatedVisibility(
+                visible = !isPlayerReady && playbackError == null,
+                enter = fadeIn(),
+                exit = fadeOut(animationSpec = tween(300))
+            ) {
+                Box(Modifier.fillMaxSize()) {
+                    SubcomposeAsyncImage(
+                        model = item.thumbnailUrl,
+                        contentDescription = null,
+                        contentScale = ContentScale.Fit,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                    Box(Modifier.fillMaxSize(), Alignment.Center) {
+                        CircularProgressIndicator(color = Color.White.copy(0.5f))
+                    }
                 }
             }
             
@@ -605,7 +692,7 @@ fun ShortVideoItem(
             SubcomposeAsyncImage(
                 model = item.thumbnailUrl,
                 contentDescription = null,
-                contentScale = ContentScale.Crop,
+                contentScale = ContentScale.Fit,
                 modifier = Modifier.fillMaxSize(),
                 loading = {
                     Box(Modifier.fillMaxSize(), Alignment.Center) {
@@ -641,9 +728,25 @@ fun ShortVideoItem(
                 }
 
                 Column(modifier = Modifier.align(Alignment.BottomStart).padding(start = 16.dp, end = 100.dp, bottom = if (isLandscape) 20.dp else 40.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(Modifier.size(32.dp).background(Color.White.copy(0.2f), CircleShape), contentAlignment = Alignment.Center) {
-                            Text(item.channelName.take(1), color = Color.White, fontWeight = FontWeight.Bold)
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.clickable { 
+                            if (item.channelUrl.isNotEmpty()) {
+                                onChannelClick(item.channelUrl)
+                            }
+                        }
+                    ) {
+                        Box(Modifier.size(36.dp).clip(CircleShape).background(Color.White.copy(0.15f)), contentAlignment = Alignment.Center) {
+                            if (item.channelAvatarUrl.isNotEmpty()) {
+                                SubcomposeAsyncImage(
+                                    model = item.channelAvatarUrl,
+                                    contentDescription = null,
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentScale = ContentScale.Crop
+                                )
+                            } else {
+                                Text(item.channelName.take(1), color = Color.White, fontWeight = FontWeight.Bold)
+                            }
                         }
                         Spacer(Modifier.width(10.dp))
                         Text(item.channelName, color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 15.sp)

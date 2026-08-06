@@ -35,6 +35,9 @@ import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
 import androidx.media3.ui.AspectRatioFrameLayout
+import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import kotlinx.coroutines.delay
 import java.net.URLDecoder
 import java.net.URLEncoder
@@ -66,8 +69,22 @@ fun AdultDetailScreen(
         }
     }
 
-    DisposableEffect(exoPlayer) {
-        onDispose { exoPlayer.release() }
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(exoPlayer, lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_PAUSE) {
+                exoPlayer.pause()
+            } else if (event == Lifecycle.Event.ON_RESUME) {
+                if (links.isNotEmpty() && (!isPlayerVisible || isPlayerMinimized)) {
+                    exoPlayer.play()
+                }
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { 
+            lifecycleOwner.lifecycle.removeObserver(observer)
+            exoPlayer.release() 
+        }
     }
 
     LaunchedEffect(isPlayerVisible, isPlayerMinimized) {
@@ -126,7 +143,7 @@ fun AdultDetailScreen(
         detail?.let { data ->
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(bottom = 120.dp)
+                contentPadding = PaddingValues(bottom = 150.dp)
             ) {
                 item {
                     AdultDetailHeroSection(data, links.firstOrNull()?.url, exoPlayer, isPlayerVisible, isPlayerMinimized)
@@ -199,6 +216,7 @@ fun AdultDetailScreen(
         DetailTopBar(
             navController = navController,
             title = detail?.title ?: "",
+            movieId = pageUrl,
             url = pageUrl,
             isLiked = isLiked,
             onLikeToggle = {

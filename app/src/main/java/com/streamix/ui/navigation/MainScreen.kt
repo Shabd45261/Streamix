@@ -140,6 +140,7 @@ fun MainScreen(
                     val context = if (profile == Profile.ADULT) ShortsContext.ADULT else ShortsContext.YOUTUBE
                     ShortsScreen(
                         context = context,
+                        navController = navController,
                         onClose = { 
                             scope.launch { pagerState.animateScrollToPage(0) }
                         },

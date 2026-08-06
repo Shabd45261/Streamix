@@ -8,5 +8,16 @@
     <mapping directory="$PROJECT_DIR$/Extensions/Movies/CSX" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/Extensions/Movies/Cloudstream/cloudstream" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/Extensions/Movies/cloudstream-extensions-phisher" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/Scrapers/Adult/CXXX" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/Scrapers/Adult/Cs-GizliKeyif" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/Scrapers/Movies/CNCVerse-Cloud-Stream-Extension" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/Scrapers/Movies/CSX" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/Scrapers/Movies/Cs-Karma" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/Scrapers/Movies/MegaRepo" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/Scrapers/Movies/NetMirror-Extension" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/Scrapers/Movies/Redowan-CloudStream" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/Scrapers/Movies/cloudstream-extensions-phisher" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/Scrapers/Movies/doGiorsHadEnough" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/Scrapers/Movies/extensions" vcs="Git" />
   </component>
 </project>

@@ -6,16 +6,23 @@ import coil.ImageLoaderFactory
 import coil.disk.DiskCache
 import coil.memory.MemoryCache
 import com.streamix.core.utils.NewPipeUtils
+import com.streamix.core.analytics.AnalyticsManager
+import com.streamix.core.analytics.AnalyticsEvent
 import dagger.hilt.android.HiltAndroidApp
 import okhttp3.OkHttpClient
 import java.util.concurrent.TimeUnit
+import javax.inject.Inject
 
 @HiltAndroidApp
 class StreamixApp : Application(), ImageLoaderFactory {
 
+    @Inject
+    lateinit var analyticsManager: AnalyticsManager
+
     override fun onCreate() {
         super.onCreate()
         NewPipeUtils.init(this)
+        analyticsManager.logEvent(AnalyticsEvent.APP_OPENED)
     }
 
     override fun newImageLoader(): ImageLoader {

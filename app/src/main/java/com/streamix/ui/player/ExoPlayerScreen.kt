@@ -41,6 +41,9 @@ import kotlinx.coroutines.launch
 import android.app.Activity
 import com.streamix.ui.navigation.LocalBottomDockVisible
 import com.streamix.core.utils.SystemUiUtils
+import com.streamix.core.analytics.AnalyticsManager
+import com.streamix.core.analytics.AnalyticsEvent
+import com.streamix.core.analytics.logVideoEvent
 import android.provider.Settings
 import androidx.compose.material.icons.filled.BrightnessLow
 import androidx.compose.material.icons.filled.VolumeUp
@@ -291,9 +294,9 @@ fun ExoPlayerScreen(
                         )
                     }
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text(formatTime(currentPosition), color = Color.White, fontSize = 12.sp)
+                        Text(com.streamix.ui.player.formatTime(currentPosition), color = Color.White, fontSize = 12.sp)
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(formatTime(totalDuration), color = Color.White, fontSize = 12.sp)
+                            Text(com.streamix.ui.player.formatTime(totalDuration), color = Color.White, fontSize = 12.sp)
                             Spacer(Modifier.width(16.dp))
                             IconButton(onClick = {
                                 (context as? android.app.Activity)?.let {
@@ -312,9 +315,3 @@ fun ExoPlayerScreen(
     }
 }
 
-private fun formatTime(millis: Long): String {
-    val totalSeconds = millis / 1000
-    val minutes = totalSeconds / 60
-    val seconds = totalSeconds % 60
-    return "%02d:%02d".format(minutes, seconds)
-}

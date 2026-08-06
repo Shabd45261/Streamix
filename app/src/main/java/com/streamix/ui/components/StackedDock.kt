@@ -72,19 +72,16 @@ fun StackedDock(
                 .offset { IntOffset(0, playerOffsetY.dp.roundToPx()) }
                 .scale(playerScale)
                 .clip(RoundedCornerShape(35.dp))
-                .pointerInput(Unit) {
-                    detectDragGestures(
-                        onDrag = { change, dragAmount ->
-                            change.consume()
-                            if (dragAmount.y < -10) onFrontCardChange(DockFront.PLAYER)
-                            else if (dragAmount.y > 10) onFrontCardChange(DockFront.NAV)
-                            
-                            if (dragAmount.x < -10) onFrontCardChange(DockFront.PLAYER)
-                            else if (dragAmount.x > 10) onFrontCardChange(DockFront.NAV)
-                        }
-                    )
-                }
-                .clickable(enabled = frontCard != DockFront.PLAYER) { onFrontCardChange(DockFront.PLAYER) }
+                .then(
+                    if (frontCard != DockFront.PLAYER) {
+                        Modifier.pointerInput(Unit) {
+                            detectDragGestures { change, dragAmount ->
+                                change.consume()
+                                onFrontCardChange(DockFront.PLAYER)
+                            }
+                        }.clickable { onFrontCardChange(DockFront.PLAYER) }
+                    } else Modifier
+                )
         ) {
             playerBar()
         }
@@ -96,19 +93,16 @@ fun StackedDock(
                 .offset { IntOffset(0, navOffsetY.dp.roundToPx()) }
                 .scale(navScale)
                 .clip(RoundedCornerShape(35.dp))
-                .pointerInput(Unit) {
-                    detectDragGestures(
-                        onDrag = { change, dragAmount ->
-                            change.consume()
-                            if (dragAmount.y < -10) onFrontCardChange(DockFront.PLAYER)
-                            else if (dragAmount.y > 10) onFrontCardChange(DockFront.NAV)
-                            
-                            if (dragAmount.x < -10) onFrontCardChange(DockFront.NAV)
-                            else if (dragAmount.x > 10) onFrontCardChange(DockFront.PLAYER)
-                        }
-                    )
-                }
-                .clickable(enabled = frontCard != DockFront.NAV) { onFrontCardChange(DockFront.NAV) }
+                .then(
+                    if (frontCard != DockFront.NAV) {
+                        Modifier.pointerInput(Unit) {
+                            detectDragGestures { change, dragAmount ->
+                                change.consume()
+                                onFrontCardChange(DockFront.NAV)
+                            }
+                        }.clickable { onFrontCardChange(DockFront.NAV) }
+                    } else Modifier
+                )
         ) {
             navBar()
         }

@@ -8,6 +8,7 @@ plugins {
     alias(libs.plugins.ksp)
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.kotlinx.serialization)
+    alias(libs.plugins.google.services)
 }
 
 android {
@@ -15,11 +16,11 @@ android {
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.streamix"
-        minSdk = 21
+        applicationId = "com.streamix.app"
+        minSdk = 23
         targetSdk = 34
-        versionCode = 238
-        versionName = "1.238"
+        versionCode = 275
+        versionName = "1.275"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -29,11 +30,21 @@ android {
         buildConfigField("String", "TMDB_API_KEY", "\"YOUR_TMDB_API_KEY_HERE\"")
     }
 
+    signingConfigs {
+        create("release") {
+            storeFile = file("../release.jks")
+            storePassword = "streamix_release_key"
+            keyAlias = "streamix"
+            keyPassword = "streamix_release_key"
+        }
+    }
+
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("release")
         }
     }
     compileOptions {
@@ -58,9 +69,9 @@ android {
     applicationVariants.all {
         outputs.forEach { output ->
             if (output is com.android.build.gradle.internal.api.ApkVariantOutputImpl) {
-                val dateStr = SimpleDateFormat("yyyyMMdd").format(Date())
+                val dateStr = SimpleDateFormat("dd-MM-yyyy").format(Date())
                 val dayStr = SimpleDateFormat("EEEE").format(Date())
-                val timeStr = SimpleDateFormat("hhmm a").format(Date()).replace(" ", "")
+                val timeStr = SimpleDateFormat("hhmma").format(Date()).toUpperCase()
                 val buildNumber = versionCode ?: 0
                 val suffix = when {
                     buildNumber % 100 in 11..13 -> "th"
@@ -75,12 +86,21 @@ android {
     }
 }
 
-tasks.register<Copy>("copyApkToRoot") {
+tasks.register<Copy>("copyApkToApkFolder") {
     dependsOn("assembleRelease")
     from(layout.buildDirectory.dir("outputs/apk/release"))
     include("*.apk")
     duplicatesStrategy = DuplicatesStrategy.INCLUDE
     into(rootProject.file("apk"))
+}
+
+tasks.register<Copy>("copyApkToDesktop") {
+    dependsOn("assembleRelease")
+    val desktopPath = "C:/Users/DELL/Desktop"
+    from(layout.buildDirectory.dir("outputs/apk/release"))
+    include("*.apk")
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
+    into(desktopPath)
 }
 
 dependencies {
@@ -89,6 +109,7 @@ dependencies {
     implementation(libs.compose.ui)
     implementation(libs.compose.ui.tooling.preview)
     implementation(libs.compose.material3)
+    implementation(libs.compose.material)
     implementation(libs.compose.foundation)
     implementation(libs.compose.animation)
     implementation(libs.compose.icons.extended)
@@ -124,4 +145,9 @@ dependencies {
     implementation("androidx.media3:media3-exoplayer-dash:1.3.1")
     implementation("androidx.media3:media3-ui:1.3.1")
     implementation("androidx.media3:media3-session:1.3.1")
+
+    // Firebase
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.analytics)
+    implementation(libs.material)
 }
