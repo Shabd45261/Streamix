@@ -194,40 +194,10 @@ class MovieBoxProvider : MainAPI() {
     )
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
-        val perPage = 15
-        val token = getCachedToken()
-        val url = if (request.data.contains("|")) "$mainUrl/wefeed-mobile-bff/subject-api/list" else "$mainUrl/wefeed-mobile-bff/tab/ranking-list?tabId=0&categoryType=${request.data}&page=$page&perPage=$perPage"
-
-        val data1 = request.data
-        val mainParts = data1.substringBefore(";").split("|")
-        val pg = mainParts.getOrNull(0)?.toIntOrNull() ?: 1
-        val channelId = mainParts.getOrNull(1)
-
-        val options = mutableMapOf<String, String>()
-        data1.substringAfter(";", "")
-            .split(";")
-            .forEach {
-                val parts = it.split("=")
-                val k = parts.getOrNull(0)
-                val v = parts.getOrNull(1)
-                if (!k.isNullOrBlank() && !v.isNullOrBlank()) {
-                    options[k] = v
-                }
-            }
-
-        val classify = options["classify"] ?: "All"
-        val country  = options["country"] ?: "All"
-        val year     = options["year"] ?: "All"
-        val genre    = options["genre"] ?: "All"
-        val sort     = options["sort"] ?: "ForYou"
-
-        val jsonBody = """{"page":$pg,"perPage":$perPage,"channelId":"$channelId","classify":"$classify","country":"$country","year":"$year","genre":"$genre","sort":"$sort"}"""
+        val url = "$mainUrl/wefeed-mobile-bff/tab-operating?page=1&tabId=0&version="
         val ts = System.currentTimeMillis()
         val xClientToken = generateXClientToken(ts)
-        val xTrSignature = if (request.data.contains("|")) 
-            generateXTrSignature("POST", "application/json", "application/json; charset=utf-8", url , jsonBody, hardcodedTimestamp = ts)
-        else 
-            generateXTrSignature("GET", "application/json", "application/json", url, hardcodedTimestamp = ts)
+        val xTrSignature = generateXTrSignature("GET", "application/json", "application/json", url, hardcodedTimestamp = ts)
 
         val headers = mapOf(
             "user-agent" to "com.community.mbox.in/50020042 (Linux; U; Android 16; en_IN; sdk_gphone64_x86_64; Build/BP22.250325.006; Cronet/133.0.6876.3)",
@@ -237,26 +207,54 @@ class MovieBoxProvider : MainAPI() {
             "x-tr-signature" to xTrSignature,
             "x-client-info" to """{"package_name":"com.community.mbox.in","version_name":"3.0.03.0529.03","version_code":50020042,"os":"android","os_version":"16","device_id":"$deviceId","install_store":"ps","gaid":"d7578036d13336cc","brand":"google","model":"sdk_gphone64_x86_64","system_language":"en","net":"NETWORK_WIFI","region":"IN","timezone":"Asia/Calcutta","sp_code":""}""",
             "x-client-status" to "0",
-            "Authorization" to "Bearer $token"
+            "Authorization" to "Bearer ${getCachedToken()}"
         )
 
-        val response = if (request.data.contains("|")) 
-            app.post(url, headers = headers, requestBody = jsonBody.toRequestBody("application/json".toMediaType())) 
-        else 
-            app.get(url, headers = headers)
+        val response = app.get(url, headers = headers)
 
-        val root = try { mapper.readTree(response.text) } catch (_: Exception) { null } ?: return newHomePageResponse(emptyList())
-        val items = root["data"]?.get("items") ?: root["data"]?.get("subjects") ?: return newHomePageResponse(emptyList())
-        val data = items.mapNotNull { item ->
-            val title = item["title"]?.asText()?.substringBefore("[") ?: return@mapNotNull null
-            val id = item["subjectId"]?.asText() ?: return@mapNotNull null
-            val type = if (item["subjectType"]?.asInt() == 2) TvType.TvSeries else TvType.Movie
-            newMovieSearchResponse(title, id, type) {
-                this.posterUrl = item["cover"]?.get("url")?.asText()
-                this.score = Score.from10(item["imdbRatingValue"]?.asText())
+        fun parseSubject(subjectJson: JsonNode?): SearchResponse? {
+            subjectJson ?: return null
+            val subjectId = subjectJson["subjectId"]?.asText() ?: return null
+            val title = subjectJson["title"]?.asText()?.substringBefore("[") ?: return null
+            val coverUrl = subjectJson["cover"]?.get("url")?.asText()
+            val subjectType = when (subjectJson["subjectType"]?.asInt()) {
+                1 -> TvType.Movie
+                2 -> TvType.TvSeries
+                else -> TvType.Movie
+            }
+            return newMovieSearchResponse(title, subjectId, subjectType) {
+                this.posterUrl = coverUrl
+                this.score = Score.from10(subjectJson["imdbRatingValue"]?.asText())
             }
         }
-        return newHomePageResponse(request.name, data)
+
+        val homePageLists = try {
+            val root = mapper.readTree(response.text)
+            val sections = root["data"]?.get("items") ?: return newHomePageResponse(emptyList())
+
+            sections.mapNotNull { section ->
+                val title = section["title"]?.asText()?.let {
+                    if (it.equals("banner", ignoreCase = true)) "🔥Top Picks" else it
+                } ?: return@mapNotNull null
+                val type = section["type"]?.asText()
+
+                val mediaList = when (type) {
+                    "BANNER" -> section["banner"]?.get("banners")
+                        ?.mapNotNull { bannerItem -> parseSubject(bannerItem["subject"]) }
+                    "SUBJECTS_MOVIE" -> section["subjects"]
+                        ?.mapNotNull { subjectItem -> parseSubject(subjectItem) }
+                    "CUSTOM" -> section["customData"]?.get("items")
+                        ?.mapNotNull { customItem -> parseSubject(customItem["subject"]) }
+                    else -> null
+                }
+
+                if (mediaList.isNullOrEmpty()) null else HomePageList(title, mediaList)
+            }
+        } catch (e: Exception) {
+            emptyList()
+        }
+
+        return newHomePageResponse(homePageLists)
     }
 
     override suspend fun search(query: String, page: Int): SearchResponseList {
@@ -299,7 +297,19 @@ class MovieBoxProvider : MainAPI() {
         val id = if (url.contains("subjectId=")) url.substringAfter("subjectId=").substringBefore("&") else url.substringAfterLast("/")
         val token = getCachedToken()
         val finalUrl = "$mainUrl/wefeed-mobile-bff/subject-api/get?subjectId=$id"
-        val headers = getHeaders(finalUrl, "GET", token = token)
+        val ts = System.currentTimeMillis()
+        val xClientToken = generateXClientToken(ts)
+        val xTrSignature = generateXTrSignature("GET", "application/json", "application/json", finalUrl, hardcodedTimestamp = ts)
+        val headers = mapOf(
+            "user-agent" to "com.community.mbox.in/50020088 (Linux; U; Android 13; en_IN; Pixel 7; Build/TQ3A.230901.001; Cronet/145.0.7582.0)",
+            "accept" to "application/json",
+            "content-type" to "application/json",
+            "x-client-token" to xClientToken,
+            "x-tr-signature" to xTrSignature,
+            "x-client-info" to """{"package_name":"com.community.mbox.in","version_name":"3.0.13.0325.03","version_code":50020088,"os":"android","os_version":"13","device_id":"$deviceId","install_store":"ps","gaid":"d7578036d13336cc","brand":"google","model":"Pixel 7","system_language":"en","net":"NETWORK_WIFI","region":"IN","timezone":"Asia/Calcutta","sp_code":""}""",
+            "x-client-status" to "0",
+            "Authorization" to "Bearer $token"
+        )
 
         val response = try { app.get(finalUrl, headers = headers) } catch (_: Exception) { return null }
         val detailData = try { mapper.readTree(response.text)["data"] } catch (_: Exception) { null } ?: return null
@@ -315,7 +325,13 @@ class MovieBoxProvider : MainAPI() {
             val episodes = mutableListOf<Episode>()
             try {
                 val seasonUrl = "$mainUrl/wefeed-mobile-bff/subject-api/season-info?subjectId=$id"
-                val sResponse = app.get(seasonUrl, headers = getHeaders(seasonUrl, "GET", token = token))
+                val seasonTs = System.currentTimeMillis()
+                val seasonSig = generateXTrSignature("GET", "application/json", "application/json", seasonUrl, hardcodedTimestamp = seasonTs)
+                val seasonHeaders = headers.toMutableMap().apply { 
+                    put("x-tr-signature", seasonSig) 
+                    put("x-client-token", generateXClientToken(seasonTs))
+                }
+                val sResponse = app.get(seasonUrl, headers = seasonHeaders)
                 mapper.readTree(sResponse.text)["data"]?.get("seasons")?.forEach { season ->
                     val se = season["se"]?.asInt() ?: 1
                     val maxEp = season["maxEp"]?.asInt() ?: 1
@@ -351,22 +367,6 @@ class MovieBoxProvider : MainAPI() {
         return res
     }
 
-    private suspend fun getHeaders(url: String, method: String, body: String? = null, token: String? = null): Map<String, String> {
-        val ts = System.currentTimeMillis()
-        val sig = generateXTrSignature(method, "application/json", "application/json", url, body, hardcodedTimestamp = ts)
-        val finalToken = token ?: getCachedToken()
-        return mapOf(
-            "user-agent" to "com.community.mbox.in/50020088 (Linux; U; Android 13; en_IN; Pixel 7; Build/TQ3A.230901.001; Cronet/145.0.7582.0)",
-            "accept" to "application/json",
-            "content-type" to "application/json",
-            "x-client-token" to generateXClientToken(ts),
-            "x-tr-signature" to sig,
-            "x-client-info" to """{"package_name":"com.community.mbox.in","version_name":"3.0.13.0325.03","version_code":50020088,"os":"android","os_version":"13","device_id":"$deviceId","install_store":"ps","gaid":"d7578036d13336cc","brand":"google","model":"Pixel 7","system_language":"en","net":"NETWORK_WIFI","region":"IN","timezone":"Asia/Calcutta","sp_code":""}""",
-            "x-client-status" to "0",
-            "Authorization" to "Bearer $finalToken"
-        )
-    }
-
     override suspend fun loadLinks(data: String, isCasting: Boolean, subtitleCallback: (SubtitleFile) -> Unit, callback: (ExtractorLink) -> Unit): Boolean {
         val parts = data.split("|")
         val sid = parts[0]
@@ -379,12 +379,12 @@ class MovieBoxProvider : MainAPI() {
         val xClientToken = generateXClientToken(ts)
         val xTrSignature = generateXTrSignature("GET", "application/json", "application/json", url, hardcodedTimestamp = ts)
         val headers = mapOf(
-            "user-agent" to "com.community.mbox.in/50020042 (Linux; U; Android 13; en_IN; Pixel 7; Build/TQ3A.230901.001; Cronet/145.0.7582.0)",
+            "user-agent" to "com.community.mbox.in/50020042 (Linux; U; Android 13; en_IN; sdk_gphone64_x86_64; Build/BP22.250325.006; Cronet/133.0.6876.3)",
             "accept" to "application/json",
             "content-type" to "application/json",
             "x-client-token" to xClientToken,
             "x-tr-signature" to xTrSignature,
-            "x-client-info" to """{"package_name":"com.community.mbox.in","version_name":"3.0.03.0529.03","version_code":50020042,"os":"android","os_version":"13","device_id":"$deviceId","install_store":"ps","gaid":"d7578036d13336cc","brand":"google","model":"Pixel 7","system_language":"en","net":"NETWORK_WIFI","region":"IN","timezone":"Asia/Calcutta","sp_code":""}""",
+            "x-client-info" to """{"package_name":"com.community.mbox.in","version_name":"3.0.03.0529.03","version_code":50020042,"os":"android","os_version":"13","device_id":"$deviceId","install_store":"ps","gaid":"d7578036d13336cc","brand":"google","model":"sdk_gphone64_x86_64","system_language":"en","net":"NETWORK_WIFI","region":"IN","timezone":"Asia/Calcutta","sp_code":""}""",
             "x-client-status" to "0",
             "Authorization" to "Bearer $token"
         )

@@ -24,6 +24,7 @@ import javax.inject.Inject
 @HiltViewModel
 class MoviesDetailViewModel @Inject constructor(
     private val repo: MoviesScraperRepository,
+    private val tmdbRepo: com.streamix.data.tmdb.TmdbRepository,
     private val watchlistDao: WatchlistDao,
     private val historyDao: WatchHistoryDao
 ) : ViewModel() {
@@ -110,6 +111,9 @@ class MoviesDetailViewModel @Inject constructor(
                             eps.find { it.season == seasonToLoad }
                         }
                         _selectedEpisode.value = epToLoad
+                        
+                        // Enrich episode metadata
+                        enrichEpisodes(detail.name, detail.year, seasonToLoad ?: 1)
                     } else {
                         val eps = try {
                             com.streamix.scraper.cloudstream.utils.json.decodeFromString<List<Episode>>(detail.dataUrl)
@@ -165,7 +169,59 @@ class MoviesDetailViewModel @Inject constructor(
     fun selectSeason(season: Int) {
         _selectedSeason.value = season
         _selectedEpisode.value = _episodes.value.find { it.season == season }
-        _currentMovie.value?.let { loadTrailer(it, season) }
+        _currentMovie.value?.let { 
+            loadTrailer(it, season)
+            enrichEpisodes(it.name, it.year, season)
+        }
+    }
+
+    private fun enrichEpisodes(title: String, year: Int?, season: Int) {
+        viewModelScope.launch {
+            try {
+                Log.d("MoviesDetailVM", "Enriching episodes for $title ($year) S$season")
+                val results = tmdbRepo.search(title)
+                val match = results.find { 
+                    it.title.equals(title, ignoreCase = true) && 
+                    (year == null || it.year == year.toString())
+                } ?: results.find { it.title.equals(title, ignoreCase = true) }
+                  ?: results.firstOrNull()
+
+                if (match != null) {
+                    Log.d("MoviesDetailVM", "Found TMDB match: ${match.title} (${match.id})")
+                    val seasonDetail = tmdbRepo.getSeasonDetail(match.id, season)
+                    if (seasonDetail != null) {
+                        Log.d("MoviesDetailVM", "Fetched season detail for S$season: ${seasonDetail.episodes.size} episodes")
+                        val updatedEpisodes = _episodes.value.map { ep ->
+                            if (ep.season == season) {
+                                val tmdbEp = seasonDetail.episodes.find { it.episode_number == ep.episode }
+                                if (tmdbEp != null) {
+                                    ep.copy(
+                                        name = tmdbEp.name,
+                                        description = tmdbEp.overview,
+                                        posterUrl = tmdbEp.still_path?.let { "https://image.tmdb.org/t/p/w500$it" } ?: ep.posterUrl
+                                    )
+                                } else ep
+                            } else ep
+                        }
+                        _episodes.value = updatedEpisodes
+                        
+                        // Force update the current selected episode if it's in the updated list
+                        val current = _selectedEpisode.value
+                        if (current != null && current.season == season) {
+                            updatedEpisodes.find { it.season == season && it.episode == current.episode }?.let {
+                                _selectedEpisode.value = it
+                            }
+                        }
+                    } else {
+                        Log.w("MoviesDetailVM", "Season detail was null for show ID ${match.id}")
+                    }
+                } else {
+                    Log.w("MoviesDetailVM", "No TMDB match found for $title")
+                }
+            } catch (e: Exception) {
+                Log.e("MoviesDetailVM", "Failed to enrich episodes", e)
+            }
+        }
     }
 
     fun selectEpisode(episode: Episode, position: Long = 0L) {

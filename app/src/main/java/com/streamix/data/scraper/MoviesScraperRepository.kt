@@ -40,7 +40,7 @@ class MoviesScraperRepository @Inject constructor() {
         try {
             Log.d("MoviesRepo", "Fetching home data rows for $name using all mainPage sections...")
             
-            if (name == "MovieBoxIN") {
+            if (name == "MovieBoxIN" || name == "MovieBoxPh") {
                 val resp = provider.getMainPage(1, MainPageRequest(name, ""))
                 return@coroutineScope resp?.items?.map { MovieHomeRow(it.name, it.list.map { res -> res.toSearchResult(name) }) } ?: emptyList()
             }

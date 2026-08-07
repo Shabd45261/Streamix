@@ -37,6 +37,13 @@ interface TmdbApiService {
         @Query("api_key") apiKey: String = BuildConfig.TMDB_API_KEY,
         @Query("append_to_response") append: String = "credits,videos,seasons"
     ): TmdbTvDetail
+
+    @GET("tv/{tv_id}/season/{season_number}")
+    suspend fun getSeasonDetail(
+        @Path("tv_id") tvId: String,
+        @Path("season_number") seasonNumber: Int,
+        @Query("api_key") apiKey: String = BuildConfig.TMDB_API_KEY
+    ): TmdbSeasonDetail
 }
 
 data class TmdbSearchResponse(val results: List<TmdbSearchResult>)
@@ -78,6 +85,18 @@ data class TmdbTvDetail(
     val seasons: List<TmdbSeason>?,
     val vote_average: Double = 0.0,
     val status: String = ""
+)
+
+data class TmdbSeasonDetail(
+    val episodes: List<TmdbEpisode>
+)
+
+data class TmdbEpisode(
+    val episode_number: Int,
+    val name: String,
+    val overview: String,
+    val still_path: String?,
+    val air_date: String?
 )
 
 data class TmdbGenre(val name: String)

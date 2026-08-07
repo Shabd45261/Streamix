@@ -38,6 +38,7 @@ class TmdbRepository @Inject constructor(
 
     suspend fun getMovieDetail(id: String) = try { api.getMovieDetail(id) } catch (e: Exception) { null }
     suspend fun getTvDetail(id: String) = try { api.getTvDetail(id) } catch (e: Exception) { null }
+    suspend fun getSeasonDetail(id: String, season: Int) = try { api.getSeasonDetail(id, season) } catch (e: Exception) { null }
 
     private fun TmdbSearchResult.toSearchResult() = SearchResult(
         id = id.toString(),

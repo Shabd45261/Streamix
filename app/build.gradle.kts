@@ -19,15 +19,15 @@ android {
         applicationId = "com.streamix.app"
         minSdk = 23
         targetSdk = 34
-        versionCode = 275
-        versionName = "1.275"
+        versionCode = 277
+        versionName = "1.277"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary = true
         }
 
-        buildConfigField("String", "TMDB_API_KEY", "\"YOUR_TMDB_API_KEY_HERE\"")
+        buildConfigField("String", "TMDB_API_KEY", "\"c803365e9069d67568f63ed20790ee64\"")
     }
 
     signingConfigs {

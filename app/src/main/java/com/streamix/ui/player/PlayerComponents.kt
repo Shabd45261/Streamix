@@ -456,7 +456,7 @@ fun EmbeddedPlayer(
         }
     }
 
-    val exoPlayer = remember(id) {
+    val exoPlayer = remember {
         ExoPlayer.Builder(context).build().apply { repeatMode = Player.REPEAT_MODE_ONE }
     }
 
@@ -467,7 +467,7 @@ fun EmbeddedPlayer(
         }
     }
 
-    val mediaSession = remember(exoPlayer) {
+    val mediaSession = remember {
         val intent = Intent(context, MainActivity::class.java)
         val pendingIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
         MediaSession.Builder(context, exoPlayer)
@@ -541,6 +541,10 @@ fun EmbeddedPlayer(
             val mediaSource = mediaSourceFactory.createMediaSource(mediaItem)
             
             val currentPosBeforePrepare = if (hasStarted) exoPlayer.currentPosition else -1L
+            
+            // Explicitly stop and clear before new preparation to avoid conflicts
+            exoPlayer.stop()
+            exoPlayer.clearMediaItems()
             
             exoPlayer.setMediaSource(mediaSource)
             exoPlayer.prepare()

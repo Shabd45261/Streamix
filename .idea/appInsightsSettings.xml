@@ -8,7 +8,7 @@
             <InsightsFilterSettings>
               <option name="connection">
                 <ConnectionSetting>
-                  <option name="appId" value="com.streamix" />
+                  <option name="appId" value="com.streamix.app" />
                   <option name="mobileSdkAppId" value="1:597437815776:android:8a99a2804580d8aeade985" />
                   <option name="projectId" value="streamix-c56cc" />
                   <option name="projectNumber" value="597437815776" />

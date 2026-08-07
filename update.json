@@ -1,10 +1,12 @@
 {
-  "latestVersion": 275,
-  "versionName": "1.275",
-  "apkUrl": "https://shabd45261.github.io/Streamix.github.io/apk/Streamix_06-08-2026_Thursday_0938PM_275th(275).apk",
+  "latestVersion": 277,
+  "versionName": "1.277",
+  "apkUrl": "https://media.githubusercontent.com/media/Shabd45261/Streamix.github.io/main/apk/Streamix_07-08-2026_Friday_0845AM_277th(277).apk",
   "mandatory": true,
   "releaseNotes": [
-    "Improved update check reliability",
-    "Internal stability improvements"
+    "Fixed content repetition on home screen",
+    "Restored episode names, thumbnails, and descriptions",
+    "Improved TMDB metadata enrichment",
+    "Fixed website deployment issue"
   ]
 }
