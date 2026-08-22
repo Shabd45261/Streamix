@@ -1,0 +1,57 @@
+STREAMIX - COMPLETE PROJECT DOCUMENTATION
+
+1. PROJECT OVERVIEW
+Streamix is a high-performance Android media aggregator and streaming client built with Jetpack Compose. it acts as a central hub for Movies, TV Shows, YouTube, and specialized content, utilizing advanced scraping techniques to provide a unified viewing experience.
+
+2. CORE REPOSITORIES & LOCATIONS
+- MAIN APP SOURCE CODE:
+  * Local Path: D:/Projects/Streamix
+  * GitHub Repo: https://github.com/Shabd45261/Streamix
+- WEBSITE & APK HOSTING (GitHub Pages):
+  * Local Path: D:/Projects/Streamix.github.io
+  * Live URL: https://shabd45261.github.io/Streamix.github.io/
+  * GitHub Repo: https://github.com/Shabd45261/Shabd45261.github.io (Note: hosted on the .github.io repo)
+
+3. KEY FEATURES
+- SMART PROFILE SYSTEM:
+  * Movies Profile: Full cinema/TV experience with metadata from TMDB.
+  * YouTube Profile: Client for YouTube using NewPipeExtractor (No API key needed).
+  * Adult Profile: Hidden mode (unlocked via 7-taps on header icon).
+- ADVANCED VIDEO PLAYER:
+  * Powered by Media3/ExoPlayer with support for HLS, DASH, and MP4.
+  * Internal YouTube playback with SponsorBlock integration.
+  * External player support (VLC).
+  * Gestures: Double-tap to seek, vertical swipe for volume/brightness, horizontal swipe to seek.
+  * Minimized "Floating" Bar: Continue browsing while watching.
+- CONTENT DISCOVERY:
+  * Modular Scraper System using Jsoup and NiceHttp.
+  * Integration with MovieBoxPh, MovieBoxIN, and various specialized providers.
+  * TMDB Metadata Enrichment for high-quality posters and episode descriptions.
+- TECHNICAL STACK:
+  * UI: 100% Jetpack Compose.
+  * DI: Hilt (Dagger).
+  * Networking: OkHttp, Retrofit, Resilience4j (for scraper stability).
+  * Storage: Room (History/Watchlist), DataStore (Preferences).
+
+4. DEPLOYMENT PROCESS (Step-by-Step)
+To release a new version successfully:
+1. Increment Version: Update `versionCode` and `versionName` in `app/build.gradle.kts`.
+2. Build APK: Run `./gradlew :app:assembleRelease`.
+3. Locate APK: The file is generated in `app/build/outputs/apk/release/` and named automatically (e.g., Streamix_DATE_TIME_VERSION.apk).
+4. Local Copy: Copy the new APK to `D:/Projects/Streamix.github.io/apk/`.
+5. Update Metadata:
+   - Edit `update.json` (in both App and Website folders): Set `latestVersion` to the new versionCode and update `apkUrl`.
+   - Edit `index.html` (Website): Update the href of the "Download APK" button.
+6. Push to GitHub:
+   - Website Repo: `git add .`, `git commit`, `git push`.
+   - App Repo: `git add .`, `git commit`, `git push`.
+
+5. IMPORTANT WORKFLOW NOTES
+- GITHUB PAGES LIMIT: GitHub Pages has a 100MB limit for deployment artifacts.
+- APK EXCLUSION: The `.github/workflows/static.yml` is configured to delete the `apk/` folder before "deploying" the website assets. This stays under the limit while keeping the APK available for direct download via the `media.githubusercontent.com` (LFS) link.
+- LFS LINKS: Since APKs are large, they use Git LFS. Always use the `https://media.githubusercontent.com/media/Shabd45261/Streamix.github.io/main/apk/FILENAME.apk` format for download links to ensure they work correctly.
+
+6. DEEP LINKING SUPPORT
+- Scheme: `streamix://watch`
+- Parameters: `profile`, `type`, `id`, `t` (timestamp), `season`, `episode`.
+- Example: `streamix://watch?profile=movies&id=12345&season=1&episode=1`
